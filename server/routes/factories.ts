@@ -1,0 +1,644 @@
+import { Hono } from "hono";
+import { db, sqlite } from "../db/index.js";
+import { factories, employees, contracts, auditLog } from "../db/schema.js";
+import { eq, count } from "drizzle-orm";
+import { z } from "zod";
+import fs from "node:fs";
+import path from "node:path";
+import { createFactorySchema, updateFactorySchema } from "../validation.js";
+import {
+  getFactoryGroupRoles,
+  bulkUpdateFactoryRoles,
+  ROLE_GROUPS,
+  type RoleKey,
+} from "../services/factory-roles.js";
+
+const bulkRolesSchema = z.object({
+  companyId: z.number().int().positive(),
+  factoryName: z.string().min(1),
+  roleKey: z.string().min(1),
+  value: z.object({
+    name: z.string().nullable(),
+    dept: z.string().nullable(),
+    phone: z.string().nullable(),
+    address: z.string().nullable().optional(),
+  }),
+  excludeLineIds: z.array(z.number().int().positive()).default([]),
+});
+
+export const factoriesRouter = new Hono();
+
+// GET /api/factories — list all (optional ?companyId=)
+factoriesRouter.get("/", async (c) => {
+  try {
+    const companyId = c.req.query("companyId");
+
+    const results = await db.query.factories.findMany({
+      where: companyId ? eq(factories.companyId, Number(companyId)) : undefined,
+      orderBy: (t, { asc }) => [asc(t.factoryName), asc(t.department), asc(t.lineName)],
+      with: { company: true },
+    });
+    return c.json(results);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Operation failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// PUT /api/factories/bulk-calendar — update worker calendar text on all active factories
+const bulkCalendarSchema = z.object({
+  calendarText: z.string().min(1, "calendarText is required"),
+});
+
+factoriesRouter.put("/bulk-calendar", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = bulkCalendarSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+    const { calendarText } = parsed.data;
+
+    const result = sqlite.transaction(() => {
+      const updated = db
+        .update(factories)
+        .set({ workerCalendar: calendarText, updatedAt: new Date().toISOString() })
+        .where(eq(factories.isActive, true))
+        .returning({ id: factories.id })
+        .all();
+
+      db.insert(auditLog)
+        .values({
+          action: "update",
+          entityType: "factory",
+          entityId: 0,
+          detail: `Bulk worker calendar update: ${updated.length} factories → "${calendarText}"`,
+          userName: "system",
+        })
+        .run();
+
+      return updated;
+    })();
+
+    return c.json({ updated: result.length, calendarText });
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Failed to bulk update calendars" }, 500);
+  }
+});
+
+// ─── Factory-level role management ────────────────────────────────────
+// NOTE: These must be BEFORE /:id routes to avoid Hono matching "bulk-roles" as :id
+
+// GET /api/factories/role-summary/:companyId
+factoriesRouter.get("/role-summary/:companyId", async (c) => {
+  try {
+    const companyId = Number(c.req.param("companyId"));
+    if (isNaN(companyId)) return c.json({ error: "Invalid companyId" }, 400);
+    const result = getFactoryGroupRoles(companyId);
+    return c.json(result);
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Unknown error" }, 500);
+  }
+});
+
+// PUT /api/factories/bulk-roles — bulk update a role across all lines in a factory
+factoriesRouter.put("/bulk-roles", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = bulkRolesSchema.safeParse(raw);
+    if (!parsed.success) {
+      return c.json({ error: parsed.error.issues[0].message }, 400);
+    }
+    const { companyId, factoryName, roleKey, value, excludeLineIds } = parsed.data;
+
+    if (!(roleKey in ROLE_GROUPS)) {
+      return c.json(
+        { error: `Invalid roleKey. Must be one of: ${Object.keys(ROLE_GROUPS).join(", ")}` },
+        400
+      );
+    }
+
+    const updated = bulkUpdateFactoryRoles(
+      companyId,
+      factoryName,
+      roleKey as RoleKey,
+      value,
+      excludeLineIds
+    );
+
+    const excludeNote =
+      excludeLineIds.length > 0 ? `, ${excludeLineIds.length} excluded` : "";
+    db.insert(auditLog)
+      .values({
+        action: "update",
+        entityType: "factory",
+        entityId: 0,
+        detail: `Bulk role update: ${roleKey} for ${factoryName} (${updated} lines updated${excludeNote})`,
+        userName: "system",
+      })
+      .run();
+
+    return c.json({ updated, excluded: excludeLineIds.length });
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Unknown error" }, 500);
+  }
+});
+
+// GET /api/factories/cascade/:companyId — for cascading select
+// NOTE: Must be BEFORE /:id to avoid Hono matching "cascade" as :id
+factoriesRouter.get("/cascade/:companyId", async (c) => {
+  try {
+    const companyId = Number(c.req.param("companyId"));
+    const results = await db.query.factories.findMany({
+      where: eq(factories.companyId, companyId),
+      orderBy: (t, { asc }) => [asc(t.factoryName), asc(t.department), asc(t.lineName)],
+    });
+
+    // Group by factoryName → department → lineName for cascading UI
+    const grouped: Record<string, Record<string, typeof results>> = {};
+    for (const f of results) {
+      const fName = f.factoryName;
+      const dept = f.department || "—";
+      if (!grouped[fName]) grouped[fName] = {};
+      if (!grouped[fName][dept]) grouped[fName][dept] = [];
+      grouped[fName][dept].push(f);
+    }
+
+    return c.json({ flat: results, grouped });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Operation failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// GET /api/factories/badges/:companyId — factory badge status R24 (MUST come before /:id)
+factoriesRouter.get("/badges/:companyId", async (c) => {
+  try {
+    const companyId = Number(c.req.param("companyId"));
+    if (Number.isNaN(companyId)) return c.json({ error: "Invalid companyId" }, 400);
+
+    const facs = await db.query.factories.findMany({
+      where: eq(factories.companyId, companyId),
+      with: { calendars: true },
+    });
+
+    const empCounts = db
+      .select({ factoryId: employees.factoryId, cnt: count() })
+      .from(employees)
+      .where(eq(employees.companyId, companyId))
+      .groupBy(employees.factoryId)
+      .all();
+
+    const empCountMap = new Map(empCounts.map((r) => [r.factoryId, r.cnt]));
+
+    const REQUIRED_FACTORY_FIELDS = [
+      "supervisorName", "supervisorPhone", "hakensakiManagerName", "hakensakiManagerPhone",
+      "address", "workHours", "conflictDate", "closingDayText", "paymentDayText",
+      "managerUnsName", "managerUnsPhone",
+    ];
+
+    const badges = facs.map((f) => {
+      const missing: string[] = [];
+      for (const field of REQUIRED_FACTORY_FIELDS) {
+        const val = (f as Record<string, unknown>)[field];
+        if (val === null || val === undefined || val === "") {
+          missing.push(field);
+        }
+      }
+      const currentYear = new Date().getFullYear();
+      const hasCalendar = f.calendars.some((cal) => cal.year === currentYear);
+      return {
+        factoryId: f.id,
+        factoryName: f.factoryName,
+        department: f.department,
+        lineName: f.lineName,
+        dataComplete: missing.length === 0 ? "ok" : missing.length <= 3 ? "warning" : "error",
+        hasCalendar,
+        employeeCount: empCountMap.get(f.id) ?? 0,
+        conflictDate: f.conflictDate,
+        missingFields: missing,
+      };
+    });
+
+    return c.json(badges);
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Operation failed" }, 500);
+  }
+});
+
+// GET /api/factories/:id — AFTER all literal routes
+factoriesRouter.get("/:id", async (c) => {
+  try {
+    const id = Number(c.req.param("id"));
+    const factory = await db.query.factories.findFirst({
+      where: eq(factories.id, id),
+      with: { company: true, employees: true },
+    });
+    if (!factory) return c.json({ error: "Factory not found" }, 404);
+    return c.json(factory);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Operation failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// POST /api/factories
+factoriesRouter.post("/", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = createFactorySchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+    const body = parsed.data;
+    const result = db.insert(factories).values(body).returning().get();
+
+    db.insert(auditLog).values({
+      action: "create",
+      entityType: "factory",
+      entityId: result.id,
+      detail: `Created factory: ${result.factoryName} / ${result.department} / ${result.lineName}`,
+      userName: "system",
+    }).run();
+
+    return c.json(result, 201);
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Failed to create factory" }, 500);
+  }
+});
+
+// PUT /api/factories/:id
+factoriesRouter.put("/:id", async (c) => {
+  try {
+    const id = Number(c.req.param("id"));
+    const raw = await c.req.json();
+    const parsed = updateFactorySchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+    const body = parsed.data;
+    const result = db
+      .update(factories)
+      .set({ ...body, updatedAt: new Date().toISOString() })
+      .where(eq(factories.id, id))
+      .returning()
+      .get();
+    if (!result) return c.json({ error: "Factory not found" }, 404);
+
+    db.insert(auditLog)
+      .values({
+        action: "update",
+        entityType: "factory",
+        entityId: id,
+        detail: `Updated factory: ${result.factoryName} / ${result.department} / ${result.lineName}`,
+        userName: "system",
+      })
+      .run();
+
+    return c.json(result);
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Failed to update factory" }, 500);
+  }
+});
+
+// DELETE /api/factories/:id
+factoriesRouter.delete("/:id", async (c) => {
+  try {
+    const id = Number(c.req.param("id"));
+
+    const result = sqlite.transaction(() => {
+      const existing = db.select().from(factories).where(eq(factories.id, id)).get();
+
+      if (!existing) return { error: "Factory not found", status: 404 as const };
+
+      // Prevent deletion if factory has active employees or contracts
+      const empCount = db.select({ c: count() }).from(employees).where(eq(employees.factoryId, id)).get();
+      if ((empCount?.c ?? 0) > 0) {
+        return {
+          error: `この工場には ${empCount!.c} 名の社員が配属されています。先に社員の配属を変更してください。`,
+          status: 400 as const,
+        };
+      }
+      const conCount = db.select({ c: count() }).from(contracts).where(eq(contracts.factoryId, id)).get();
+      if ((conCount?.c ?? 0) > 0) {
+        return {
+          error: `この工場には ${conCount!.c} 件の契約があります。先に契約を移動してください。`,
+          status: 400 as const,
+        };
+      }
+
+      db.delete(factories).where(eq(factories.id, id)).run();
+
+      db.insert(auditLog)
+        .values({
+          action: "delete",
+          entityType: "factory",
+          entityId: id,
+          detail: `Deleted factory: ${existing.factoryName} / ${existing.department} / ${existing.lineName}`,
+          userName: "system",
+        })
+        .run();
+
+      return { success: true } as const;
+    })();
+
+    if ("error" in result) {
+      return c.json({ error: result.error }, result.status);
+    }
+    return c.json(result);
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Failed to delete factory" }, 500);
+  }
+});
+
+// POST /api/factories/export-excel — Generate Excel and save to disk
+const EXPORT_DIR = process.env.EXPORT_DIR ?? path.resolve("DataTotal");
+
+factoriesRouter.post("/export-excel", async (c) => {
+  try {
+    const allFactories = await db.query.factories.findMany({
+      with: { company: true },
+      orderBy: (t, { asc }) => [asc(t.factoryName), asc(t.department), asc(t.lineName)],
+    });
+    const allCompanies = await db.query.clientCompanies.findMany();
+
+    const ExcelJS = (await import("exceljs")).default;
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = "JP個別契約書 v26.3.31";
+    workbook.created = new Date();
+
+    // ── Column definitions with group colors ──
+    const cols: { header: string; key: string; group: string; width: number }[] = [
+      // basic
+      { header: "会社名", key: "companyName", group: "basic", width: 30 },
+      { header: "工場名", key: "factoryName", group: "basic", width: 18 },
+      { header: "部署", key: "department", group: "basic", width: 14 },
+      { header: "ライン名", key: "lineName", group: "basic", width: 16 },
+      { header: "住所", key: "address", group: "basic", width: 38 },
+      { header: "TEL", key: "phone", group: "basic", width: 16 },
+      // hakensakiManager — short headers: parser prepends group name "派遣先責任者"
+      { header: "氏名", key: "hakensakiManagerName", group: "hakensakiManager", width: 16 },
+      { header: "部署", key: "hakensakiManagerDept", group: "hakensakiManager", width: 16 },
+      { header: "TEL", key: "hakensakiManagerPhone", group: "hakensakiManager", width: 16 },
+      { header: "役職", key: "hakensakiManagerRole", group: "hakensakiManager", width: 12 },
+      // supervisor — parser prepends "指揮命令者"
+      { header: "氏名", key: "supervisorName", group: "supervisor", width: 16 },
+      { header: "部署", key: "supervisorDept", group: "supervisor", width: 16 },
+      { header: "TEL", key: "supervisorPhone", group: "supervisor", width: 16 },
+      { header: "役職", key: "supervisorRole", group: "supervisor", width: 12 },
+      // complaintClient — parser prepends "苦情処理(派遣先)"
+      { header: "氏名", key: "complaintClientName", group: "complaintClient", width: 16 },
+      { header: "部署", key: "complaintClientDept", group: "complaintClient", width: 16 },
+      { header: "TEL", key: "complaintClientPhone", group: "complaintClient", width: 16 },
+      // complaintUns — parser prepends "苦情処理(派遣元)"
+      { header: "氏名", key: "complaintUnsName", group: "complaintUns", width: 16 },
+      { header: "部署", key: "complaintUnsDept", group: "complaintUns", width: 16 },
+      { header: "TEL", key: "complaintUnsPhone", group: "complaintUns", width: 16 },
+      { header: "所在地", key: "complaintUnsAddress", group: "complaintUns", width: 30 },
+      // managerUns — parser prepends "派遣元責任者"
+      { header: "氏名", key: "managerUnsName", group: "managerUns", width: 16 },
+      { header: "部署", key: "managerUnsDept", group: "managerUns", width: 16 },
+      { header: "TEL", key: "managerUnsPhone", group: "managerUns", width: 16 },
+      { header: "所在地", key: "managerUnsAddress", group: "managerUns", width: 30 },
+      // work
+      { header: "単価", key: "hourlyRate", group: "work", width: 10 },
+      { header: "仕事内容", key: "jobDescription", group: "work", width: 34 },
+      { header: "シフト", key: "shiftPattern", group: "work", width: 14 },
+      { header: "就業時間", key: "workHours", group: "work", width: 20 },
+      { header: "昼勤時間", key: "workHoursDay", group: "work", width: 16 },
+      { header: "夜勤時間", key: "workHoursNight", group: "work", width: 16 },
+      { header: "休憩時間", key: "breakTimeDay", group: "work", width: 30 },
+      { header: "休憩(分)", key: "breakTime", group: "work", width: 10 },
+      { header: "夜勤休憩", key: "breakTimeNight", group: "work", width: 20 },
+      { header: "時間外", key: "overtimeHours", group: "work", width: 14 },
+      { header: "就業日外労働", key: "overtimeOutsideDays", group: "work", width: 18 },
+      { header: "就業日", key: "workDays", group: "work", width: 14 },
+      // contract
+      { header: "抵触日", key: "conflictDate", group: "contract", width: 14 },
+      { header: "契約期間", key: "contractPeriod", group: "contract", width: 14 },
+      { header: "締め日テキスト", key: "closingDayText", group: "contract", width: 14 },
+      { header: "支払日テキスト", key: "paymentDayText", group: "contract", width: 14 },
+      { header: "カレンダー", key: "calendar", group: "contract", width: 14 },
+      { header: "銀行口座", key: "bankAccount", group: "contract", width: 20 },
+      { header: "時間単位", key: "timeUnit", group: "contract", width: 12 },
+      // worker
+      { header: "作業者締め日", key: "workerClosingDay", group: "worker", width: 14 },
+      { header: "作業者支払日", key: "workerPaymentDay", group: "worker", width: 14 },
+      { header: "作業者カレンダー", key: "workerCalendar", group: "worker", width: 14 },
+      // legal
+      { header: "当該協定期間", key: "agreementPeriodEnd", group: "legal", width: 14 },
+      { header: "説明者", key: "explainerName", group: "legal", width: 14 },
+      { header: "産業用ロボット特別教育", key: "hasRobotTraining", group: "legal", width: 20 },
+    ];
+
+    const groupColors: Record<string, { fill: string; text: string; label: string }> = {
+      basic:            { fill: "E8F0FE", text: "1A73E8", label: "基本情報" },
+      supervisor:       { fill: "E6F4EA", text: "137333", label: "指揮命令者" },
+      hakensakiManager: { fill: "FEF7E0", text: "B06000", label: "派遣先責任者" },
+      complaintClient:  { fill: "FCE8E6", text: "C5221F", label: "苦情処理(派遣先)" },
+      complaintUns:     { fill: "F3E8FD", text: "7627BB", label: "苦情処理(派遣元)" },
+      managerUns:       { fill: "E0F2F1", text: "00796B", label: "派遣元責任者" },
+      work:             { fill: "FFF3E0", text: "E65100", label: "勤務条件" },
+      contract:         { fill: "E8EAF6", text: "283593", label: "契約・支払" },
+      worker:           { fill: "E0F7FA", text: "00838F", label: "作業者" },
+      legal:            { fill: "EFEBE9", text: "4E342E", label: "法定" },
+    };
+
+    // Sheet 1: Factory data
+    const ws = workbook.addWorksheet("企業データ一覧", {
+      views: [{ state: "frozen" as const, xSplit: 1, ySplit: 2 }],
+    });
+
+    // Set column widths and default font for all columns
+    cols.forEach((col, i) => {
+      const column = ws.getColumn(i + 1);
+      column.width = col.width;
+      column.font = { name: "Meiryo UI", size: 10 };
+      column.alignment = { vertical: "middle", wrapText: true };
+    });
+
+    // ── Row 1: Group header bar (merged, pastel fill + colored text) ──
+    const groupSpans: { group: string; start: number; end: number }[] = [];
+    let curGroup = cols[0].group;
+    let spanStart = 0;
+    for (let i = 1; i <= cols.length; i++) {
+      if (i === cols.length || cols[i].group !== curGroup) {
+        groupSpans.push({ group: curGroup, start: spanStart + 1, end: i });
+        if (i < cols.length) { curGroup = cols[i].group; spanStart = i; }
+      }
+    }
+
+    ws.addRow(cols.map(() => ""));
+    ws.getRow(1).height = 26;
+    for (const span of groupSpans) {
+      const gc = groupColors[span.group];
+      if (span.end > span.start) ws.mergeCells(1, span.start, 1, span.end);
+      const cell = ws.getCell(1, span.start);
+      cell.value = gc?.label ?? span.group;
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${gc?.fill ?? "F3F4F6"}` } };
+      cell.font = { name: "Meiryo UI", size: 10, bold: true, color: { argb: `FF${gc?.text ?? "333333"}` } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        bottom: { style: "thin", color: { argb: `FF${gc?.text ?? "999999"}` } },
+      };
+    }
+
+    // ── Row 2: Column sub-headers (same fill as group, bold dark text) ──
+    const headerRow = ws.addRow(cols.map((c) => c.header));
+    headerRow.height = 24;
+    cols.forEach((col, i) => {
+      const cell = headerRow.getCell(i + 1);
+      const gc = groupColors[col.group];
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${gc?.fill ?? "F3F4F6"}` } };
+      cell.font = { name: "Meiryo UI", size: 10, bold: true, color: { argb: "FF1F2937" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.border = {
+        bottom: { style: "medium", color: { argb: `FF${gc?.text ?? "999999"}` } },
+        top: { style: "thin", color: { argb: "FFD1D5DB" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } },
+      };
+    });
+
+    // Auto filter on row 2
+    ws.autoFilter = { from: { row: 2, column: 1 }, to: { row: 2, column: cols.length } };
+
+    // ── Data rows with alternating colors and thin borders ──
+    const companyPalette = ["1A73E8", "137333", "B06000", "C5221F", "7627BB", "00796B", "E65100", "283593", "00838F", "4E342E"];
+    const companyColorMap = new Map<string, number>();
+    let colorIdx = 0;
+    const sortedFactories = [...allFactories].sort((a, b) => {
+      const ca = a.company?.name ?? "";
+      const cb = b.company?.name ?? "";
+      if (ca !== cb) return ca.localeCompare(cb);
+      if (a.factoryName !== b.factoryName) return a.factoryName.localeCompare(b.factoryName);
+      return (a.department ?? "").localeCompare(b.department ?? "");
+    });
+
+    let prevCompany = "";
+    let dataRowIdx = 0;
+    for (const f of sortedFactories) {
+      const companyName = f.company?.name ?? "";
+      const isNewCompany = companyName !== prevCompany;
+      prevCompany = companyName;
+
+      if (!companyColorMap.has(companyName)) {
+        companyColorMap.set(companyName, colorIdx % companyPalette.length);
+        colorIdx++;
+      }
+      const companyHex = companyPalette[companyColorMap.get(companyName)!];
+
+      const values = [
+        companyName, f.factoryName, f.department ?? "", f.lineName ?? "",
+        f.address ?? "", f.phone ?? "",
+        f.hakensakiManagerName ?? "", f.hakensakiManagerDept ?? "", f.hakensakiManagerPhone ?? "", f.hakensakiManagerRole ?? "",
+        f.supervisorName ?? "", f.supervisorDept ?? "", f.supervisorPhone ?? "", f.supervisorRole ?? "",
+        f.complaintClientName ?? "", f.complaintClientDept ?? "", f.complaintClientPhone ?? "",
+        f.complaintUnsName ?? "", f.complaintUnsDept ?? "", f.complaintUnsPhone ?? "", f.complaintUnsAddress ?? "",
+        f.managerUnsName ?? "", f.managerUnsDept ?? "", f.managerUnsPhone ?? "", f.managerUnsAddress ?? "",
+        f.hourlyRate ?? "", f.jobDescription ?? "",
+        f.shiftPattern ?? "", f.workHours ?? "", f.workHoursDay ?? "", f.workHoursNight ?? "",
+        f.breakTimeDay ?? "", f.breakTime ?? "", f.breakTimeNight ?? "",
+        f.overtimeHours ?? "", f.overtimeOutsideDays ?? "", f.workDays ?? "",
+        f.conflictDate ?? "", f.contractPeriod ?? "",
+        f.closingDayText ?? "", f.paymentDayText ?? "", f.calendar ?? "",
+        f.bankAccount ?? "", f.timeUnit ?? "",
+        f.workerClosingDay ?? "", f.workerPaymentDay ?? "", f.workerCalendar ?? "",
+        f.agreementPeriodEnd ?? "", f.explainerName ?? "", f.hasRobotTraining ? "1" : "",
+      ];
+
+      const row = ws.addRow(values);
+      row.height = 20;
+      const bg = dataRowIdx % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA";
+      const thinBorder = { style: "thin" as const, color: { argb: "FFE0E0E0" } };
+
+      cols.forEach((col, i) => {
+        const cell = row.getCell(i + 1);
+        const isCompanyCell = col.key === "companyName";
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+        cell.font = {
+          name: "Meiryo UI", size: 10,
+          bold: isCompanyCell,
+          color: isCompanyCell ? { argb: `FF${companyHex}` } : { argb: "FF333333" },
+        };
+        cell.alignment = {
+          horizontal: col.key === "hourlyRate" ? "right" : "left",
+          vertical: "middle",
+          wrapText: true,
+        };
+        cell.border = {
+          top: thinBorder,
+          bottom: thinBorder,
+          left: thinBorder,
+          right: thinBorder,
+          ...(isNewCompany ? { top: { style: "medium" as const, color: { argb: `FF${companyHex}` } } } : {}),
+        };
+      });
+      dataRowIdx++;
+    }
+
+    // Sheet 2: Company info — styled to match Sheet 1
+    const ws2 = workbook.addWorksheet("企業情報", {
+      views: [{ state: "frozen" as const, xSplit: 1, ySplit: 1 }],
+    });
+    const companyHeaders = ["会社名", "会社名カナ", "略称", "住所", "TEL", "代表者", "有効"];
+    const companyColWidths = [34, 26, 16, 42, 18, 18, 10];
+
+    // Set column defaults
+    companyColWidths.forEach((w, i) => {
+      const column = ws2.getColumn(i + 1);
+      column.width = w;
+      column.font = { name: "Meiryo UI", size: 10 };
+      column.alignment = { vertical: "middle", wrapText: true };
+    });
+
+    // Header row with distinct color
+    const companyHeaderRow = ws2.addRow(companyHeaders);
+    companyHeaderRow.height = 26;
+    companyHeaders.forEach((_h, i) => {
+      const cell = companyHeaderRow.getCell(i + 1);
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8F0FE" } };
+      cell.font = { name: "Meiryo UI", size: 10, bold: true, color: { argb: "FF1A73E8" } };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.border = {
+        bottom: { style: "medium", color: { argb: "FF1A73E8" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } },
+      };
+    });
+
+    // Auto filter on header
+    ws2.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: companyHeaders.length } };
+
+    // Data rows with alternating colors
+    const sortedCompanies = allCompanies.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
+    sortedCompanies.forEach((co, idx) => {
+      const row = ws2.addRow([co.name ?? "", co.nameKana ?? "", co.shortName ?? "", co.address ?? "", co.phone ?? "", co.representative ?? "", co.isActive ? "1" : "0"]);
+      row.height = 20;
+      const bg = idx % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA";
+      const thinBorder = { style: "thin" as const, color: { argb: "FFE0E0E0" } };
+      companyHeaders.forEach((_h, i) => {
+        const cell = row.getCell(i + 1);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+        cell.font = { name: "Meiryo UI", size: 10, color: { argb: "FF333333" } };
+        cell.alignment = { vertical: "middle", wrapText: true };
+        cell.border = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+      });
+    });
+
+    // Save to disk
+    if (!fs.existsSync(EXPORT_DIR)) fs.mkdirSync(EXPORT_DIR, { recursive: true });
+    const now = new Date();
+    const ts = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
+    const filename = `企業データ一覧_${ts}.xlsx`;
+    const filepath = path.join(EXPORT_DIR, filename);
+    await workbook.xlsx.writeFile(filepath);
+
+    db.insert(auditLog).values({
+      action: "export",
+      entityType: "factory",
+      entityId: null,
+      detail: `Excel出力: ${allFactories.length}工場 / ${allCompanies.length}企業 → ${filename}`,
+      userName: "system",
+    }).run();
+
+    return c.json({ success: true, filename, path: filepath, factoryCount: allFactories.length, companyCount: allCompanies.length });
+  } catch (err: unknown) {
+    return c.json({ error: err instanceof Error ? err.message : "Excel export failed" }, 500);
+  }
+});
+

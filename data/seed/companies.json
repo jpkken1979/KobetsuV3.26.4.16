@@ -1,0 +1,115 @@
+[
+  {
+    "name": "高雄工業株式会社",
+    "address": "〒498-0066 愛知県弥富市楠三丁目13番地2",
+    "phone": "0567-68-8110",
+    "representative": "下村 豊",
+    "shortName": "高雄工業",
+    "isActive": true
+  },
+  {
+    "name": "加藤木材工業株式会社",
+    "address": "〒486-0902 愛知県春日井市新開町字平渕6",
+    "phone": "(0568)36-2931",
+    "representative": null,
+    "shortName": "加藤木材工業",
+    "isActive": true
+  },
+  {
+    "name": "瑞陵精機株式会社",
+    "address": "〒509-7126 岐阜県恵那市武並町新竹折89番地",
+    "phone": "(0573)28-3153",
+    "representative": null,
+    "shortName": "瑞陵精機",
+    "isActive": true
+  },
+  {
+    "name": "株式会社川原鉄工所",
+    "address": "〒455-0813 愛知県名古屋市港区善進本町413",
+    "phone": "052-389-4088",
+    "representative": null,
+    "shortName": "川原鉄工所",
+    "isActive": true
+  },
+  {
+    "name": "六甲電子株式会社",
+    "address": "〒663-8105 兵庫県西宮市中島町8-5",
+    "phone": "0798-65-4508",
+    "representative": null,
+    "shortName": "六甲電子",
+    "isActive": true
+  },
+  {
+    "name": "株式会社オーツカ",
+    "address": "〒501-6065 岐阜県羽島郡笠松町門間1815番地の1",
+    "phone": "(058)388-3121",
+    "representative": null,
+    "shortName": "オーツカ",
+    "isActive": true
+  },
+  {
+    "name": "ピーエムアイ有限会社",
+    "address": "〒471-0804 愛知県豊田市神池町2丁目1236番地643",
+    "phone": "0565-80-0037",
+    "representative": null,
+    "shortName": "ピーエムアイ",
+    "isActive": true
+  },
+  {
+    "name": "三幸技研株式会社",
+    "address": "〒474-0055 愛知県大府市一屋町2丁目194",
+    "phone": "0562-47-5533",
+    "representative": null,
+    "shortName": "三幸技研",
+    "isActive": true
+  },
+  {
+    "name": "アサヒフォージ株式会社",
+    "address": "〒719-3121 岡山県真庭市上河内3828-9",
+    "phone": "0867-42-8786",
+    "representative": null,
+    "shortName": "アサヒフォージ",
+    "isActive": true
+  },
+  {
+    "name": "ユアサ工機株式会社",
+    "address": "〒701-0144 岡山県岡山市北区久米6番地",
+    "phone": "086-241-2592",
+    "representative": null,
+    "shortName": "ユアサ工機",
+    "isActive": true
+  },
+  {
+    "name": "株式会社美鈴工業",
+    "address": "〒485-0822 愛知県小牧市大字上末969",
+    "phone": "0568-79-4145",
+    "representative": null,
+    "shortName": "美鈴工業",
+    "isActive": true
+  },
+  {
+    "name": "セイビテック株式会社",
+    "address": "〒715-0024 岡山県井原市高屋町266-1",
+    "phone": "(0866)67-3130",
+    "representative": null,
+    "shortName": "セイビテック",
+    "isActive": true
+  },
+  {
+    "name": "フェニテックセミコンダクター株式会社",
+    "address": "〒715-8602 岡山県井原市木之子町6833",
+    "phone": "0866-62-4121",
+    "representative": null,
+    "shortName": "フェニテック",
+    "isActive": true
+  },
+  {
+    "name": "TKE株式会社",
+    "address": "〒490-1402 愛知県弥富市五斗山三丁目22番地",
+    "phone": "0567-56-6721",
+    "representative": null,
+    "shortName": "TKE",
+    "isActive": true
+  }
+]
+

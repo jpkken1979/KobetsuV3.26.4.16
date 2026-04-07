@@ -1,0 +1,47 @@
+node_modules/
+dist/
+coverage/
+output/
+
+# Local runtime data
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/kobetsu-auto-*.db
+data/backups/
+
+# Env and local config
+.env
+.env.local
+*.local
+
+# Generated files
+src/routeTree.gen.ts
+__pycache__/
+*.pyc
+
+# Tooling/cache folders
+.agent/
+.agents/
+.antigravity/
+.claude/
+.context/
+.continue/
+.cursor/
+.gemini/
+.omc/
+.superpowers/
+.tanstack/
+.vscode/
+.windsurf/
+.worktrees/
+.zed/
+
+# Temporary/debug
+*.log
+db_out*.json
+error.log
+tsc_output.txt
+typecheck_output.txt
+push_output.txt
+sqlite.db

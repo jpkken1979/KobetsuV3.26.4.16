@@ -1,0 +1,48 @@
+## INSTRUCCIÓN OBLIGATORIA
+
+ANTES de cualquier tarea, LEE el archivo `RULES.md` en la raíz del proyecto.
+
+Contiene el mapa completo de 99 agentes y 732+ skills disponibles en el ecosistema Antigravity.
+NUNCA reinventes lo que ya existe. Consulta `.agent/agents/` y `.agent/skills/` primero.
+
+Reglas adicionales en: `.antigravity/rules.md`
+Estado del proyecto en: `ESTADO_PROYECTO.md`
+Contexto en: `.context/APP_KNOWLEDGE.md`
+
+Idioma: Respuestas en español. Código en inglés.
+
+Para tareas complejas (3+ pasos, bug fixing, refactoring): consulta `WORKFLOW_RULES.md`
+
+---
+<!-- ANTIGRAVITY-RULES-START -->
+# Antigravity Ecosystem Rules
+
+This project uses **Antigravity v6.0.0** — a modular AI runtime
+with 117 active agents and 795 skills.
+
+## MCP Gateway
+
+- Local gateway: `http://localhost:4747` (localhost:4747)
+- Active MCP servers: antigravity, antigravity-agents, antigravity-skills, antigravity-observations, antigravity-intelligence, antigravity-ui, antigravity-memory, stitch
+
+## Agent Protocol
+
+1. Read `.agent/agents/<name>/SYSTEM_PROMPT.md` before delegating tasks.
+2. Use the MCP server `antigravity-agents` to invoke agents via the gateway.
+3. Use `antigravity-skills` to load modular skills on demand.
+
+## Key Directories
+
+- `.agent/agents/`   — 117 agents (tier 1–7)
+- `.agent/skills/`   — 795 skills
+- `.agent/workflows/` — multi-agent orchestration workflows
+- `.antigravity/`    — config, manifest, rules, SDK
+- `.mcp.json`        — MCP server configuration
+
+## Rules
+
+- Always prefer agent-delegated tasks over inline code for complex operations.
+- Read `ESTADO_PROYECTO.md` for current project memory before starting work.
+- Respect `.antigravity/rules.md` and `.claude/rules/` for project-specific constraints.
+
+<!-- ANTIGRAVITY-RULES-END -->

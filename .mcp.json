@@ -1,0 +1,117 @@
+{
+  "mcpServers": {
+    "antigravity": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/mcp-server/server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-agents": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/agents-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-skills": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/skills-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-observations": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/observations-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-intelligence": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/intelligence-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-ui": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/ui-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-memory": {
+      "command": "python",
+      "args": [
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/memory-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "stitch": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "stitch-mcp"
+      ],
+      "env": {
+        "GOOGLE_CLOUD_PROJECT": "${GOOGLE_CLOUD_PROJECT}",
+        "STITCH_API_KEY": "${STITCH_API_KEY}"
+      }
+    },
+    "context7": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ]
+    },
+    "git": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "uvx",
+        "mcp-server-git"
+      ]
+    },
+    "chrome-devtools": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--no-usage-statistics"
+      ]
+    },
+    "filesystem": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30"
+      ]
+    }
+  }
+}
