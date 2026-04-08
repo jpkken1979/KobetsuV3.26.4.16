@@ -382,28 +382,7 @@ function NewContractWizard() {
                   <span>残業: ¥{Math.round((selectedLine.hourlyRate ?? 0) * 1.25)}/h</span>
                   <span>指揮命令者: {selectedLine.supervisorName || "未設定"}</span>
                   <span>業務内容: {(selectedLine.jobDescription ?? "").slice(0, 20) || "未設定"}</span>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      抵触日 (工場設定): {selectedLine.conflictDate || "未設定"}
-                    </span>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={state.useConflictDateOverride}
-                        onChange={(e) => wizard.setUseConflictDateOverride(e.target.checked)}
-                        className="rounded"
-                      />
-                      別の抵触日を使用する
-                    </label>
-                    {state.useConflictDateOverride && (
-                      <input
-                        type="date"
-                        value={state.conflictDateOverride ?? ""}
-                        onChange={(e) => wizard.setConflictDateOverride(e.target.value || null)}
-                        className="border rounded px-2 py-1 text-sm w-40"
-                      />
-                    )}
-                  </div>
+                  <span>抵触日 (工場設定): {selectedLine.conflictDate || "未設定"}</span>
                   <span>契約期間: {selectedLine.contractPeriod === "teishokubi" ? "抵触日まで" : selectedLine.contractPeriod || "未設定"}</span>
                 </div>
               </div>
@@ -448,6 +427,25 @@ function NewContractWizard() {
                   onChange={(e) => wizard.setEndDate(e.target.value, true)}
                   className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
                 />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={state.useConflictDateOverride}
+                    onChange={(e) => wizard.setUseConflictDateOverride(e.target.checked)}
+                    className="rounded"
+                  />
+                  別の抵触日を使用する
+                </label>
+                {state.useConflictDateOverride && (
+                  <input
+                    type="date"
+                    value={state.conflictDateOverride ?? ""}
+                    onChange={(e) => wizard.setConflictDateOverride(e.target.value || null)}
+                    className="border rounded px-2 py-1 text-sm w-40"
+                  />
+                )}
               </div>
               {(() => {
                 const eff = state.useConflictDateOverride && state.conflictDateOverride

@@ -144,9 +144,10 @@ contractsRouter.post("/", async (c) => {
     const usesLegacyEmployeeIdsPayload = !employeeAssignments && Array.isArray(employeeIds);
 
     const factory = await assertFactoryBelongsToCompany(contractData.factoryId, contractData.companyId);
-    if (factory.conflictDate && contractData.endDate && contractData.endDate > factory.conflictDate) {
+    const effectiveConflictDate = contractData.conflictDateOverride ?? factory.conflictDate;
+    if (effectiveConflictDate && contractData.endDate && contractData.endDate > effectiveConflictDate) {
       throw new ContractValidationError(
-        `契約終了日(${contractData.endDate})が抵触日(${factory.conflictDate})を超えています`
+        `契約終了日(${contractData.endDate})が抵触日(${effectiveConflictDate})を超えています`
       );
     }
     await assertSelectedEmployeesMatchFactory(
@@ -230,9 +231,10 @@ contractsRouter.put("/:id", async (c) => {
     if (contractData.factoryId || contractData.companyId) {
       const factory = await assertFactoryBelongsToCompany(nextFactoryId, nextCompanyId);
       const endDate = contractData.endDate;
-      if (factory.conflictDate && endDate && endDate > factory.conflictDate) {
+      const effectiveConflictDate = contractData.conflictDateOverride ?? factory.conflictDate;
+      if (effectiveConflictDate && endDate && endDate > effectiveConflictDate) {
         throw new ContractValidationError(
-          `契約終了日(${endDate})が抵触日(${factory.conflictDate})を超えています`
+          `契約終了日(${endDate})が抵触日(${effectiveConflictDate})を超えています`
         );
       }
     } else if (contractData.endDate) {
@@ -241,9 +243,10 @@ contractsRouter.put("/:id", async (c) => {
         where: eq(factories.id, nextFactoryId),
         columns: { conflictDate: true },
       });
-      if (factory?.conflictDate && contractData.endDate > factory.conflictDate) {
+      const effectiveConflictDate = contractData.conflictDateOverride ?? factory?.conflictDate;
+      if (effectiveConflictDate && contractData.endDate > effectiveConflictDate) {
         throw new ContractValidationError(
-          `契約終了日(${contractData.endDate})が抵触日(${factory.conflictDate})を超えています`
+          `契約終了日(${contractData.endDate})が抵触日(${effectiveConflictDate})を超えています`
         );
       }
     }
