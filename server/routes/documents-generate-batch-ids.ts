@@ -1,5 +1,6 @@
 // Handler for POST /api/documents/generate-by-ids — ID-based employee grouping + generation
 import type { Context } from "hono";
+import { z } from "zod";
 import crypto from "node:crypto";
 import path from "node:path";
 import { db, sqlite } from "../db/index.js";
@@ -38,22 +39,24 @@ import { mergePdfs } from "./documents-generate-batch-utils.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
 import fs from "node:fs";
 
+const generateByIdsSchema = z.object({
+  ids: z.array(z.string().min(1)).min(1, "ids must be a non-empty array"),
+  idType: z.enum(["hakensaki", "hakenmoto"]),
+  contractStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "contractStart must be YYYY-MM-DD"),
+  contractEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "contractEnd must be YYYY-MM-DD"),
+  kobetsuCopies: z.union([z.literal(1), z.literal(2)]).optional(),
+});
+
 // ─── POST /api/documents/generate-by-ids ─────────────────────────────
 export async function handleGenerateByIds(c: Context) {
   try {
-    let body: { ids: string[]; idType: "hakensaki" | "hakenmoto"; contractStart: string; contractEnd: string; kobetsuCopies?: number };
-    try {
-      body = await c.req.json();
-    } catch {
-      return c.json({ error: "Invalid JSON body" }, 400);
+    const parsed = generateByIdsSchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: "Invalid request body", details: parsed.error.flatten() }, 400);
     }
 
-    const { ids, idType, contractStart, contractEnd } = body;
-    const kobetsuCopies: 1 | 2 = body.kobetsuCopies === 2 ? 2 : 1;
-
-    if (!ids?.length || !idType || !contractStart || !contractEnd) {
-      return c.json({ error: "ids, idType, contractStart, contractEnd are required" }, 400);
-    }
+    const { ids, idType, contractStart, contractEnd } = parsed.data;
+    const kobetsuCopies: 1 | 2 = parsed.data.kobetsuCopies === 2 ? 2 : 1;
 
     const { groups, notFoundIds } = await groupEmployeesByIds(ids, idType, contractStart, contractEnd);
 

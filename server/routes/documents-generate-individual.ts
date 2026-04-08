@@ -2,7 +2,13 @@
 // POST /api/documents/keiyakusho/:employeeNumber — 契約書 (labor contract)
 // POST /api/documents/shugyojoken/:employeeNumber — 就業条件明示書
 import type { Context } from "hono";
+import { z } from "zod";
 import path from "node:path";
+
+const individualDocBodySchema = z.object({
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD").optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD").optional(),
+});
 import { db } from "../db/index.js";
 import { employees, auditLog } from "../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -35,16 +41,10 @@ export async function handleKeiyakusho(c: Context) {
   }
 
   // Optionally accept startDate/endDate from body, otherwise auto-generate
-  let startDate: string;
-  let endDate: string;
-  try {
-    const body = await c.req.json();
-    startDate = body.startDate || toLocalDateStr(new Date());
-    endDate = body.endDate || "";
-  } catch {
-    startDate = toLocalDateStr(new Date());
-    endDate = "";
-  }
+  const bodyParsed = individualDocBodySchema.safeParse(await c.req.json().catch(() => ({})));
+  const bodyData = bodyParsed.success ? bodyParsed.data : {};
+  let startDate: string = bodyData.startDate || toLocalDateStr(new Date());
+  let endDate: string = bodyData.endDate || "";
 
   // Auto-set endDate to 3 months from startDate if not provided
   if (!endDate) {
@@ -165,16 +165,10 @@ export async function handleShugyojoken(c: Context) {
     return c.json({ error: `社員番号「${employeeNumber}」に配属先（工場）が設定されていません` }, 400);
   }
 
-  let startDate: string;
-  let endDate: string;
-  try {
-    const body = await c.req.json();
-    startDate = body.startDate || toLocalDateStr(new Date());
-    endDate = body.endDate || "";
-  } catch {
-    startDate = toLocalDateStr(new Date());
-    endDate = "";
-  }
+  const bodyParsed2 = individualDocBodySchema.safeParse(await c.req.json().catch(() => ({})));
+  const bodyData2 = bodyParsed2.success ? bodyParsed2.data : {};
+  let startDate: string = bodyData2.startDate || toLocalDateStr(new Date());
+  let endDate: string = bodyData2.endDate || "";
 
   if (!endDate) {
     const [sy, sm, sd] = startDate.split("-").map(Number);

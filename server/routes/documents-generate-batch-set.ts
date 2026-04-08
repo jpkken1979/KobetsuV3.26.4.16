@@ -1,5 +1,6 @@
 // Handler for POST /api/documents/generate-set — combined PDF set for shared factory/line
 import type { Context } from "hono";
+import { z } from "zod";
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "../db/index.js";
@@ -31,21 +32,21 @@ import {
 import { SET_OUTPUT_DIR } from "./documents-generate-batch-utils.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
 
+const generateSetSchema = z.object({
+  contractIds: z.array(z.number().int().positive()).min(1, "contractIds must be a non-empty array"),
+  kobetsuCopies: z.union([z.literal(1), z.literal(2)]).optional(),
+});
+
 // ─── POST /api/documents/generate-set ────────────────────────────────
 export async function handleGenerateSet(c: Context) {
   try {
-    let body: { contractIds: number[]; kobetsuCopies?: number };
-    try {
-      body = await c.req.json();
-    } catch {
-      return c.json({ error: "Invalid JSON body" }, 400);
+    const parsed = generateSetSchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: "Invalid request body", details: parsed.error.flatten() }, 400);
     }
 
-    const { contractIds } = body;
-    const kobetsuCopies = body.kobetsuCopies === 1 ? 1 : 2; // default: 2 copies (甲+乙)
-    if (!contractIds || !Array.isArray(contractIds) || contractIds.length === 0) {
-      return c.json({ error: "contractIds array is required" }, 400);
-    }
+    const { contractIds } = parsed.data;
+    const kobetsuCopies = parsed.data.kobetsuCopies === 1 ? 1 : 2; // default: 2 copies (甲+乙)
 
     // Bulk-fetch all contracts with relations (avoids N+1)
     const contractsData = await db.query.contracts.findMany({

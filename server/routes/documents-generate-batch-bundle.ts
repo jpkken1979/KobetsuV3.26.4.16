@@ -1,5 +1,6 @@
 // Handler for POST /api/documents/generate-batch — per-contract bundles
 import type { Context } from "hono";
+import { z } from "zod";
 import path from "node:path";
 import { db } from "../db/index.js";
 import { contracts, auditLog } from "../db/schema.js";
@@ -35,19 +36,18 @@ import {
 import { recordPdfVersion } from "../services/pdf-versioning.js";
 import fs from "node:fs";
 
+const generateBatchSchema = z.object({
+  contractIds: z.array(z.number().int().positive()).min(1, "contractIds must be a non-empty array"),
+});
+
 // ─── POST /api/documents/generate-batch ──────────────────────────────
 export async function handleGenerateBatch(c: Context) {
-  let body: { contractIds: number[] };
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: "Invalid JSON body" }, 400);
+  const parsed = generateBatchSchema.safeParse(await c.req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return c.json({ error: "Invalid request body", details: parsed.error.flatten() }, 400);
   }
 
-  const { contractIds } = body;
-  if (!contractIds || !Array.isArray(contractIds) || contractIds.length === 0) {
-    return c.json({ error: "contractIds array is required" }, 400);
-  }
+  const { contractIds } = parsed.data;
 
   // Load all contracts in a single bulk query (avoids N+1)
   const contractsData = await db.query.contracts.findMany({

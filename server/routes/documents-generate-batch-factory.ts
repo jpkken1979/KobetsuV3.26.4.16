@@ -1,5 +1,6 @@
 // Handler for POST /api/documents/generate-factory — all documents for a factory
 import type { Context } from "hono";
+import { z } from "zod";
 import path from "node:path";
 import { db } from "../db/index.js";
 import { contracts, factories, auditLog } from "../db/schema.js";
@@ -35,22 +36,21 @@ import { mergePdfs } from "./documents-generate-batch-utils.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
 import fs from "node:fs";
 
+const generateFactorySchema = z.object({
+  factoryId: z.number().int().positive("factoryId must be a positive integer"),
+  kobetsuCopies: z.union([z.literal(1), z.literal(2)]).optional(),
+});
+
 // ─── POST /api/documents/generate-factory ────────────────────────────
 export async function handleGenerateFactory(c: Context) {
   try {
-    let body: { factoryId: number; kobetsuCopies?: number };
-    try {
-      body = await c.req.json();
-    } catch {
-      return c.json({ error: "Invalid JSON body" }, 400);
+    const parsed = generateFactorySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: "Invalid request body", details: parsed.error.flatten() }, 400);
     }
 
-    const { factoryId } = body;
-    const kobetsuCopies: 1 | 2 = body.kobetsuCopies === 2 ? 2 : 1;
-
-    if (!factoryId || typeof factoryId !== "number" || factoryId <= 0) {
-      return c.json({ error: "factoryId is required" }, 400);
-    }
+    const { factoryId } = parsed.data;
+    const kobetsuCopies: 1 | 2 = parsed.data.kobetsuCopies === 2 ? 2 : 1;
 
     // Verify factory exists
     const factory = await db.query.factories.findFirst({
