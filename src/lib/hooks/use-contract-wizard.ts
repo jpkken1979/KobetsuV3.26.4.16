@@ -11,6 +11,8 @@ interface WizardState {
   period: string; // "1month" | "2months" | "3months" | "6months" | "1year" | "teishokubi"
   endDate: string;
   endDateOverride: boolean; // true if user manually edited endDate
+  conflictDateOverride: string | null;
+  useConflictDateOverride: boolean;
   // Step 2
   employeeIds: number[];
   generatePdfs: boolean;
@@ -46,6 +48,8 @@ export function useContractWizard() {
     period: '3months',
     endDate: '',
     endDateOverride: false,
+    conflictDateOverride: null,
+    useConflictDateOverride: false,
     employeeIds: [],
     generatePdfs: false,
   });
@@ -97,6 +101,14 @@ export function useContractWizard() {
     setState((s) => ({ ...s, generatePdfs }));
   }, []);
 
+  const setConflictDateOverride = useCallback((conflictDateOverride: string | null) => {
+    setState((s) => ({ ...s, conflictDateOverride }));
+  }, []);
+
+  const setUseConflictDateOverride = useCallback((useConflictDateOverride: boolean) => {
+    setState((s) => ({ ...s, useConflictDateOverride }));
+  }, []);
+
   const reset = useCallback(() => {
     setState({
       step: 1,
@@ -106,6 +118,8 @@ export function useContractWizard() {
       period: '3months',
       endDate: '',
       endDateOverride: false,
+      conflictDateOverride: null,
+      useConflictDateOverride: false,
       employeeIds: [],
       generatePdfs: false,
     });
@@ -121,6 +135,8 @@ export function useContractWizard() {
     setEndDate,
     setEmployeeIds,
     setGeneratePdfs,
+    setConflictDateOverride,
+    setUseConflictDateOverride,
     reset,
     calculateEndDate,
   };

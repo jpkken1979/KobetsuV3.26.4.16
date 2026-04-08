@@ -96,24 +96,28 @@ function NewContractWizard() {
     (startDate: string) => {
       wizard.setStartDate(startDate);
       if (startDate && !state.endDateOverride) {
-        const conflictDate = selectedLine?.conflictDate ? new Date(selectedLine.conflictDate) : null;
-        const calculated = calculateEndDate(new Date(startDate), state.period, conflictDate);
+        const effectiveConflict = state.useConflictDateOverride && state.conflictDateOverride
+          ? new Date(state.conflictDateOverride)
+          : selectedLine?.conflictDate ? new Date(selectedLine.conflictDate) : null;
+        const calculated = calculateEndDate(new Date(startDate), state.period, effectiveConflict);
         wizard.setEndDate(calculated.toISOString().split("T")[0], false);
       }
     },
-    [wizard, state.period, state.endDateOverride, selectedLine]
+    [wizard, state.period, state.endDateOverride, state.useConflictDateOverride, state.conflictDateOverride, selectedLine]
   );
 
   const handlePeriodChange = useCallback(
     (period: string) => {
       wizard.setPeriod(period);
       if (state.startDate && !state.endDateOverride) {
-        const conflictDate = selectedLine?.conflictDate ? new Date(selectedLine.conflictDate) : null;
-        const calculated = calculateEndDate(new Date(state.startDate), period, conflictDate);
+        const effectiveConflict = state.useConflictDateOverride && state.conflictDateOverride
+          ? new Date(state.conflictDateOverride)
+          : selectedLine?.conflictDate ? new Date(selectedLine.conflictDate) : null;
+        const calculated = calculateEndDate(new Date(state.startDate), period, effectiveConflict);
         wizard.setEndDate(calculated.toISOString().split("T")[0], false);
       }
     },
-    [wizard, state.startDate, state.endDateOverride, selectedLine]
+    [wizard, state.startDate, state.endDateOverride, state.useConflictDateOverride, state.conflictDateOverride, selectedLine]
   );
 
   // Group employees by displayRate for preview
@@ -140,6 +144,7 @@ function NewContractWizard() {
           factoryId: state.factoryId!,
           startDate: state.startDate,
           endDate: state.endDate,
+          conflictDateOverride: state.useConflictDateOverride ? state.conflictDateOverride : null,
           employeeAssignments: emps.map((e) => ({ employeeId: e.id, hourlyRate: rate })),
         });
       }
@@ -377,7 +382,28 @@ function NewContractWizard() {
                   <span>残業: ¥{Math.round((selectedLine.hourlyRate ?? 0) * 1.25)}/h</span>
                   <span>指揮命令者: {selectedLine.supervisorName || "未設定"}</span>
                   <span>業務内容: {(selectedLine.jobDescription ?? "").slice(0, 20) || "未設定"}</span>
-                  <span>抵触日: {selectedLine.conflictDate || "未設定"}</span>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      抵触日 (工場設定): {selectedLine.conflictDate || "未設定"}
+                    </span>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={state.useConflictDateOverride}
+                        onChange={(e) => wizard.setUseConflictDateOverride(e.target.checked)}
+                        className="rounded"
+                      />
+                      別の抵触日を使用する
+                    </label>
+                    {state.useConflictDateOverride && (
+                      <input
+                        type="date"
+                        value={state.conflictDateOverride ?? ""}
+                        onChange={(e) => wizard.setConflictDateOverride(e.target.value || null)}
+                        className="border rounded px-2 py-1 text-sm w-40"
+                      />
+                    )}
+                  </div>
                   <span>契約期間: {selectedLine.contractPeriod === "teishokubi" ? "抵触日まで" : selectedLine.contractPeriod || "未設定"}</span>
                 </div>
               </div>
@@ -423,7 +449,12 @@ function NewContractWizard() {
                   className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
                 />
               </div>
-              {selectedLine?.conflictDate && state.endDate > selectedLine.conflictDate && (
+              {(() => {
+                const eff = state.useConflictDateOverride && state.conflictDateOverride
+                  ? state.conflictDateOverride
+                  : selectedLine?.conflictDate ?? null;
+                return eff && state.endDate > eff;
+              })() && (
                 <div className="flex items-center gap-2 text-amber-600 text-sm">
                   <AlertTriangle className="h-4 w-4" />
                   終了日が抵触日を超えています
