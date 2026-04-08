@@ -2,11 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [master]
   pull_request:
+    branches: [master]
 
 jobs:
-  validate:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,8 +28,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Test
-        run: npm run test:run
-
       - name: Build
         run: npm run build
+
+      - name: Test
+        run: npm run test:run
