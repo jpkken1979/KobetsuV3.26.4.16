@@ -220,7 +220,7 @@ export function buildCommonData(contract: NonNullable<Awaited<ReturnType<typeof 
     breakTime,
     overtimeHours: factory.overtimeHours || c.overtimeMax || "",
     hourlyRate: c.hourlyRate ?? factory.hourlyRate ?? 0,
-    conflictDate: factory.conflictDate || "",
+    conflictDate: c.conflictDateOverride || factory.conflictDate || "",
     closingDay: factory.closingDayText || (factory.closingDay ? `${factory.closingDay}日` : ""),
     paymentDay: factory.paymentDayText || (factory.paymentDay ? `${factory.paymentDay}日` : ""),
     bankAccount: factory.bankAccount || "",
