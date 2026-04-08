@@ -91,33 +91,39 @@ function NewContractWizard() {
     });
   }, [wizard]);
 
+  // Fecha de 抵触日 efectiva: usa el override si está activo, sino la de la fábrica
+  const effectiveConflictStr = useMemo(
+    () => (state.useConflictDateOverride && state.conflictDateOverride
+      ? state.conflictDateOverride
+      : selectedLine?.conflictDate ?? null),
+    [state.useConflictDateOverride, state.conflictDateOverride, selectedLine]
+  );
+  const effectiveConflict = useMemo(
+    () => (effectiveConflictStr ? new Date(effectiveConflictStr) : null),
+    [effectiveConflictStr]
+  );
+
   // Auto-fill endDate when startDate/period changes
   const handleStartDateChange = useCallback(
     (startDate: string) => {
       wizard.setStartDate(startDate);
       if (startDate && !state.endDateOverride) {
-        const effectiveConflict = state.useConflictDateOverride && state.conflictDateOverride
-          ? new Date(state.conflictDateOverride)
-          : selectedLine?.conflictDate ? new Date(selectedLine.conflictDate) : null;
         const calculated = calculateEndDate(new Date(startDate), state.period, effectiveConflict);
         wizard.setEndDate(calculated.toISOString().split("T")[0], false);
       }
     },
-    [wizard, state.period, state.endDateOverride, state.useConflictDateOverride, state.conflictDateOverride, selectedLine]
+    [wizard, state.period, state.endDateOverride, effectiveConflict]
   );
 
   const handlePeriodChange = useCallback(
     (period: string) => {
       wizard.setPeriod(period);
       if (state.startDate && !state.endDateOverride) {
-        const effectiveConflict = state.useConflictDateOverride && state.conflictDateOverride
-          ? new Date(state.conflictDateOverride)
-          : selectedLine?.conflictDate ? new Date(selectedLine.conflictDate) : null;
         const calculated = calculateEndDate(new Date(state.startDate), period, effectiveConflict);
         wizard.setEndDate(calculated.toISOString().split("T")[0], false);
       }
     },
-    [wizard, state.startDate, state.endDateOverride, state.useConflictDateOverride, state.conflictDateOverride, selectedLine]
+    [wizard, state.startDate, state.endDateOverride, effectiveConflict]
   );
 
   // Group employees by displayRate for preview
@@ -447,12 +453,7 @@ function NewContractWizard() {
                   />
                 )}
               </div>
-              {(() => {
-                const eff = state.useConflictDateOverride && state.conflictDateOverride
-                  ? state.conflictDateOverride
-                  : selectedLine?.conflictDate ?? null;
-                return eff && state.endDate > eff;
-              })() && (
+              {effectiveConflictStr && state.endDate > effectiveConflictStr && (
                 <div className="flex items-center gap-2 text-amber-600 text-sm">
                   <AlertTriangle className="h-4 w-4" />
                   終了日が抵触日を超えています
