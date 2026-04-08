@@ -8,8 +8,18 @@
  */
 
 import { Hono } from "hono";
+import { getTableColumns } from "drizzle-orm";
 import { db, sqlite } from "../db/index.js";
-import { auditLog } from "../db/schema.js";
+import {
+  auditLog,
+  clientCompanies,
+  factories,
+  employees,
+  contracts,
+  contractEmployees,
+  factoryCalendars,
+  shiftTemplates,
+} from "../db/schema.js";
 
 /** All valid table names accepted by this router. */
 const VALID_TABLES = new Set([
@@ -39,6 +49,31 @@ const ENTITY_TYPE: Record<string, string> = {
 };
 
 export const adminCrudRouter = new Hono();
+
+// ─── Column whitelist helpers ──────────────────────────────────────────────
+
+/** Maps SQL table names to their Drizzle table objects for column introspection. */
+const DRIZZLE_TABLE_MAP: Record<string, Parameters<typeof getTableColumns>[0]> = {
+  client_companies: clientCompanies,
+  factories: factories,
+  employees: employees,
+  contracts: contracts,
+  contract_employees: contractEmployees,
+  factory_calendars: factoryCalendars,
+  shift_templates: shiftTemplates,
+  audit_log: auditLog,
+};
+
+/**
+ * Returns the set of valid column names (camelCase keys from the Drizzle schema)
+ * for the given table. Used to whitelist INSERT/UPDATE body keys.
+ */
+function getValidColumns(tableName: string): Set<string> {
+  const table = DRIZZLE_TABLE_MAP[tableName];
+  if (!table) return new Set<string>();
+  const cols = getTableColumns(table);
+  return new Set(Object.keys(cols));
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -81,6 +116,16 @@ adminCrudRouter.post("/:table", async (c) => {
   if (!body || Object.keys(body).length === 0) {
     return c.json({ error: "Request body is required" }, 400);
   }
+
+  // Whitelist: strip keys that don't correspond to real schema columns
+  const validCols = getValidColumns(tableName);
+  const filteredBody = Object.fromEntries(
+    Object.entries(body).filter(([key]) => validCols.has(key))
+  );
+  if (Object.keys(filteredBody).length === 0) {
+    return c.json({ error: "No valid columns provided" }, 400);
+  }
+  body = filteredBody;
 
   try {
     // Inject timestamps (all tables except shift_templates which has no timestamps)
@@ -142,6 +187,16 @@ adminCrudRouter.put("/:table/:id", async (c) => {
   if (!body || Object.keys(body).length === 0) {
     return c.json({ error: "Request body is required" }, 400);
   }
+
+  // Whitelist: strip keys that don't correspond to real schema columns
+  const validCols = getValidColumns(tableName);
+  const filteredBody = Object.fromEntries(
+    Object.entries(body).filter(([key]) => validCols.has(key))
+  );
+  if (Object.keys(filteredBody).length === 0) {
+    return c.json({ error: "No valid columns provided" }, 400);
+  }
+  body = filteredBody;
 
   try {
     // Guard: check record exists
