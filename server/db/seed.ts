@@ -218,6 +218,7 @@ async function seed() {
       night_shift_rate REAL,
       holiday_rate REAL,
       previous_contract_id INTEGER REFERENCES contracts(id),
+      conflict_date_override TEXT,
       pdf_path TEXT,
       notes TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
