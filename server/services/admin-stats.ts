@@ -5,7 +5,7 @@
  * Used by GET /api/admin/stats.
  */
 
-import { db } from "../db/index.js";
+import { db, sqlite } from "../db/index.js";
 import {
   clientCompanies,
   factories,
@@ -212,6 +212,26 @@ function computeTopFactories(): {
 
 // ─── Null counts (employees + factories columns) ─────────────────────────────
 
+/**
+ * Compute null counts for a set of columns in one single SQL query.
+ * Uses SUM(CASE WHEN col IS NULL THEN 1 ELSE 0 END) to avoid N round-trips.
+ */
+function computeNullCountsForTable(
+  tableName: string,
+  columns: readonly string[]
+): Record<string, number> {
+  if (columns.length === 0) return {};
+  const selects = columns
+    .map(col => `SUM(CASE WHEN "${col}" IS NULL THEN 1 ELSE 0 END) AS "${col}"`)
+    .join(", ");
+  const row = sqlite
+    .prepare(`SELECT ${selects} FROM "${tableName}"`)
+    .get() as Record<string, number | null>;
+  return Object.fromEntries(
+    columns.map(col => [col, row?.[col] ?? 0])
+  );
+}
+
 function computeNullCounts(): { table: string; column: string; nullCount: number }[] {
   const result: { table: string; column: string; nullCount: number }[] = [];
 
@@ -222,13 +242,9 @@ function computeNullCounts(): { table: string; column: string; nullCount: number
     "address", "postalCode", "companyId", "factoryId",
   ] as const;
 
+  const empNulls = computeNullCountsForTable("employees", empCols);
   for (const col of empCols) {
-    const row = db
-      .select({ nullCount: count() })
-      .from(employees)
-      .where(isNull(employees[col]))
-      .get();
-    const nullCount = row?.nullCount ?? 0;
+    const nullCount = empNulls[col] ?? 0;
     if (nullCount > 0) {
       result.push({ table: "employees", column: col, nullCount });
     }
@@ -255,13 +271,9 @@ function computeNullCounts(): { table: string; column: string; nullCount: number
     "workerCalendar", "agreementPeriodEnd", "explainerName",
   ] as const;
 
+  const factNulls = computeNullCountsForTable("factories", factCols);
   for (const col of factCols) {
-    const row = db
-      .select({ nullCount: count() })
-      .from(factories)
-      .where(isNull(factories[col]))
-      .get();
-    const nullCount = row?.nullCount ?? 0;
+    const nullCount = factNulls[col] ?? 0;
     if (nullCount > 0) {
       result.push({ table: "factories", column: col, nullCount });
     }
