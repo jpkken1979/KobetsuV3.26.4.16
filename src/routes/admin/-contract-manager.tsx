@@ -1,20 +1,12 @@
 /**
- * Contract Manager — Admin Tab 4.
- * Specialized contract management view with filters, TanStack Table,
- * bulk actions, and per-row edit / delete / renew operations.
+ * Contract Manager — Admin Tab 4 Orchestrator.
+ * Manages state, queries, mutations, and coordinates with ContractTable component.
  */
 
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from "@tanstack/react-table";
+import { Link } from "@tanstack/react-router";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import {
   AnimatePresence,
   motion,
@@ -25,8 +17,6 @@ import {
   ArrowUp,
   ArrowUpDown,
   CheckSquare,
-  ChevronsLeft,
-  ChevronsRight,
   Edit3,
   FileText,
   RefreshCw,
@@ -44,10 +34,10 @@ import { Badge } from "@/components/ui/badge";
 import { ContractStatusBadge } from "@/components/ui/status-badge";
 import { api, type Contract } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
+import { ContractTable, type ContractRow } from "./-contract-table";
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
-const PAGE_SIZES = [10, 25, 50, 100] as const;
-type PageSize = (typeof PAGE_SIZES)[number];
+type PageSize = 10 | 25 | 50 | 100;
 
 const STATUS_OPTIONS = [
   { value: "all", label: "全て" },
@@ -57,20 +47,6 @@ const STATUS_OPTIONS = [
   { value: "cancelled", label: "取消済み" },
   { value: "renewed", label: "更新済み" },
 ] as const;
-
-/* ── Row type ──────────────────────────────────────────────────────────── */
-interface ContractRow {
-  id: number;
-  contractNumber: string;
-  companyName: string;
-  factoryName: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  employeeCount: number;
-  hourlyRate: number | null;
-  _raw: Contract;
-}
 
 /* ── Column definitions ──────────────────────────────────────────────── */
 function buildColumns(
@@ -277,9 +253,6 @@ function buildColumns(
   ];
 }
 
-// Link must be imported at top level — lazily inside cells breaks hot-reload
-import { Link } from "@tanstack/react-router";
-
 /* ── Main component ──────────────────────────────────────────────────── */
 export function ContractManager() {
   const shouldReduceMotion = useReducedMotion();
@@ -437,7 +410,7 @@ export function ContractManager() {
       }));
   }, [contracts, statusFilter, companySearch, startDateFrom, startDateTo]);
 
-  /* ── TanStack Table ───────────────────────────────────────────────── */
+  /* ── Column definitions ───────────────────────────────────────────– */
   const columns = useMemo(
     () =>
       buildColumns(
@@ -447,50 +420,11 @@ export function ContractManager() {
     [],
   );
 
-  const table = useReactTable({
-    data: rows,
-    columns,
-    state: {
-      sorting,
-      globalFilter,
-      pagination: { pageIndex: page - 1, pageSize },
-    },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: (updater) => {
-      const next =
-        typeof updater === "function"
-          ? updater({ pageIndex: page - 1, pageSize })
-          : updater;
-      setPage(next.pageIndex + 1);
-      setPageSize(next.pageSize as PageSize);
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    globalFilterFn: (row, _columnId, filterValue: string) => {
-      const r = row.original;
-      const q = filterValue.toLowerCase();
-      return (
-        r.contractNumber.toLowerCase().includes(q) ||
-        r.companyName.toLowerCase().includes(q) ||
-        r.factoryName.toLowerCase().includes(q)
-      );
-    },
-  });
-
-  /* ── Computed ─────────────────────────────────────────────────────── */
-  const pageCount = table.getPageCount();
-
+  /* ── Handlers ────────────────────────────────────────────────────── */
   function handleSelectAll() {
     if (selectedIds.size === rows.length && rows.length > 0) {
-      table.resetRowSelection();
       setSelectedIds(new Set());
     } else {
-      table.setRowSelection(
-        Object.fromEntries(rows.map((r) => [r.id, true])),
-      );
       setSelectedIds(new Set(rows.map((r) => r.id)));
     }
   }
@@ -507,13 +441,6 @@ export function ContractManager() {
     });
   }
 
-  function handlePageSizeChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const next = Number(e.target.value) as PageSize;
-    setPageSize(next);
-    setPage(1);
-    table.setPageSize(next);
-  }
-
   function handleBulkCancel() {
     if (selectedIds.size === 0) return;
     setConfirmAction({ type: "bulk-cancel" });
@@ -522,6 +449,17 @@ export function ContractManager() {
   function handleBulkRenew() {
     if (selectedIds.size === 0) return;
     setConfirmAction({ type: "bulk-renew" });
+  }
+
+  function handlePaginationChange({
+    pageIndex,
+    pageSize: newSize,
+  }: {
+    pageIndex: number;
+    pageSize: PageSize;
+  }) {
+    setPage(pageIndex + 1);
+    setPageSize(newSize);
   }
 
   function confirmAndExecute() {
@@ -643,202 +581,23 @@ export function ContractManager() {
         </div>
       </div>
 
-      {/* ── Table ──────────────────────────────────────────────────── */}
-      <div className="border border-border rounded-xl overflow-hidden bg-card">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-muted/30">
-              <tr>
-                <th className="px-3 py-2.5 w-10">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.size === rows.length && rows.length > 0}
-                    ref={(el) => {
-                      if (el)
-                        el.indeterminate =
-                          selectedIds.size > 0 && selectedIds.size < rows.length;
-                    }}
-                    onChange={handleSelectAll}
-                    aria-label="全て選択"
-                    className="h-4 w-4 rounded border-border/60 text-primary accent-primary cursor-pointer"
-                  />
-                </th>
-                {table.getHeaderGroups()[0].headers.map((header) => {
-                  if (header.id === "select") return null;
-                  return (
-                    <th
-                      key={header.id}
-                      className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap"
-                      style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : header.column.getCanSort()
-                          ? (
-                            <button
-                              onClick={header.column.getToggleSortingHandler()}
-                              className="inline-flex items-center gap-1 hover:text-foreground transition-colors cursor-pointer"
-                            >
-                              {header.column.getIsSorted() === "asc" ? (
-                                <ArrowUp className="h-3 w-3 text-primary" />
-                              ) : header.column.getIsSorted() === "desc" ? (
-                                <ArrowDown className="h-3 w-3 text-primary" />
-                              ) : (
-                                <ArrowUpDown className="h-3 w-3 text-muted-foreground/30" />
-                              )}
-                              {typeof header.column.columnDef.header === "string"
-                                ? header.column.columnDef.header
-                                : null}
-                            </button>
-                          )
-                          : typeof header.column.columnDef.header === "string"
-                            ? header.column.columnDef.header
-                            : null}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border/50">
-                    <td className="px-3 py-3">
-                      <div className="h-4 w-4 rounded bg-muted animate-pulse" />
-                    </td>
-                    {Array.from({ length: 9 }).map((__, j) => (
-                      <td key={j} className="px-3 py-3">
-                        <div
-                          className="h-3 rounded bg-muted animate-pulse"
-                          style={{ width: `${40 + ((i * 7 + j * 13) % 60)}%` }}
-                        />
-                      </td>
-                    ))}
-                  </tr>
-                ))
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="px-4 py-16 text-center text-muted-foreground">
-                    契約が見つかりません
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="border-b border-border/50 hover:bg-muted/30 transition-colors group"
-                  >
-                    <td className="px-3 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(row.original.id)}
-                        onChange={(e) => handleRowSelect(row.original, e.target.checked)}
-                        aria-label={`${row.original.contractNumber}を選択`}
-                        className="h-4 w-4 rounded border-border/60 text-primary accent-primary cursor-pointer"
-                      />
-                    </td>
-                    {row.getVisibleCells().map((cell) => {
-                      if (cell.column.id === "select") return null;
-                      return (
-                        <td key={cell.id} className="px-3 py-3">
-                          {cell.getValue() != null ? String(cell.getValue()) : "—"}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* ── Pagination ────────────────────────────────────────────── */}
-        {!isLoading && rows.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/20 gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground">
-                {((page - 1) * pageSize + 1).toLocaleString()}
-                {" – "}
-                {Math.min(page * pageSize, rows.length).toLocaleString()}
-                {" / "}
-                {rows.length.toLocaleString()}件
-              </span>
-              <Select
-                className="h-7 w-20 text-xs"
-                value={String(pageSize)}
-                onChange={handlePageSizeChange}
-              >
-                {PAGE_SIZES.map((size) => (
-                  <option key={size} value={String(size)}>
-                    {size}件/頁
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={() => {
-                  setPage(1);
-                  table.setPageIndex(0);
-                }}
-                disabled={page <= 1}
-                aria-label="最初ページ"
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={() => {
-                  const p = page - 1;
-                  setPage(p);
-                  table.previousPage();
-                }}
-                disabled={page <= 1}
-                aria-label="前ページ"
-              >
-                ‹
-              </Button>
-              <span className="px-2 text-xs text-muted-foreground tabular-nums">
-                {page} / {Math.max(1, pageCount)}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={() => {
-                  const p = page + 1;
-                  setPage(p);
-                  table.nextPage();
-                }}
-                disabled={page >= pageCount}
-                aria-label="次ページ"
-              >
-                ›
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs px-2"
-                onClick={() => {
-                  const p = pageCount;
-                  setPage(p);
-                  table.setPageIndex(p - 1);
-                }}
-                disabled={page >= pageCount}
-                aria-label="最終ページ"
-              >
-                <ChevronsRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      {/* ── Table component ────────────────────────────────────────── */}
+      <ContractTable
+        rows={rows}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        selectedIds={selectedIds}
+        sorting={sorting}
+        globalFilter={globalFilter}
+        page={page}
+        pageSize={pageSize}
+        columns={columns}
+        onSelectAll={handleSelectAll}
+        onRowSelect={handleRowSelect}
+        onSortingChange={setSorting}
+        onGlobalFilterChange={setGlobalFilter}
+        onPaginationChange={handlePaginationChange}
+      />
 
       {/* ── Bulk action bar ────────────────────────────────────────── */}
       <AnimatePresence>
@@ -870,7 +629,6 @@ export function ContractManager() {
                 className="h-8 gap-1.5"
                 onClick={() => {
                   setSelectedIds(new Set());
-                  table.resetRowSelection();
                 }}
               >
                 <X className="h-3.5 w-3.5" />
