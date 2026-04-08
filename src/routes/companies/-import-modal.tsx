@@ -37,6 +37,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set());
   const [expandedUpdates, setExpandedUpdates] = useState<Set<number>>(new Set());
   const [companySheetData, setCompanySheetData] = useState<Record<string, unknown>[]>([]);
+  const [sheetError, setSheetError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
@@ -45,6 +46,19 @@ export function ImportModal({ onClose }: ImportModalProps) {
       const workbook = await loadExcelWorkbook(selectedFile);
       const worksheet = workbook.getWorksheet(nextSheetName);
       const rows = worksheet ? parseCompanySheet(worksheet) : [];
+
+      // Validar que la hoja tiene headers reconocibles
+      const EXPECTED_HEADERS = ["工場名", "部署名", "派遣先責任者氏名", "指揮命令者氏名", "会社名"];
+      const firstRow = rows[0] ?? {};
+      const keys = Object.keys(firstRow);
+      const hasValidHeaders = EXPECTED_HEADERS.some((h) => keys.includes(h));
+      if (rows.length > 0 && !hasValidHeaders) {
+        setSheetError(`このシート (${nextSheetName}) はインポートに対応していません。企業データシートを選択してください。`);
+        setParsedRows([]);
+        return;
+      }
+      setSheetError(null);
+
       setParsedRows(rows);
       setImportKind(inferCompanyImportKind(nextSheetName, rows));
 
@@ -257,6 +271,9 @@ export function ImportModal({ onClose }: ImportModalProps) {
                   </option>
                 ))}
               </select>
+            )}
+            {sheetError && (
+              <p className="text-sm text-red-500 mt-1">{sheetError}</p>
             )}
             {parsedRows.length > 0 && (
               <span className="text-xs text-muted-foreground">
@@ -517,7 +534,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
               (importKind === "companies" && !result && parsedRows.length > 0)) && (
               <button
                 onClick={handleImport}
-                disabled={importing}
+                disabled={importing || !!sheetError}
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-white transition-all",
                   importing
