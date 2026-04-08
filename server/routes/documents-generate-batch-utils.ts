@@ -1,6 +1,7 @@
 // Shared utilities for batch document generation handlers
 import fs from "node:fs";
 import path from "node:path";
+import type { PDFPage } from "pdf-lib";
 
 /**
  * Merge multiple PDF files into one using pdf-lib.
@@ -14,7 +15,7 @@ export async function mergePdfs(filePaths: string[], outputPath: string): Promis
       const bytes = await fs.promises.readFile(fp);
       const src = await PDFDocument.load(bytes);
       const copied = await merged.copyPages(src, src.getPageIndices());
-      copied.forEach((p) => merged.addPage(p));
+      copied.forEach((p: PDFPage) => merged.addPage(p));
     } catch { /* skip unreadable PDFs */ }
   }
   const out = await merged.save();
