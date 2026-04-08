@@ -1,0 +1,2 @@
+- [Sesion 2026-04-07b — pendientes resueltos + backup rotacion](session_2026-04-07b.md) — recordPdfVersion batch; pdf-lib; EmptyState 6 rutas; deprecacion employeeIds; refactor imports; backup rotacion
+- [Sesion 2026-04-08 — conflictDateOverride + auditoría imports + fixes](session_2026-04-08.md) — feature 抵触日 override por contrato; 3 fixes auditoría Excel; 待機中→onLeave; CLAUDE.md actualizado

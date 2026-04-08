@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.3.25
 
-> Última actualización: 2026-04-07
+> Última actualización: 2026-04-08
 
 ---
 
@@ -29,6 +29,22 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-08 — conflictDateOverride + auditoría imports + 3 fixes
+
+**Feature:** Campo `conflictDateOverride` nullable por contrato para soportar contratos históricos retroactivos con 抵触日 distinta a la de la fábrica. Toggle en Step 2 del wizard, resolver en PDF (`??` nullish), validación server-side actualizada, detalle de contrato muestra `(個別設定)`.
+
+**Fixes de auditoría:**
+1. `pdf-lib` instalado + `PDFPage` tipado en `batch-utils.ts`
+2. `normalizeJpDateString()` en `import-factories-service.ts` — normaliza Date/YYYY/MM/DD a ISO
+3. Validación de headers de sheet en `-import-modal.tsx` — bloquea import silencioso con sheet equivocada
+4. `待機中` → `onLeave` en `import-employees.ts`
+
+**Auditoría Excel:** ambos archivos reales auditados (`企業データ一覧`, `社員台帳`), sin errores bloqueantes.
+
+**Tests:** 703/703 ✅ | Build ✅ | Typecheck ✅
+
+---
 
 ## Sesión 2026-04-07c — Bugfix edición de fábricas
 

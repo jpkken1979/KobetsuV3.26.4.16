@@ -24,7 +24,7 @@ __pycache__/
 .agent/
 .agents/
 .antigravity/
-.claude/
+.claude/worktrees/
 .context/
 .continue/
 .cursor/
