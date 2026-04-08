@@ -116,7 +116,7 @@ export function buildEmployeeData(
 ) {
   const rawStatus = String(row.status || row["現在"] || "").trim();
   const status: "active" | "inactive" | "onLeave" =
-    rawStatus === "退社" ? "inactive" : "active";
+    rawStatus === "退社" ? "inactive" : rawStatus === "待機中" ? "onLeave" : "active";
 
   const rawDispatch = String(row.companyName || row["派遣先"] || "").trim();
   const { companyId, resolvedFactoryName } = resolveCompanyFromDispatch(rawDispatch, companyMap);

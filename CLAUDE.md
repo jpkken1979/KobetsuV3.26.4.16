@@ -166,17 +166,22 @@ src/
 |------|---------|
 | `/` | Dashboard — stats, charts, alerts |
 | `/companies` | Company/factory registry |
+| `/companies/table` | Tabla editable de factories con import modal |
 | `/companies/koritsu` | コーリツ-specific import |
 | `/employees` | Employee list with search/filter |
 | `/contracts` | Contract list with filters + cancelled toggle |
 | `/contracts/new` | 5-step contract wizard |
+| `/contracts/:contractId` | Contract detail + employee assignment editor |
 | `/contracts/batch` | Batch contract generation |
+| `/contracts/new-hires` | Batch creation for new hires (preview → confirm) |
+| `/contracts/mid-hires` | Batch creation for mid-hires (preview → confirm) |
 | `/documents` | PDF generation/download (tabs: 契約別/工場一括/ID指定) |
 | `/import` | Excel employee import |
 | `/data-check` | Completeness matrix |
 | `/audit` | Audit log explorer |
 | `/history` | Contract history |
 | `/settings` | Backup, system info |
+| `/admin` | Panel de administración — token-gated (`ADMIN_TOKEN`) |
 
 **Conventions:**
 - Path aliases: `@/*` → `src/*`, `@server/*` → `server/*`
@@ -188,8 +193,8 @@ src/
 - `src/routeTree.gen.ts` is **auto-generated** by TanStack Router — never edit manually
 
 ### Large Files Warning
-- 10 route/component files exceed 500 lines. Consider splitting when adding features:
-  - `companies/-koritsu-components.tsx` (804L), `contracts/index.tsx` (794L), `import/-import-page.tsx` (784L), `companies/koritsu.tsx` (766L), `contracts/batch.tsx` (669L), `employees/index.tsx` (613L)
+- Several route/component files exceed 500 lines. Consider splitting when adding features:
+  - `companies/-koritsu-components.tsx` (805L), `companies/koritsu.tsx` (768L), `contracts/index.tsx` (762L), `import/-import-page.tsx` (761L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `employees/index.tsx` (692L), `settings/index.tsx` (617L), `contracts/mid-hires.tsx` (586L), `contracts/new-hires.tsx` (552L), `history/index.tsx` (538L)
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
 - `closingDayText` and `paymentDayText` are free text (`"当月末"`, `"翌月20日"`), NOT numbers — use the `*Text` schema fields in all UI and API
@@ -311,13 +316,12 @@ Different format from all other companies — 3 separate generators in `server/p
 - Factory editor: centered `Dialog` modal (not Sheet drawer)
 - NEVER use `useRef` as close guard in Radix dialogs — causes zombie state
 - NEVER manipulate `body.style.overflow` manually — Radix handles scroll locking
-- ⚠️ `p-5` spacing is PROHIBITED — use `p-4` or `p-6` only. Current violations: `routes/-dashboard-alerts.tsx` (lines 77, 281), `audit/index.tsx` (lines 45, 53, 173+)
+- ⚠️ `p-5` spacing is PROHIBITED — use `p-4` or `p-6` only
 - Design reference screenshots in `LUNARIS-exports/dark/` and `LUNARIS-exports/light/` (14 screens each)
 
 ### UI Accessibility — CRITICAL
 - All `motion` animations (`animate=`, `whileHover`, `whileTap`, `transition=`) MUST check `useReducedMotion()` first
-- Pattern already implemented in `src/components/ui/animated.tsx` and `src/components/ui/dialog.tsx` — replicate this pattern in every component using motion
-- 22 files currently missing this check (audit finding C-001) — do not add new motion without reduced-motion guard
+- Pattern established in `src/components/ui/animated.tsx` and `src/components/ui/dialog.tsx` — replicate in every component using motion (audit C-001 closed)
 
 ## TypeScript & Build
 
