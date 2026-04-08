@@ -74,6 +74,18 @@ export function deriveShiftTime(workHoursText: string, index: number): string | 
   return null;
 }
 
+/** Normaliza un valor de fecha (Date object, "2028/12/15", o ISO) a "YYYY-MM-DD". */
+function normalizeJpDateString(val: unknown): string | null {
+  if (!val) return null;
+  if (val instanceof Date) return val.toISOString().split("T")[0];
+  const s = String(val).trim();
+  if (!s) return null;
+  // "2028/12/15" → "2028-12-15"
+  const slashMatch = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if (slashMatch) return `${slashMatch[1]}-${slashMatch[2].padStart(2, "0")}-${slashMatch[3].padStart(2, "0")}`;
+  return s;
+}
+
 /** Genera la clave de coincidencia estricta para una fábrica. */
 function factoryKey(cId: number, fn: string, dept: string, ln: string): string {
   return `${cId}|${normalizeWidth(fn || "")}|${normalizeWidth(dept || "")}|${normalizeWidth(ln || "")}`;
@@ -217,7 +229,7 @@ function buildFactoryData(
     overtimeOutsideDays: String(row["就業日外労働"] || row.overtimeOutsideDays || "").trim() || null,
     workDays: String(row["就業日"] || row.workDays || "").trim() || null,
     hourlyRate: parseNum(row["単価"] ?? row.hourlyRate),
-    conflictDate: String(row["抵触日"] || row.conflictDate || "").trim() || null,
+    conflictDate: normalizeJpDateString(row["抵触日"] ?? row.conflictDate),
     contractPeriod: String(row["契約期間"] || row.contractPeriod || "").trim() || null,
     calendar: String(row["カレンダー"] || row.calendar || "").trim() || null,
     closingDay: parseIntVal(row["締め日"] ?? row.closingDay),
