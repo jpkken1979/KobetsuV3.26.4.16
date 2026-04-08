@@ -429,9 +429,9 @@ function ContractsList() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+          transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3 }}
           className="hidden overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)] md:block"
         >
           <div className="max-h-[calc(100vh-220px)] overflow-auto">

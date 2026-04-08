@@ -188,8 +188,8 @@ export function BulkEditModal({
                   <Check className="h-7 w-7 text-emerald-500" />
                 ) : (
                   <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    animate={shouldReduceMotion ? {} : { rotate: 360 }}
+                    transition={shouldReduceMotion ? { duration: 0 } : { repeat: Infinity, duration: 1, ease: "linear" }}
                     className="h-7 w-7 rounded-full border-2 border-primary border-t-transparent"
                   />
                 )}
@@ -200,9 +200,9 @@ export function BulkEditModal({
               <div className="mx-auto h-2 w-48 overflow-hidden rounded-full bg-muted">
                 <motion.div
                   className="h-full rounded-full bg-primary"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(progress.done / progress.total) * 100}%` }}
-                  transition={{ type: "spring", stiffness: 200, damping: 30 }}
+                  initial={shouldReduceMotion ? false : { width: 0 }}
+                  animate={shouldReduceMotion ? {} : { width: `${(progress.done / progress.total) * 100}%` }}
+                  transition={shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 200, damping: 30 }}
                 />
               </div>
             </div>

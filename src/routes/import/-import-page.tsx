@@ -418,8 +418,8 @@ export function ImportPage() {
           <AnimatePresence>
             {preview && (
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
                 className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]"
               >
                 <div className="flex items-center justify-between border-b border-border/40 px-4 py-4">
@@ -706,8 +706,8 @@ export function ImportPage() {
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
                 className="rounded-xl border border-green-200/60 bg-green-50/50 p-4 dark:border-green-800/40 dark:bg-green-950/30"
               >
                 <div className="mb-5 flex items-center gap-3">
