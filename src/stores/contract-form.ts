@@ -11,6 +11,8 @@ export interface ContractFormData {
   endDate: string;
   contractDate: string;
   notificationDate: string;
+  conflictDateOverride: string | null;
+  useConflictDateOverride: boolean;
 
   // Step 3: Work conditions (auto-filled from factory)
   workDays: string;
@@ -71,6 +73,8 @@ interface ContractFormStore {
   updateFields: (fields: Partial<ContractFormData>) => void;
   reset: () => void;
   clearDraft: () => void;
+  setConflictDateOverride: (date: string | null) => void;
+  setUseConflictDateOverride: (val: boolean) => void;
 }
 
 const INITIAL_DATA: ContractFormData = {
@@ -80,6 +84,8 @@ const INITIAL_DATA: ContractFormData = {
   endDate: "",
   contractDate: "",
   notificationDate: "",
+  conflictDateOverride: null,
+  useConflictDateOverride: false,
   workDays: "",
   workStartTime: "",
   workEndTime: "",
@@ -158,6 +164,19 @@ export const useContractFormStore = create<ContractFormStore>()(
       clearDraft: () => {
         set({ ...INITIAL_STATE, isDirty: false });
       },
+
+      setConflictDateOverride: (date) =>
+        set((s) => ({ ...s, data: { ...s.data, conflictDateOverride: date } })),
+
+      setUseConflictDateOverride: (val) =>
+        set((s) => ({
+          ...s,
+          data: {
+            ...s.data,
+            useConflictDateOverride: val,
+            conflictDateOverride: val ? s.data.conflictDateOverride : null,
+          },
+        })),
     }),
     {
       name: "contract-form-draft",

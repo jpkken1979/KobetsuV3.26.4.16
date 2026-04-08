@@ -117,6 +117,7 @@ export interface Contract {
   endDate: string;
   contractDate: string | null;
   notificationDate: string | null;
+  conflictDateOverride: string | null;
   // Art. 26 legal fields (派遣法第26条)
   workDays: string | null;
   workStartTime: string | null;
