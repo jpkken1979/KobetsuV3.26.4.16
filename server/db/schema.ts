@@ -181,6 +181,7 @@ export const contracts = sqliteTable(
     endDate: text("end_date").notNull(),
     contractDate: text("contract_date").notNull(),
     notificationDate: text("notification_date").notNull(),
+    conflictDateOverride: text("conflict_date_override"),
 
     // 16 Art. 26 legal fields (派遣法第26条)
     workDays: text("work_days"),
