@@ -120,7 +120,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* Logo / branding */}
       <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] font-black text-base text-[#06010f] dark:shadow-[0_0_24px_rgba(139,92,246,0.45)]">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] font-black text-base text-foreground dark:shadow-[0_0_24px_rgba(139,92,246,0.45)]">
           契
         </div>
         <div>

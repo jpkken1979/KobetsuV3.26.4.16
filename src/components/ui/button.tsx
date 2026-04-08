@@ -21,7 +21,7 @@ const buttonVariants = cva(
         link:
           "text-primary underline-offset-4 hover:underline",
         cyan:
-          "bg-[#0f766e] text-white font-bold hover:-translate-y-0.5 dark:bg-gradient-to-r dark:from-[#00f5d4] dark:to-[#00c9ae] dark:text-[#06010f] dark:shadow-[0_0_16px_rgba(0,245,212,0.3)]",
+          "bg-cyan-800 text-white font-bold hover:-translate-y-0.5 dark:bg-gradient-to-r dark:from-cyan-400 dark:to-cyan-500 dark:text-foreground dark:shadow-[0_0_16px_rgba(0,245,212,0.3)]",
         success:
           "bg-emerald-600 text-white hover:bg-emerald-700",
       },

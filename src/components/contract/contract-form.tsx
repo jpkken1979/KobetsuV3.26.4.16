@@ -82,7 +82,7 @@ export function ContractForm() {
                   <div className={cn(
                     "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all",
                     isCompleted
-                      ? "bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] text-[#06010f]"
+                      ? "bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] text-foreground"
                       : isCurrent
                       ? "bg-primary text-primary-foreground dark:shadow-[0_0_16px_rgba(139,92,246,0.5)]"
                       : "border-2 border-border text-muted-foreground"
