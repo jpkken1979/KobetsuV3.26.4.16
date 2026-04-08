@@ -13,14 +13,13 @@
  *   - Contact fields (supervisor, manager, etc.) follow the same rule
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { db, sqlite } from "../db/index.js";
-import { factories, clientCompanies, auditLog } from "../db/schema.js";
-import { like, inArray, eq } from "drizzle-orm";
-import { importFactories, buildFactoryData } from "../services/import-factories-service.js";
+import { db } from "../db/index.js";
+import { factories, auditLog } from "../db/schema.js";
+import { like, inArray } from "drizzle-orm";
+import { importFactories } from "../services/import-factories-service.js";
 
 // ─── Test DB constants ──────────────────────────────────────────────────────
 // company_id=3 → 瑞陵精機株式会社
-const TEST_COMPANY_ID = 3;
 const TEST_COMPANY_NAME = "瑞陵精機株式会社";
 
 // Factory names prefixed with TEST- for isolation

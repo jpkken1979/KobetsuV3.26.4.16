@@ -391,7 +391,7 @@ These rules are injected into every session automatically. When they conflict wi
 ## Integracion Antigravity
 
 Proyecto integrado con **Antigravity v6.0.0**.
-Instalado por Nexus el 2026-04-07.
+Instalado por Nexus el 2026-04-08.
 
 ### Persona activa: gentleman
 

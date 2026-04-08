@@ -585,7 +585,6 @@ export function ContractManager() {
       <ContractTable
         rows={rows}
         isLoading={isLoading}
-        isFetching={isFetching}
         selectedIds={selectedIds}
         sorting={sorting}
         globalFilter={globalFilter}

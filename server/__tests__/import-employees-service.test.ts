@@ -21,7 +21,6 @@ import { buildFactoryLookup } from "../services/import-assignment.js";
 // ─── Test DB constants (verified in kobetsu.test.db) ─────────────────────────
 // company_id=3 → 瑞陵精機株式会社
 // factory_id=1 → 恵那工場, department=製造部, line=等速ジョイント, company_id=3
-const TEST_COMPANY_ID = 3;
 const TEST_COMPANY_NAME = "瑞陵精機株式会社";
 const TEST_FACTORY_ID = 1;
 const TEST_DEPT = "製造部";

@@ -10,18 +10,11 @@ import {
   ArrowUpDown,
   ChevronsLeft,
   ChevronsRight,
-  Edit3,
-  FileText,
-  RefreshCw,
-  Trash2,
 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ContractStatusBadge } from "@/components/ui/status-badge";
 import { Select } from "@/components/ui/select";
-import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { ColumnDef, SortingState, OnChangeFn } from "@tanstack/react-table";
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel } from "@tanstack/react-table";
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
@@ -46,7 +39,6 @@ export interface ContractRow {
 interface ContractTableProps {
   rows: ContractRow[];
   isLoading: boolean;
-  isFetching: boolean;
   selectedIds: Set<number>;
   sorting: SortingState;
   globalFilter: string;
@@ -55,7 +47,7 @@ interface ContractTableProps {
   columns: ColumnDef<ContractRow>[];
   onSelectAll: () => void;
   onRowSelect: (row: ContractRow, checked: boolean) => void;
-  onSortingChange: (sorting: SortingState) => void;
+  onSortingChange: OnChangeFn<SortingState>;
   onGlobalFilterChange: (filter: string) => void;
   onPaginationChange: (updater: { pageIndex: number; pageSize: PageSize }) => void;
 }
@@ -64,7 +56,6 @@ interface ContractTableProps {
 export function ContractTable({
   rows,
   isLoading,
-  isFetching,
   selectedIds,
   sorting,
   globalFilter,
@@ -77,7 +68,7 @@ export function ContractTable({
   onGlobalFilterChange,
   onPaginationChange,
 }: ContractTableProps) {
-  const shouldReduceMotion = useReducedMotion();
+  useReducedMotion();
 
   const table = useReactTable({
     data: rows,

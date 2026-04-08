@@ -43,7 +43,7 @@ export async function handleKeiyakusho(c: Context) {
   // Optionally accept startDate/endDate from body, otherwise auto-generate
   const bodyParsed = individualDocBodySchema.safeParse(await c.req.json().catch(() => ({})));
   const bodyData = bodyParsed.success ? bodyParsed.data : {};
-  let startDate: string = bodyData.startDate || toLocalDateStr(new Date());
+  const startDate: string = bodyData.startDate || toLocalDateStr(new Date());
   let endDate: string = bodyData.endDate || "";
 
   // Auto-set endDate to 3 months from startDate if not provided
@@ -167,7 +167,7 @@ export async function handleShugyojoken(c: Context) {
 
   const bodyParsed2 = individualDocBodySchema.safeParse(await c.req.json().catch(() => ({})));
   const bodyData2 = bodyParsed2.success ? bodyParsed2.data : {};
-  let startDate: string = bodyData2.startDate || toLocalDateStr(new Date());
+  const startDate: string = bodyData2.startDate || toLocalDateStr(new Date());
   let endDate: string = bodyData2.endDate || "";
 
   if (!endDate) {

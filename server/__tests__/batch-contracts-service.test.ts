@@ -9,7 +9,7 @@
  * DELETE them in afterEach without touching production data.
  */
 import { describe, it, expect, afterEach } from "vitest";
-import { db, sqlite } from "../db/index.js";
+import { db } from "../db/index.js";
 import { contracts, contractEmployees, auditLog } from "../db/schema.js";
 import { eq, like, inArray } from "drizzle-orm";
 import {
@@ -154,9 +154,9 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 3,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
-        { id: 2, fullName: "PHAM VAN THANH", billingRate: 2000, hourlyRate: 1500, employeeNumber: "230105", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
-        { id: 3, fullName: "LE  VAN THAO", billingRate: 2000, hourlyRate: 1500, employeeNumber: "230209", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: START_DATE } as any,
+        { id: 2, fullName: "PHAM VAN THANH", effectiveHireDate: START_DATE } as any,
+        { id: 3, fullName: "LE  VAN THAO", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -193,8 +193,8 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 2,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
-        { id: 2, fullName: "PHAM VAN THANH", billingRate: 2000, hourlyRate: 1500, employeeNumber: "230105", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: START_DATE } as any,
+        { id: 2, fullName: "PHAM VAN THANH", effectiveHireDate: START_DATE } as any,
       ],
     };
     // Group B: rate 2100 (employee 4)
@@ -206,7 +206,7 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3150,
       employeeCount: 1,
       employees: [
-        { id: 4, fullName: "LE DINH BINH", billingRate: 2100, hourlyRate: 1600, employeeNumber: "230316", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 4, fullName: "LE DINH BINH", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -243,8 +243,8 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 2,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
-        { id: 2, fullName: "PHAM VAN THANH", billingRate: 2000, hourlyRate: 1500, employeeNumber: "230105", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: START_DATE } as any,
+        { id: 2, fullName: "PHAM VAN THANH", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -282,7 +282,7 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 1,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -309,7 +309,7 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 1,
       employees: [
-        { id: 999999, fullName: "Inexistente", billingRate: 2000, hourlyRate: 1500, employeeNumber: "X999", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 999999, fullName: "Inexistente", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -340,7 +340,7 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 1,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -381,7 +381,7 @@ describe("executeBatchCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 1,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: null, hireDate: null, effectiveHireDate: START_DATE },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: START_DATE } as any,
       ],
     };
 
@@ -424,8 +424,8 @@ describe("executeNewHiresCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 2,
       employees: [
-        { id: 1, fullName: "THAI HUY DUC", billingRate: 2000, hourlyRate: 1500, employeeNumber: "220908", actualHireDate: HIRE_FROM, hireDate: HIRE_FROM, effectiveHireDate: HIRE_FROM },
-        { id: 2, fullName: "PHAM VAN THANH", billingRate: 2000, hourlyRate: 1500, employeeNumber: "230105", actualHireDate: HIRE_FROM, hireDate: HIRE_FROM, effectiveHireDate: HIRE_FROM },
+        { id: 1, fullName: "THAI HUY DUC", effectiveHireDate: HIRE_FROM } as any,
+        { id: 2, fullName: "PHAM VAN THANH", effectiveHireDate: HIRE_FROM } as any,
       ],
     };
 
@@ -457,7 +457,7 @@ describe("executeNewHiresCreate", () => {
       sixtyHourRate: 3000,
       employeeCount: 1,
       employees: [
-        { id: 3, fullName: "LE  VAN THAO", billingRate: 2000, hourlyRate: 1500, employeeNumber: "230209", actualHireDate: HIRE_FROM, hireDate: HIRE_FROM, effectiveHireDate: HIRE_FROM },
+        { id: 3, fullName: "LE  VAN THAO", effectiveHireDate: HIRE_FROM } as any,
       ],
     };
 
@@ -504,7 +504,22 @@ describe("executeNewHiresCreate", () => {
       TEST_COMPANY_ID,
       EARLY_DATE,
       LATE_DATE,
-      [makeAnalysisLine({ rateGroups: [rateGroup], totalEmployees: 2, totalContracts: 1, effectiveEndDate: END_DATE })],
+      [
+        makeAnalysisLine({
+          rateGroups: [
+            {
+              ...rateGroup,
+              overtimeRate: rateGroup.overtimeRate ?? 2500,
+              nightShiftRate: rateGroup.nightShiftRate ?? 2500,
+              holidayRate: rateGroup.holidayRate ?? 2700,
+              sixtyHourRate: rateGroup.sixtyHourRate ?? 3000,
+            } as any,
+          ],
+          totalEmployees: 2,
+          totalContracts: 1,
+          effectiveEndDate: END_DATE,
+        }),
+      ],
     );
 
     expect(results).toHaveLength(1);
@@ -540,7 +555,29 @@ describe("executeNewHiresCreate", () => {
       TEST_COMPANY_ID,
       HIRE_FROM,
       HIRE_TO,
-      [makeAnalysisLine({ rateGroups: [groupA, groupB], totalEmployees: 2, totalContracts: 2, effectiveEndDate: END_DATE })],
+      [
+        makeAnalysisLine({
+          rateGroups: [
+            {
+              ...groupA,
+              overtimeRate: groupA.overtimeRate ?? 2500,
+              nightShiftRate: groupA.nightShiftRate ?? 2500,
+              holidayRate: groupA.holidayRate ?? 2700,
+              sixtyHourRate: groupA.sixtyHourRate ?? 3000,
+            } as any,
+            {
+              ...groupB,
+              overtimeRate: groupB.overtimeRate ?? 2625,
+              nightShiftRate: groupB.nightShiftRate ?? 2625,
+              holidayRate: groupB.holidayRate ?? 2835,
+              sixtyHourRate: groupB.sixtyHourRate ?? 3150,
+            } as any,
+          ],
+          totalEmployees: 2,
+          totalContracts: 2,
+          effectiveEndDate: END_DATE,
+        }),
+      ],
     );
 
     expect(results).toHaveLength(2);
