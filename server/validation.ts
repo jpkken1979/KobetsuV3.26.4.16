@@ -125,6 +125,7 @@ export const createContractSchema = z.object({
   endDate: dateStr,
   contractDate: dateStr,
   notificationDate: dateStr,
+  conflictDateOverride: z.string().nullable().optional(),
   workDays: optionalStr,
   workStartTime: optionalStr,
   workEndTime: optionalStr,
