@@ -390,6 +390,14 @@ function ContractDetail() {
                 <DetailRow label="通知日" value={contract.notificationDate} />
                 <DetailRow label="開始日" value={contract.startDate} />
                 <DetailRow label="終了日" value={contract.endDate} />
+                {(contract.conflictDateOverride || contract.factory?.conflictDate) && (
+                  <DetailRow
+                    label="抵触日"
+                    value={contract.conflictDateOverride
+                      ? `${contract.conflictDateOverride} (個別設定)`
+                      : contract.factory?.conflictDate ?? ""}
+                  />
+                )}
                 <DetailRow label="状態" value={STATUS_LABELS[contract.status] ?? contract.status} />
               </div>
             </Section>
