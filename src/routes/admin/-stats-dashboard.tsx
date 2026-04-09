@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Badge } from "@/components/ui/badge";
 import { useAdminStats } from "@/lib/hooks/use-admin-stats";
 import { cn } from "@/lib/utils";
+import { CHART_COLORS } from "@/lib/chart-colors";
 import {
   AlertTriangle,
   BarChart3,
@@ -26,14 +27,6 @@ import {
   YAxis,
 } from "recharts";
 
-const PIE_COLORS = [
-  "#0052CC",
-  "#DC143C",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#06b6d4",
-];
 
 const STATUS_LABELS: Record<string, string> = {
   draft: "下書き",
@@ -266,7 +259,7 @@ export function StatsDashboard() {
                         {statusPieData.map((_, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={PIE_COLORS[index % PIE_COLORS.length]}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
                           />
                         ))}
                       </Pie>
@@ -284,7 +277,7 @@ export function StatsDashboard() {
                         className="h-2 w-2 rounded-full"
                         style={{
                           backgroundColor:
-                            PIE_COLORS[index % PIE_COLORS.length],
+                            CHART_COLORS[index % CHART_COLORS.length],
                         }}
                       />
                       <span className="text-[10px] font-medium text-muted-foreground">
@@ -376,7 +369,7 @@ export function StatsDashboard() {
                         {nationalityPieData.map((_, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={PIE_COLORS[index % PIE_COLORS.length]}
+                            fill={CHART_COLORS[index % CHART_COLORS.length]}
                           />
                         ))}
                       </Pie>
@@ -401,7 +394,7 @@ export function StatsDashboard() {
                         className="h-2 w-2 rounded-full flex-shrink-0"
                         style={{
                           backgroundColor:
-                            PIE_COLORS[index % PIE_COLORS.length],
+                            CHART_COLORS[index % CHART_COLORS.length],
                         }}
                       />
                       <span className="truncate text-[10px] font-medium text-muted-foreground">

@@ -14,6 +14,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import type { Contract } from "@/lib/api-types";
 import type { ColumnDef, SortingState, OnChangeFn } from "@tanstack/react-table";
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel } from "@tanstack/react-table";
 
@@ -32,7 +33,7 @@ export interface ContractRow {
   status: string;
   employeeCount: number;
   hourlyRate: number | null;
-  _raw: any; // Contract type — passed from manager
+  _raw: Contract;
 }
 
 /* ── Props ─────────────────────────────────────────────────────────────── */

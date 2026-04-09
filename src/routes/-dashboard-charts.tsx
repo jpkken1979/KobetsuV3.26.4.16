@@ -1,6 +1,7 @@
 import { NumberTicker } from "@/components/ui/animated";
 import type { CompanyStat, NationalityStat } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { CHART_COLORS } from "@/lib/chart-colors";
 import { Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import {
@@ -27,18 +28,6 @@ import {
   YAxis,
 } from "recharts";
 
-const COLORS = [
-  "#0052CC",
-  "#DC143C",
-  "#10b981",
-  "#f59e0b",
-  "#8b5cf6",
-  "#06b6d4",
-  "#84cc16",
-  "#f97316",
-  "#6366f1",
-  "#14b8a6",
-];
 
 const TOOLTIP_STYLE: React.CSSProperties = {
   borderRadius: "10px",
@@ -194,7 +183,7 @@ export function DashboardCharts({
                       (_: NationalityStat, index: number) => (
                         <Cell
                           key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
+                          fill={CHART_COLORS[index % CHART_COLORS.length]}
                         />
                       ),
                     )}
@@ -225,7 +214,7 @@ export function DashboardCharts({
                     <div
                       className="h-2 w-2 rounded-full"
                       style={{
-                        backgroundColor: COLORS[index % COLORS.length],
+                        backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
                       }}
                     />
                     <span className="text-[10px] font-medium text-muted-foreground">
