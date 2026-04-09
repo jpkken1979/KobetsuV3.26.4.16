@@ -18,6 +18,8 @@ export const createCompanySchema = z.object({
   address: optionalStr,
   phone: optionalStr,
   representative: optionalStr,
+  conflictDate: optionalDate,
+  contractPeriod: z.number().int().min(1).max(60).optional().nullable(),
   isActive: z.boolean().optional(),
 });
 
