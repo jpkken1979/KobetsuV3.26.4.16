@@ -186,9 +186,9 @@ export const api = {
     request<NewHiresCreateResult>("/contracts/batch/new-hires", { method: "POST", body: JSON.stringify(data) }),
 
   // Mid-Hires Batch (途中入社)
-  midHiresPreview: (data: { companyId: number; factoryIds?: number[]; startDate: string; endDate: string }) =>
+  midHiresPreview: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string }) =>
     request<MidHiresPreviewResult>("/contracts/batch/mid-hires/preview", { method: "POST", body: JSON.stringify(data) }),
-  midHiresCreate: (data: { companyId: number; factoryIds?: number[]; startDate: string; endDate: string; generateDocs?: boolean }) =>
+  midHiresCreate: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string; generateDocs?: boolean }) =>
     request<MidHiresCreateResult>("/contracts/batch/mid-hires", { method: "POST", body: JSON.stringify(data) }),
 
   bulkDeleteContracts: (ids: number[]) =>

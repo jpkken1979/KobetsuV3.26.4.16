@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCompanies } from "@/lib/hooks/use-companies";
@@ -72,8 +72,10 @@ function MidHiresBatch() {
 
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [selectedFactoryIds, setSelectedFactoryIds] = useState<Set<number>>(new Set());
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [conflictDateInput, setConflictDateInput] = useState("");
+  const [contractPeriodInput, setContractPeriodInput] = useState(12);
+  const [conflictDateOverrides, setConflictDateOverrides] = useState<Record<string, string>>({});
+  const [startDateOverride, setStartDateOverride] = useState<string | undefined>(undefined);
   const [generateDocs, setGenerateDocs] = useState(true);
   const [preview, setPreview] = useState<MidHiresPreviewResult | null>(null);
   const [excludedEmployees, setExcludedEmployees] = useState<Set<number>>(new Set());
@@ -89,6 +91,22 @@ function MidHiresBatch() {
     () => selectedCompany?.factories ?? [],
     [selectedCompany]
   );
+
+  useEffect(() => {
+    if (selectedCompany) {
+      setConflictDateInput(selectedCompany.conflictDate ?? "");
+      setContractPeriodInput(selectedCompany.contractPeriod ?? 12);
+      setConflictDateOverrides({});
+      setStartDateOverride(undefined);
+    }
+  }, [selectedCompany]);
+
+  const periodStartDisplay = useMemo(() => {
+    if (!conflictDateInput || !contractPeriodInput) return null;
+    const d = new Date(conflictDateInput + "T00:00:00");
+    d.setMonth(d.getMonth() - contractPeriodInput);
+    return d.toISOString().split("T")[0];
+  }, [conflictDateInput, contractPeriodInput]);
 
   const handleCompanyChange = useCallback((id: number) => {
     setCompanyId(id);
@@ -131,19 +149,24 @@ function MidHiresBatch() {
   }, [preview, excludedEmployees]);
 
   const handleSearch = useCallback(async () => {
-    if (!companyId || !startDate || !endDate) return;
+    if (!companyId || !conflictDateInput) return;
     try {
       const factoryIds = selectedFactoryIds.size > 0 ? Array.from(selectedFactoryIds) : undefined;
-      const res = await midHiresPreview.mutateAsync({ companyId, factoryIds, startDate, endDate });
+      const res = await midHiresPreview.mutateAsync({
+        companyId,
+        factoryIds,
+        conflictDateOverrides: Object.keys(conflictDateOverrides).length > 0 ? conflictDateOverrides : undefined,
+        startDateOverride,
+      });
       setPreview(res);
       setExcludedEmployees(new Set());
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社者の検索に失敗しました");
     }
-  }, [companyId, selectedFactoryIds, startDate, endDate, midHiresPreview]);
+  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, midHiresPreview]);
 
   const handleConfirmAndCreate = useCallback(async () => {
-    if (!companyId || !startDate || !endDate) return;
+    if (!companyId || !conflictDateInput) return;
     setShowConfirm(false);
 
     try {
@@ -151,8 +174,8 @@ function MidHiresBatch() {
       const res = await midHiresCreate.mutateAsync({
         companyId,
         factoryIds,
-        startDate,
-        endDate,
+        conflictDateOverrides: Object.keys(conflictDateOverrides).length > 0 ? conflictDateOverrides : undefined,
+        startDateOverride,
         generateDocs,
       }) as unknown as MidHiresCreateResult;
 
@@ -165,9 +188,9 @@ function MidHiresBatch() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社一括作成に失敗しました");
     }
-  }, [companyId, selectedFactoryIds, startDate, endDate, generateDocs, midHiresCreate, batchGenerateDocs]);
+  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, generateDocs, midHiresCreate, batchGenerateDocs]);
 
-  const canSearch = !!companyId && !!startDate && !!endDate && startDate <= endDate;
+  const canSearch = !!companyId && !!conflictDateInput;
   const canCreate =
     preview &&
     preview.totalEmployees > 0 &&
@@ -253,7 +276,7 @@ function MidHiresBatch() {
           open={showConfirm}
           onClose={() => setShowConfirm(false)}
           title="途中入社一括作成の確認"
-          subtitle={`${startDate} ～ ${endDate} の期間に入社した社員の契約を一括作成します`}
+          subtitle={`抵触日 ${conflictDateInput}${periodStartDisplay ? `（${periodStartDisplay}以降入社）` : ""}の社員の契約を一括作成します`}
           stats={[
             { label: "契約", value: preview.totalContracts },
             { label: "対象社員", value: activeEmployeeCount },
@@ -362,38 +385,51 @@ function MidHiresBatch() {
             </Section>
           )}
 
-          {/* Step 3: Date range */}
+          {/* Step 3: 抵触日 + período */}
           {companyId && (
             <Section icon={CalendarDays} title="契約期間の設定" step={3}>
               <p className="mb-3 text-xs text-primary/70 dark:text-primary/60">
-                契約期間を設定してください。入社日がその開始日以降の社員が対象になります。
+                会社の抵触日と契約期間を設定してください。入社日が検索対象期間内の社員が対象になります。
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
-                    契約開始日
+                  <label htmlFor="conflict-date-input" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                    抵触日（会社）
                   </label>
                   <input
+                    id="conflict-date-input"
                     type="date"
-                    value={startDate}
-                    onChange={(e) => { setStartDate(e.target.value); setPreview(null); }}
+                    value={conflictDateInput}
+                    onChange={(e) => { setConflictDateInput(e.target.value); setPreview(null); }}
                     className="w-full rounded-lg border border-input/60 bg-background px-3 py-2 text-sm focus:border-primary/30 focus:outline-none focus:ring-1 focus:ring-primary/10"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] font-medium text-muted-foreground">
-                    契約終了日
+                  <label htmlFor="contract-period-input" className="mb-1 block text-[11px] font-medium text-muted-foreground">
+                    契約期間（ヶ月）
                   </label>
                   <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => { setEndDate(e.target.value); setPreview(null); }}
+                    id="contract-period-input"
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={contractPeriodInput}
+                    onChange={(e) => { setContractPeriodInput(Number(e.target.value)); setPreview(null); }}
                     className="w-full rounded-lg border border-input/60 bg-background px-3 py-2 text-sm focus:border-primary/30 focus:outline-none focus:ring-1 focus:ring-primary/10"
                   />
                 </div>
               </div>
-              {startDate && endDate && startDate > endDate && (
-                <p className="mt-2 text-xs text-red-500">終了日は開始日より後に設定してください</p>
+              {periodStartDisplay && (
+                <div className="mt-3 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                  <span className="text-muted-foreground">検索対象期間：</span>
+                  <span className="font-medium tabular-nums">{periodStartDisplay}</span>
+                  <span className="text-muted-foreground"> 〜 今日</span>
+                </div>
+              )}
+              {!conflictDateInput && (
+                <p className="mt-2 text-xs text-amber-500">
+                  抵触日が設定されていません。企業設定で抵触日を登録してください。
+                </p>
               )}
             </Section>
           )}
@@ -547,7 +583,7 @@ function MidHiresBatch() {
               title="途中入社者が見つかりません"
               description="選択した期間内に入社した社員が見つかりませんでした"
             />
-          ) : companyId && startDate && endDate ? (
+          ) : companyId && conflictDateInput ? (
             <EmptyState
               icon={Search}
               title="途中入社者を検索"
