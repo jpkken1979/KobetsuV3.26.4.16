@@ -48,8 +48,8 @@ const newHiresSchema = z.object({
 const midHiresSchema = z.object({
   companyId: z.number().int().positive(),
   factoryIds: z.array(z.number().int().positive()).optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
+  conflictDateOverrides: z.record(z.string(), z.string()).optional(),
+  startDateOverride: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   generateDocs: z.boolean().optional(),
 });
 
@@ -234,11 +234,12 @@ contractsBatchRouter.post("/batch/mid-hires/preview", async (c) => {
     const parsed = midHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, startDate, endDate } = parsed.data;
+    const { companyId, factoryIds, conflictDateOverrides, startDateOverride } = parsed.data;
     const { lines, skipped } = await analyzeMidHires({
       companyId,
       factoryIds,
-      startDateOverride: startDate,
+      conflictDateOverrides,
+      startDateOverride,
     });
 
     const totalContracts = lines.reduce((sum, l) => sum + l.totalContracts, 0);
@@ -248,8 +249,7 @@ contractsBatchRouter.post("/batch/mid-hires/preview", async (c) => {
       preview: true,
       totalContracts,
       totalEmployees,
-      startDate,
-      endDate,
+      startDateOverride,
       lines: lines.map((l) => ({
         factoryId: l.factory.id,
         factoryName: l.factory.factoryName,
@@ -257,6 +257,8 @@ contractsBatchRouter.post("/batch/mid-hires/preview", async (c) => {
         lineName: l.factory.lineName,
         contractStartDate: l.contractStartDate,
         contractEndDate: l.contractEndDate,
+        effectiveConflictDate: l.effectiveConflictDate,
+        periodStart: l.periodStart,
         totalEmployees: l.totalEmployees,
         totalContracts: l.totalContracts,
         participationRate: l.participationRate,
@@ -295,11 +297,12 @@ contractsBatchRouter.post("/batch/mid-hires", async (c) => {
     const parsed = midHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, startDate, generateDocs } = parsed.data;
+    const { companyId, factoryIds, conflictDateOverrides, startDateOverride, generateDocs } = parsed.data;
     const { lines, skipped } = await analyzeMidHires({
       companyId,
       factoryIds,
-      startDateOverride: startDate,
+      conflictDateOverrides,
+      startDateOverride,
     });
 
     const created = executeMidHiresCreate(companyId, lines);
