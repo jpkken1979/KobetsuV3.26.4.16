@@ -100,7 +100,11 @@ function MidHiresBatch() {
     if (!conflictDateInput || !contractPeriodInput) return null;
     const d = new Date(conflictDateInput + "T00:00:00");
     d.setMonth(d.getMonth() - contractPeriodInput);
-    return d.toISOString().split("T")[0];
+    // Usar fecha local para evitar el bug de toISOString() con JST (UTC+9)
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
   }, [conflictDateInput, contractPeriodInput]);
 
   const handleCompanyChange = useCallback((id: number) => {

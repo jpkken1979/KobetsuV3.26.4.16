@@ -48,7 +48,10 @@ const newHiresSchema = z.object({
 const midHiresSchema = z.object({
   companyId: z.number().int().positive(),
   factoryIds: z.array(z.number().int().positive()).optional(),
-  conflictDateOverrides: z.record(z.string(), z.string()).optional(),
+  conflictDateOverrides: z.record(
+    z.string(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "date must be YYYY-MM-DD")
+  ).optional(),
   startDateOverride: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   generateDocs: z.boolean().optional(),
 });

@@ -13,6 +13,8 @@ export const clientCompanies = sqliteTable("client_companies", {
   phone: text("phone"),
   representative: text("representative"),
   conflictDate: text("conflict_date"),
+  // contractPeriod: meses hacia atrás desde conflictDate para determinar periodStart en mid-hires
+  // (distinto de factories.contractPeriod que es un enum semántico de texto)
   contractPeriod: integer("contract_period"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
