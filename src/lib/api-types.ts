@@ -14,6 +14,8 @@ export interface Company {
   address: string | null;
   phone: string | null;
   representative: string | null;
+  conflictDate: string | null;
+  contractPeriod: number | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
