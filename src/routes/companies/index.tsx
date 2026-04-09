@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CompanyCard } from "./-company-card";
 import { FactoryDrawer } from "./-factory-drawer";
+import { CompanyEditDialog } from "./-company-edit-dialog";
 import { useCompanies, useCreateCompany } from "@/lib/hooks/use-companies";
 import type { Company } from "@/lib/api-types";
 
@@ -32,6 +33,7 @@ function CompaniesPage() {
   const [factoryEditorOpen, setFactoryEditorOpen] = useState(false);
   const [factoryId, setFactoryId] = useState<number | null>(null);
   const [tab, setTab] = useState("list");
+  const [editCompanyOpen, setEditCompanyOpen] = useState(false);
 
   const handleEditFactory = (id: number) => {
     setFactoryId(id);
@@ -82,7 +84,10 @@ function CompaniesPage() {
                 <CompanyCard
                   key={co.id}
                   company={co}
-                  onEdit={() => {}}
+                  onEdit={(company) => {
+                    setSelectedCompany(company);
+                    setEditCompanyOpen(true);
+                  }}
                   onAddFactory={handleAddFactory}
                   onEditFactory={handleEditFactory}
                 />
@@ -113,6 +118,12 @@ function CompaniesPage() {
           }}
         />
       )}
+
+      <CompanyEditDialog
+        company={selectedCompany}
+        open={editCompanyOpen}
+        onOpenChange={setEditCompanyOpen}
+      />
     </div>
   );
 }
