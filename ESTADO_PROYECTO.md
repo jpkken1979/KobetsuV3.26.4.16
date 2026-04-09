@@ -30,6 +30,16 @@
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
 
+## Sesión 2026-04-09b — Audit-pro fixes: chart colors + typing
+
+**Refactor:** Centralización de paleta Recharts en `src/lib/chart-colors.ts` (`CHART_COLORS`). Removidos arrays locales `COLORS` y `PIE_COLORS` de `-dashboard-charts.tsx` y `-stats-dashboard.tsx`. Tipado `_raw: Contract` correctamente importado en `-contract-table.tsx`. CLAUDE.md actualizado con 3 archivos de servidor grandes.
+
+**Commit:** `57884dc` (charts refactor)
+
+**Tests:** 686/686 ✅ | Typecheck ✅ | Lint 0 errores ✅
+
+---
+
 ## Sesión 2026-04-09 — Enhanced Mid-Hires: auto-period + preview agrupado
 
 **Feature:** Flujo `/contracts/mid-hires` mejorado con cálculo automático de período desde `company.conflictDate`. Jerarquía de 抵触日: `override manual > factory.conflictDate > company.conflictDate`. Preview agrupado por fábrica con 抵触日 editable inline y exclusión por checkbox. Empresa ahora tiene campos `conflictDate`/`contractPeriod` editables en el dialog de empresas.

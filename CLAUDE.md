@@ -195,6 +195,7 @@ src/
 ### Large Files Warning
 - Several route/component files exceed 500 lines. Consider splitting when adding features:
   - `companies/-koritsu-components.tsx` (805L), `companies/koritsu.tsx` (768L), `contracts/index.tsx` (762L), `import/-import-page.tsx` (761L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `employees/index.tsx` (692L), `settings/index.tsx` (617L), `contracts/mid-hires.tsx` (586L), `contracts/new-hires.tsx` (552L), `history/index.tsx` (538L)
+  - Server: `services/koritsu-pdf-parser.ts` (759L), `routes/factories.ts` (644L), `services/import-factories-service.ts` (643L)
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
 - `closingDayText` and `paymentDayText` are free text (`"当月末"`, `"翌月20日"`), NOT numbers — use the `*Text` schema fields in all UI and API
