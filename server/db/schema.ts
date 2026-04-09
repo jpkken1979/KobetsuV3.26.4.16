@@ -12,6 +12,8 @@ export const clientCompanies = sqliteTable("client_companies", {
   address: text("address"),
   phone: text("phone"),
   representative: text("representative"),
+  conflictDate: text("conflict_date"),
+  contractPeriod: integer("contract_period"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),

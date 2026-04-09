@@ -91,6 +91,8 @@ async function seed() {
       address TEXT,
       phone TEXT,
       representative TEXT,
+      conflict_date TEXT,
+      contract_period INTEGER,
       is_active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
