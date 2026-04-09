@@ -25,8 +25,13 @@ export function CompanyEditDialog({ company, open, onOpenChange }: Props) {
       setNameKana(company.nameKana ?? "");
       setConflictDate(company.conflictDate ?? "");
       setContractPeriod(company.contractPeriod ? String(company.contractPeriod) : "");
+    } else {
+      setName("");
+      setNameKana("");
+      setConflictDate("");
+      setContractPeriod("");
     }
-  }, [company]);
+  }, [company, open]);
 
   const handleSave = async () => {
     if (!company) return;
@@ -54,37 +59,43 @@ export function CompanyEditDialog({ company, open, onOpenChange }: Props) {
       </DialogHeader>
       <div className="space-y-4 py-2">
         <div className="space-y-1">
-          <label className="text-sm font-medium">企業名</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <label htmlFor="company-name" className="text-sm font-medium">企業名</label>
+          <Input id="company-name" value={name} onChange={(e) => setName(e.target.value)} disabled={updateCompany.isPending} />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium">企業名（カナ）</label>
+          <label htmlFor="company-name-kana" className="text-sm font-medium">企業名（カナ）</label>
           <Input
+            id="company-name-kana"
             value={nameKana}
             onChange={(e) => setNameKana(e.target.value)}
             placeholder="カナ名（任意）"
+            disabled={updateCompany.isPending}
           />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium">抵触日（会社）</label>
+          <label htmlFor="company-conflict-date" className="text-sm font-medium">抵触日（会社）</label>
           <Input
+            id="company-conflict-date"
             type="date"
             value={conflictDate}
             onChange={(e) => setConflictDate(e.target.value)}
+            disabled={updateCompany.isPending}
           />
           <p className="text-xs text-muted-foreground">
             途中入社契約のデフォルト抵触日。各工場で個別設定可能。
           </p>
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium">契約期間（ヶ月）</label>
+          <label htmlFor="company-contract-period" className="text-sm font-medium">契約期間（ヶ月）</label>
           <Input
+            id="company-contract-period"
             type="number"
             min={1}
             max={60}
             value={contractPeriod}
             onChange={(e) => setContractPeriod(e.target.value)}
             placeholder="12"
+            disabled={updateCompany.isPending}
           />
           <p className="text-xs text-muted-foreground">
             抵触日から遡って何ヶ月分を検索対象とするか（例: 12）
