@@ -22,6 +22,8 @@ describe("batch-contracts type definitions", () => {
       factory: {} as MidHiresLine["factory"],
       contractStartDate: "2026-04-01",
       contractEndDate: "2026-06-30",
+      effectiveConflictDate: "2026-07-01",
+      periodStart: "2026-04-01",
       totalEmployees: 3,
       totalContracts: 1,
       rateGroups: [

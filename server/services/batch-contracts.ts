@@ -18,6 +18,8 @@ import {
   calculateContractDate,
   calculateNotificationDate,
   toLocalDateStr,
+  subtractMonths,
+  subtractDays,
 } from "./contract-dates.js";
 import {
   buildBatchContext,
@@ -44,6 +46,8 @@ export interface MidHiresLine {
   factory: Awaited<ReturnType<typeof buildBatchContext>>["targetFactories"][number];
   contractStartDate: string;
   contractEndDate: string;
+  effectiveConflictDate: string;
+  periodStart: string;
   totalEmployees: number;
   totalContracts: number;
   rateGroups: Array<{
@@ -275,15 +279,30 @@ export async function analyzeNewHires(
   return { lines, skipped };
 }
 
-/** Analyze mid-term hires: employees hired within an existing contract period */
-export async function analyzeMidHires(
-  companyId: number,
-  factoryIds: number[] | undefined,
-  startDate: string,
-  endDate: string,
-): Promise<MidHiresResult> {
+/** Analyze mid-term hires: employees hired within the auto-calculated period based on 抵触日 */
+export async function analyzeMidHires(params: {
+  companyId: number;
+  factoryIds?: number[];
+  conflictDateOverrides?: Record<string, string>; // factoryId.toString() → "YYYY-MM-DD"
+  startDateOverride?: string; // override manual de periodStart
+}): Promise<MidHiresResult> {
+  const { companyId, factoryIds, conflictDateOverrides = {}, startDateOverride } = params;
   const today = toLocalDateStr(new Date());
-  const { targetFactories } = await buildBatchContext(companyId, startDate, factoryIds);
+
+  // Cargar empresa para obtener conflictDate y contractPeriod
+  const companyRows = await db
+    .select({
+      id: clientCompanies.id,
+      conflictDate: clientCompanies.conflictDate,
+      contractPeriod: clientCompanies.contractPeriod,
+    })
+    .from(clientCompanies)
+    .where(eq(clientCompanies.id, companyId));
+
+  const company = companyRows[0];
+  if (!company) throw new Error(`Company ${companyId} not found`);
+
+  const { targetFactories } = await buildBatchContext(companyId, today, factoryIds);
   const lines: MidHiresLine[] = [];
   const skipped: SkipRecord[] = [];
 
@@ -291,13 +310,31 @@ export async function analyzeMidHires(
   const empsByFactory = await getActiveEmployeesByFactories(allFactoryIds);
 
   for (const factory of targetFactories) {
-    const factoryEmps = empsByFactory.get(factory.id) ?? [];
+    // 1. Determinar 抵触日 efectiva: override > fábrica > empresa
+    const effectiveConflictDate =
+      conflictDateOverrides[String(factory.id)] ??
+      factory.conflictDate ??
+      company.conflictDate ??
+      null;
 
-    // Filter: employees hired between startDate and today (inclusive)
+    if (!effectiveConflictDate) {
+      skipped.push(createSkipRecord(factory, "抵触日未設定"));
+      continue;
+    }
+
+    // 2. contractEnd = effectiveConflictDate - 1 día
+    const contractEnd = subtractDays(effectiveConflictDate, 1);
+
+    // 3. periodStart = override manual ?? conflictDate - contractPeriod meses
+    const contractPeriod = company.contractPeriod ?? 12;
+    const periodStart = startDateOverride ?? subtractMonths(effectiveConflictDate, contractPeriod);
+
+    // 4. Filtrar empleados con hireDate en [periodStart, today]
+    const factoryEmps = empsByFactory.get(factory.id) ?? [];
     const eligible = factoryEmps.filter((emp) => {
-      const hireDate = emp.actualHireDate || emp.hireDate;
+      const hireDate = emp.actualHireDate ?? emp.hireDate;
       if (!hireDate) return false;
-      return hireDate >= startDate && hireDate <= today;
+      return hireDate >= periodStart && hireDate <= today;
     });
 
     if (eligible.length === 0) {
@@ -319,14 +356,16 @@ export async function analyzeMidHires(
       ...rg,
       employees: rg.employees.map((emp) => ({
         ...emp,
-        effectiveHireDate: emp.actualHireDate || emp.hireDate || startDate,
+        effectiveHireDate: emp.actualHireDate ?? emp.hireDate ?? periodStart,
       })),
     }));
 
     lines.push({
       factory,
-      contractStartDate: startDate,
-      contractEndDate: endDate,
+      contractStartDate: periodStart,
+      contractEndDate: contractEnd,
+      effectiveConflictDate,
+      periodStart,
       totalEmployees: eligible.length,
       totalContracts: rateGroupList.length,
       rateGroups: rateGroupList as MidHiresLine["rateGroups"],

@@ -601,6 +601,8 @@ describe("executeMidHiresCreate", () => {
       factory,
       contractStartDate: MID_START,
       contractEndDate: MID_END,
+      effectiveConflictDate: "2099-07-01",
+      periodStart: MID_START,
       totalEmployees: 1,
       totalContracts: 1,
       rateGroups: [
@@ -637,6 +639,8 @@ describe("executeMidHiresCreate", () => {
       factory,
       contractStartDate: MID_START,
       contractEndDate: MID_END,
+      effectiveConflictDate: "2099-07-01",
+      periodStart: MID_START,
       totalEmployees: 1,
       totalContracts: 1,
       rateGroups: [

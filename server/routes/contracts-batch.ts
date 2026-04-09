@@ -235,7 +235,11 @@ contractsBatchRouter.post("/batch/mid-hires/preview", async (c) => {
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
     const { companyId, factoryIds, startDate, endDate } = parsed.data;
-    const { lines, skipped } = await analyzeMidHires(companyId, factoryIds, startDate, endDate);
+    const { lines, skipped } = await analyzeMidHires({
+      companyId,
+      factoryIds,
+      startDateOverride: startDate,
+    });
 
     const totalContracts = lines.reduce((sum, l) => sum + l.totalContracts, 0);
     const totalEmployees = lines.reduce((sum, l) => sum + l.totalEmployees, 0);
@@ -291,8 +295,12 @@ contractsBatchRouter.post("/batch/mid-hires", async (c) => {
     const parsed = midHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, startDate, endDate, generateDocs } = parsed.data;
-    const { lines, skipped } = await analyzeMidHires(companyId, factoryIds, startDate, endDate);
+    const { companyId, factoryIds, startDate, generateDocs } = parsed.data;
+    const { lines, skipped } = await analyzeMidHires({
+      companyId,
+      factoryIds,
+      startDateOverride: startDate,
+    });
 
     const created = executeMidHiresCreate(companyId, lines);
 
