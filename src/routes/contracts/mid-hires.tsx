@@ -7,7 +7,7 @@ import {
   useMidHiresCreate,
   useBatchGenerateDocuments,
 } from "@/lib/hooks/use-contracts";
-import { cn } from "@/lib/utils";
+import { cn, toLocalDateStr } from "@/lib/utils";
 import { AnimatedPage } from "@/components/ui/animated";
 import {
   Section,
@@ -74,6 +74,7 @@ function MidHiresBatch() {
   const [generateDocs, setGenerateDocs] = useState(true);
   const [preview, setPreview] = useState<MidHiresPreviewResult | null>(null);
   const [excludedFactoryIds, setExcludedFactoryIds] = useState<Set<number>>(new Set());
+  const [isPreviewStale, setIsPreviewStale] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<MidHiresCreateResult | null>(null);
 
@@ -100,11 +101,7 @@ function MidHiresBatch() {
     if (!conflictDateInput || !contractPeriodInput) return null;
     const d = new Date(conflictDateInput + "T00:00:00");
     d.setMonth(d.getMonth() - contractPeriodInput);
-    // Usar fecha local para evitar el bug de toISOString() con JST (UTC+9)
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
+    return toLocalDateStr(d);
   }, [conflictDateInput, contractPeriodInput]);
 
   const handleCompanyChange = useCallback((id: number) => {
@@ -113,6 +110,7 @@ function MidHiresBatch() {
     setPreview(null);
     setResult(null);
     setExcludedFactoryIds(new Set());
+    setIsPreviewStale(false);
   }, []);
 
   const toggleFactory = useCallback((id: number) => {
@@ -144,6 +142,7 @@ function MidHiresBatch() {
 
   const handleConflictDateOverride = useCallback((factoryId: string, date: string) => {
     setConflictDateOverrides((prev) => ({ ...prev, [factoryId]: date }));
+    setIsPreviewStale(true);
   }, []);
 
   const activeEmployeeCount = useMemo(() => {
@@ -170,6 +169,7 @@ function MidHiresBatch() {
       });
       setPreview(res);
       setExcludedFactoryIds(new Set());
+      setIsPreviewStale(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社者の検索に失敗しました");
     }
@@ -499,6 +499,14 @@ function MidHiresBatch() {
                   <StatCard label="ライン" value={preview.lines.length} icon={Users} />
                 </div>
               </div>
+
+              {/* Banner: preview desactualizado */}
+              {isPreviewStale && (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-200/60 bg-amber-50/50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-400">
+                  <span>⚠</span>
+                  <span>Las fechas de 抵触日 cambiaron — buscá de nuevo para actualizar los empleados elegibles.</span>
+                </div>
+              )}
 
               {/* Grouped preview component */}
               <MidHiresPreview
