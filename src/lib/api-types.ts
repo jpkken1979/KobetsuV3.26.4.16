@@ -364,18 +364,18 @@ export interface MidHiresPreviewLine {
   contractEndDate: string;
   totalEmployees: number;
   totalContracts: number;
-  participationRate: number;
+  participationRate: number | null;
   isExempt: boolean;
   exemptionReason: string | null;
   rateGroups: MidHiresRateGroup[];
+  effectiveConflictDate: string;
+  periodStart: string;
 }
 
 export interface MidHiresPreviewResult {
   preview: true;
   totalContracts: number;
   totalEmployees: number;
-  startDate: string;
-  endDate: string;
   lines: MidHiresPreviewLine[];
   skipped: { factoryId?: number; factoryName: string; lineName?: string; reason: string }[];
 }
@@ -629,6 +629,8 @@ export interface CompanyCreate {
   address?: string | null;
   phone?: string | null;
   representative?: string | null;
+  conflictDate?: string | null;
+  contractPeriod?: number | null;
 }
 
 /** Input for updating a company */
