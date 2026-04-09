@@ -139,3 +139,23 @@ export function calculateContractDates(startDate: string, endDate: string) {
     notificationDate: calculateNotificationDate(startDate),
   };
 }
+
+/**
+ * Resta N meses a una fecha ISO (YYYY-MM-DD).
+ * Maneja fin de mes automáticamente (JavaScript Date behavior).
+ */
+export function subtractMonths(dateStr: string, months: number): string {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setMonth(d.getMonth() - months);
+  return toLocalDateStr(d);
+}
+
+/**
+ * Resta N días a una fecha ISO (YYYY-MM-DD).
+ * Usado para calcular contractEndDate = conflictDate - 1 día.
+ */
+export function subtractDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() - days);
+  return toLocalDateStr(d);
+}
