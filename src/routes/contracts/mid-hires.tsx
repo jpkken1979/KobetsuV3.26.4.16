@@ -23,24 +23,19 @@ import {
   ConfirmationModalShell,
   PdfGenerationBanner,
 } from "@/components/contract/batch-shared";
-import { Badge } from "@/components/ui/badge";
 import type {
   MidHiresPreviewResult,
-  MidHiresPreviewLine,
-  MidHiresPreviewEmployee,
-  MidHiresRateGroup,
   MidHiresCreatedContract,
   MidHiresCreateResult,
   Factory,
 } from "@/lib/api";
+import { MidHiresPreview } from "./-mid-hires-preview";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   UserPlus,
-  AlertTriangle,
   Users,
   FileText,
   Loader2,
-  XCircle,
   Search,
   Building2,
   CalendarDays,
@@ -78,7 +73,7 @@ function MidHiresBatch() {
   const [startDateOverride, setStartDateOverride] = useState<string | undefined>(undefined);
   const [generateDocs, setGenerateDocs] = useState(true);
   const [preview, setPreview] = useState<MidHiresPreviewResult | null>(null);
-  const [excludedEmployees, setExcludedEmployees] = useState<Set<number>>(new Set());
+  const [excludedFactoryIds, setExcludedFactoryIds] = useState<Set<number>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<MidHiresCreateResult | null>(null);
 
@@ -113,7 +108,7 @@ function MidHiresBatch() {
     setSelectedFactoryIds(new Set());
     setPreview(null);
     setResult(null);
-    setExcludedEmployees(new Set());
+    setExcludedFactoryIds(new Set());
   }, []);
 
   const toggleFactory = useCallback((id: number) => {
@@ -134,19 +129,30 @@ function MidHiresBatch() {
     setPreview(null);
   }, [availableFactories]);
 
-  const toggleEmployee = useCallback((empId: number) => {
-    setExcludedEmployees((prev) => {
+  const handleToggleFactory = useCallback((factoryId: number) => {
+    setExcludedFactoryIds((prev) => {
       const next = new Set(prev);
-      if (next.has(empId)) next.delete(empId);
-      else next.add(empId);
+      if (next.has(factoryId)) next.delete(factoryId);
+      else next.add(factoryId);
       return next;
     });
   }, []);
 
+  const handleConflictDateOverride = useCallback((factoryId: string, date: string) => {
+    setConflictDateOverrides((prev) => ({ ...prev, [factoryId]: date }));
+  }, []);
+
   const activeEmployeeCount = useMemo(() => {
     if (!preview) return 0;
-    return preview.totalEmployees - excludedEmployees.size;
-  }, [preview, excludedEmployees]);
+    const includedLines = preview.lines?.filter((l) => !excludedFactoryIds.has(l.factoryId)) ?? [];
+    return includedLines.reduce((sum, l) => sum + l.totalEmployees, 0);
+  }, [preview, excludedFactoryIds]);
+
+  const activeContractCount = useMemo(() => {
+    if (!preview) return 0;
+    const includedLines = preview.lines?.filter((l) => !excludedFactoryIds.has(l.factoryId)) ?? [];
+    return includedLines.reduce((sum, l) => sum + l.totalContracts, 0);
+  }, [preview, excludedFactoryIds]);
 
   const handleSearch = useCallback(async () => {
     if (!companyId || !conflictDateInput) return;
@@ -159,7 +165,7 @@ function MidHiresBatch() {
         startDateOverride,
       });
       setPreview(res);
-      setExcludedEmployees(new Set());
+      setExcludedFactoryIds(new Set());
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社者の検索に失敗しました");
     }
@@ -170,10 +176,14 @@ function MidHiresBatch() {
     setShowConfirm(false);
 
     try {
-      const factoryIds = selectedFactoryIds.size > 0 ? Array.from(selectedFactoryIds) : undefined;
+      const includedFactoryIds = (selectedFactoryIds.size > 0
+        ? Array.from(selectedFactoryIds)
+        : (preview?.lines?.map((l) => l.factoryId) ?? [])
+      ).filter((id) => !excludedFactoryIds.has(id));
+
       const res = await midHiresCreate.mutateAsync({
         companyId,
-        factoryIds,
+        factoryIds: includedFactoryIds.length > 0 ? includedFactoryIds : undefined,
         conflictDateOverrides: Object.keys(conflictDateOverrides).length > 0 ? conflictDateOverrides : undefined,
         startDateOverride,
         generateDocs,
@@ -188,12 +198,12 @@ function MidHiresBatch() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社一括作成に失敗しました");
     }
-  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, generateDocs, midHiresCreate, batchGenerateDocs]);
+  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, generateDocs, midHiresCreate, batchGenerateDocs, preview, excludedFactoryIds]);
 
   const canSearch = !!companyId && !!conflictDateInput;
   const canCreate =
     preview &&
-    preview.totalEmployees > 0 &&
+    activeContractCount > 0 &&
     !midHiresCreate.isPending &&
     !midHiresPreview.isPending;
 
@@ -478,89 +488,25 @@ function MidHiresBatch() {
             <div className="sticky top-6 space-y-4">
               {/* Summary */}
               <div className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
-                <h3 className="mb-1 text-sm font-semibold">検出結果</h3>
-                <p className="mb-4 text-xs text-muted-foreground">
-                  入社日 {preview.startDate} ～ 本日の対象者
-                </p>
+                <h3 className="mb-3 text-sm font-semibold">検出結果</h3>
                 <div className="grid grid-cols-3 gap-3">
-                  <StatCard label="契約数" value={preview.totalContracts} icon={FileText} />
-                  <StatCard label="途中入社" value={preview.totalEmployees} icon={UserPlus} />
+                  <StatCard label="契約数" value={activeContractCount} icon={FileText} />
+                  <StatCard label="途中入社" value={activeEmployeeCount} icon={UserPlus} />
                   <StatCard label="ライン" value={preview.lines.length} icon={Users} />
                 </div>
               </div>
 
-              {/* Employee detail per line */}
-              <div className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
-                <div className="border-b border-border/60 px-4 py-3">
-                  <h3 className="text-sm font-semibold">ライン別・社員別詳細</h3>
-                </div>
-                <div className="max-h-[500px] divide-y divide-border/40 overflow-y-auto">
-                  {preview.lines.map((line: MidHiresPreviewLine) => (
-                    <div key={line.factoryId} className="px-4 py-3">
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="max-w-[200px] truncate text-sm font-semibold">
-                          {line.factoryName} {line.lineName || line.department}
-                        </span>
-                        <span className="text-xs text-cyan-400 tabular-nums">
-                          {line.contractStartDate} ～ {line.contractEndDate}
-                        </span>
-                      </div>
-
-                      {line.rateGroups.map((rg: MidHiresRateGroup) => (
-                        <div
-                          key={rg.rate}
-                          className="hover-lift mb-2 rounded-[var(--radius-lg)] border border-border bg-card p-3"
-                        >
-                          <div className="mb-2 flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-blue-400">
-                              ¥{rg.rate.toLocaleString()}/h
-                            </span>
-                            <Badge variant="info">{rg.employees.length}名</Badge>
-                          </div>
-                          <ul className="space-y-1">
-                            {rg.employees.map((emp: MidHiresPreviewEmployee) => {
-                              const isExcluded = excludedEmployees.has(emp.id);
-                              const today = new Date().toISOString().slice(0, 10);
-                              const visaExpired = emp.visaExpiry && emp.visaExpiry < today;
-                              return (
-                                <li key={emp.id}>
-                                  <button
-                                    onClick={() => toggleEmployee(emp.id)}
-                                    className={cn(
-                                      "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-all",
-                                      isExcluded
-                                        ? "bg-red-50/50 opacity-50 dark:bg-red-950/20"
-                                        : "hover:bg-muted/40"
-                                    )}
-                                  >
-                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary dark:shadow-[0_0_4px_rgba(0,255,136,0.6)]" />
-                                    <span
-                                      className={cn(
-                                        "flex-1 truncate text-sm text-muted-foreground",
-                                        isExcluded && "line-through"
-                                      )}
-                                    >
-                                      {emp.fullName}
-                                    </span>
-                                    <span className="tabular-nums text-cyan-400 text-[10px]">
-                                      入社: {emp.effectiveHireDate}
-                                    </span>
-                                    {visaExpired && (
-                                      <span title="ビザ期限切れ">
-                                        <AlertTriangle className="h-3 w-3 text-red-500" />
-                                      </span>
-                                    )}
-                                  </button>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Grouped preview component */}
+              <MidHiresPreview
+                lines={preview.lines}
+                skipped={preview.skipped ?? []}
+                conflictDateOverrides={conflictDateOverrides}
+                onConflictDateOverride={handleConflictDateOverride}
+                excludedFactoryIds={excludedFactoryIds}
+                onToggleFactory={handleToggleFactory}
+                totalContracts={activeContractCount}
+                totalEmployees={activeEmployeeCount}
+              />
 
               {/* Create button */}
               <button
@@ -574,7 +520,7 @@ function MidHiresBatch() {
                 )}
               >
                 <UserPlus className="h-4 w-4" />
-                {preview.totalContracts}件の契約 {generateDocs ? "+ PDF" : ""} を一括作成
+                {activeContractCount}件の契約 {generateDocs ? "+ PDF" : ""} を一括作成
               </button>
             </div>
           ) : preview && preview.lines?.length === 0 ? (
@@ -590,31 +536,6 @@ function MidHiresBatch() {
               description="「途中入社者を検索」を押すと自動検出結果が表示されます"
             />
           ) : null}
-
-          {/* Skipped lines in preview */}
-          {(preview?.skipped?.length ?? 0) > 0 && (
-            <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
-              <h3 className="mb-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
-                対象外のライン
-              </h3>
-              <div className="space-y-1">
-                {preview!.skipped!.map(
-                  (s: { factoryName: string; lineName?: string; reason: string }, i: number) => (
-                    <div
-                      key={i}
-                      className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
-                    >
-                      <XCircle className="h-3 w-3" />
-                      <span>
-                        {s.factoryName} {s.lineName}
-                      </span>
-                      <span className="text-amber-500">({s.reason})</span>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </AnimatedPage>
