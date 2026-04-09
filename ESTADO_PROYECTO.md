@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.3.25
 
-> Última actualización: 2026-04-08
+> Última actualización: 2026-04-09
 
 ---
 
@@ -29,6 +29,16 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-09 — Enhanced Mid-Hires: auto-period + preview agrupado
+
+**Feature:** Flujo `/contracts/mid-hires` mejorado con cálculo automático de período desde `company.conflictDate`. Jerarquía de 抵触日: `override manual > factory.conflictDate > company.conflictDate`. Preview agrupado por fábrica con 抵触日 editable inline y exclusión por checkbox. Empresa ahora tiene campos `conflictDate`/`contractPeriod` editables en el dialog de empresas.
+
+**Commits clave:** `01ff4fa` (schema) → `aaa9f47` (analyzeMidHires) → `da64af8` (mid-hires Step 1) → `12b77b8` (preview component) → `ce41ef5` (fixes timezone/tests/Zod)
+
+**Tests:** 686/686 ✅ | Typecheck ✅ | Lint ✅
+
+---
 
 ## Sesión 2026-04-08 — conflictDateOverride + auditoría imports + 3 fixes
 
