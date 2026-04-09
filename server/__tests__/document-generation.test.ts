@@ -1,8 +1,10 @@
 /**
  * Tests for document-generation.ts — buildCommonData and utility functions.
  */
-import { describe, it, expect } from "vitest";
-import { buildCommonData } from "../services/document-generation.js";
+import { describe, it, expect, afterEach } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+import { buildCommonData, readContractDocIndex, appendContractDocIndex } from "../services/document-generation.js";
 
 // ─── Fixtures ───────────────────────────────────────────────────────
 
@@ -306,5 +308,73 @@ describe("buildCommonData", () => {
     contract.factory.hourlyRate = null;
     const result = buildCommonData(contract);
     expect(result.hourlyRate).toBe(0);
+  });
+});
+
+// ─── readContractDocIndex / appendContractDocIndex ─────────────────────
+describe("readContractDocIndex", () => {
+  const TEST_CONTRACT_ID = 999999;
+
+  afterEach(() => {
+    const outputDir = path.resolve("output");
+    const indexFile = path.join(outputDir, ".index", `${TEST_CONTRACT_ID}.json`);
+    if (fs.existsSync(indexFile)) fs.unlinkSync(indexFile);
+  });
+
+  it("returns empty array when no index file exists", async () => {
+    const result = await readContractDocIndex(TEST_CONTRACT_ID);
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array for malformed JSON in index file", async () => {
+    const outputDir = path.resolve("output");
+    const indexDir = path.join(outputDir, ".index");
+    if (!fs.existsSync(indexDir)) fs.mkdirSync(indexDir, { recursive: true });
+    fs.writeFileSync(path.join(indexDir, `${TEST_CONTRACT_ID}.json`), "NOT_JSON");
+    const result = await readContractDocIndex(TEST_CONTRACT_ID);
+    expect(result).toEqual([]);
+  });
+
+  it("returns empty array when JSON has no files array", async () => {
+    const outputDir = path.resolve("output");
+    const indexDir = path.join(outputDir, ".index");
+    if (!fs.existsSync(indexDir)) fs.mkdirSync(indexDir, { recursive: true });
+    fs.writeFileSync(path.join(indexDir, `${TEST_CONTRACT_ID}.json`), JSON.stringify({ contractId: TEST_CONTRACT_ID }));
+    const result = await readContractDocIndex(TEST_CONTRACT_ID);
+    expect(result).toEqual([]);
+  });
+});
+
+describe("appendContractDocIndex", () => {
+  const TEST_CONTRACT_ID = 999998;
+
+  afterEach(() => {
+    const outputDir = path.resolve("output");
+    const indexFile = path.join(outputDir, ".index", `${TEST_CONTRACT_ID}.json`);
+    if (fs.existsSync(indexFile)) fs.unlinkSync(indexFile);
+  });
+
+  it("creates index file with filenames when it does not exist", async () => {
+    await appendContractDocIndex(TEST_CONTRACT_ID, ["contract_1.pdf", "notice_1.pdf"]);
+    const outputDir = path.resolve("output");
+    const indexFile = path.join(outputDir, ".index", `${TEST_CONTRACT_ID}.json`);
+    expect(fs.existsSync(indexFile)).toBe(true);
+    const content = JSON.parse(fs.readFileSync(indexFile, "utf-8")) as { files: string[] };
+    expect(content.files).toContain("contract_1.pdf");
+    expect(content.files).toContain("notice_1.pdf");
+  });
+
+  it("merges new filenames with existing ones (deduplicates)", async () => {
+    await appendContractDocIndex(TEST_CONTRACT_ID, ["a.pdf", "b.pdf"]);
+    await appendContractDocIndex(TEST_CONTRACT_ID, ["b.pdf", "c.pdf"]);
+    const result = await readContractDocIndex(TEST_CONTRACT_ID);
+    expect(result).toEqual(["a.pdf", "b.pdf", "c.pdf"]);
+  });
+
+  it("does nothing when filenames array is empty", async () => {
+    await appendContractDocIndex(TEST_CONTRACT_ID, []);
+    const outputDir = path.resolve("output");
+    const indexFile = path.join(outputDir, ".index", `${TEST_CONTRACT_ID}.json`);
+    expect(fs.existsSync(indexFile)).toBe(false);
   });
 });

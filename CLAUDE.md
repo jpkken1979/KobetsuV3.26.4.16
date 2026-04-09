@@ -119,7 +119,7 @@ server/
 | `helpers.ts` | Grid functions, font registration, `getTakaoJigyosho()` |
 | `types.ts` | Shared type definitions for PDF data |
 
-**Service modules (28):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `pdf-data-builders`, `pdf-versioning`, `takao-detection`, `validation`
+**Service modules (29):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `pdf-data-builders`, `pdf-versioning`, `takao-detection`, `validation`
 
 **Conventions:**
 - Routes use `try/catch (err: unknown)` with JSON error responses `{ error: string }`

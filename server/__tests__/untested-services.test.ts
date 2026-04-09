@@ -12,6 +12,7 @@ import {
   sanitizeFilename,
   isSafeDownloadFilename,
 } from "../services/document-files";
+import { parseIndexFiles, sanitizeFilename as sanitizeDocIndexFilename } from "../services/document-index.js";
 import {
   normalizeImportRow,
   excelSerialToDate,
@@ -451,14 +452,62 @@ describe("deriveShortCompanyName", () => {
   });
 });
 
-// ─── document-index: parseIndexFiles (internal, tested via export behavior) ──
+// ─── document-index: parseIndexFiles ─────────────────────────────────────────
 
-describe("document-index internal: parseIndexFiles behavior", () => {
-  // We can't import parseIndexFiles directly (not exported), but we can test
-  // cleanupPurgedContractDocuments with empty input to verify it handles edge cases
-  // without needing DB/filesystem access.
+describe("parseIndexFiles", () => {
+  it("returns filenames from valid JSON", () => {
+    const json = JSON.stringify({ files: ["a.pdf", "b.pdf"] });
+    expect(parseIndexFiles(json)).toEqual(["a.pdf", "b.pdf"]);
+  });
 
-  // Import the exported function
+  it("returns empty array for invalid JSON", () => {
+    expect(parseIndexFiles("NOT_JSON")).toEqual([]);
+  });
+
+  it("returns empty array when files key is missing", () => {
+    expect(parseIndexFiles(JSON.stringify({ contractId: 1 }))).toEqual([]);
+  });
+
+  it("returns empty array when files is not an array", () => {
+    expect(parseIndexFiles(JSON.stringify({ files: "a.pdf" }))).toEqual([]);
+  });
+
+  it("filters out non-string entries from files array", () => {
+    const json = JSON.stringify({ files: ["a.pdf", 42, null, "b.pdf"] });
+    expect(parseIndexFiles(json)).toEqual(["a.pdf", "b.pdf"]);
+  });
+
+  it("returns empty array for empty files array", () => {
+    expect(parseIndexFiles(JSON.stringify({ files: [] }))).toEqual([]);
+  });
+});
+
+describe("document-index sanitizeFilename", () => {
+  it("returns null for non-pdf file", () => {
+    expect(sanitizeDocIndexFilename("document.txt")).toBeNull();
+  });
+
+  it("returns null for filename with path traversal", () => {
+    expect(sanitizeDocIndexFilename("../etc/passwd.pdf")).toBeNull();
+  });
+
+  it("returns null for filename with forward slash", () => {
+    expect(sanitizeDocIndexFilename("subdir/file.pdf")).toBeNull();
+  });
+
+  it("returns null for filename with backslash", () => {
+    expect(sanitizeDocIndexFilename("subdir\\file.pdf")).toBeNull();
+  });
+
+  it("returns a full path for a valid pdf filename", () => {
+    const result = sanitizeDocIndexFilename("contract_123.pdf");
+    expect(result).not.toBeNull();
+    expect(result!.endsWith("contract_123.pdf")).toBe(true);
+  });
+});
+
+// legacy test — kept for regression
+describe("document-index: cleanupPurgedContractDocuments (edge case)", () => {
   it("cleanupPurgedContractDocuments returns zeros for empty array", async () => {
     const { cleanupPurgedContractDocuments } = await import(
       "../services/document-index"

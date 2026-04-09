@@ -4,7 +4,7 @@ import path from "node:path";
 const OUTPUT_DIR = path.resolve("output");
 const INDEX_DIR = path.join(OUTPUT_DIR, ".index");
 
-function parseIndexFiles(content: string): string[] {
+export function parseIndexFiles(content: string): string[] {
   try {
     const parsed = JSON.parse(content) as { files?: unknown };
     if (!Array.isArray(parsed.files)) return [];
@@ -14,7 +14,7 @@ function parseIndexFiles(content: string): string[] {
   }
 }
 
-function sanitizeFilename(filename: string): string | null {
+export function sanitizeFilename(filename: string): string | null {
   if (!filename.endsWith(".pdf")) return null;
   if (filename.includes("/") || filename.includes("\\") || filename.includes("..")) return null;
   const fullPath = path.resolve(OUTPUT_DIR, filename);
