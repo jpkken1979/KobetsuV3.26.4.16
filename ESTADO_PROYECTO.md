@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.3.25
 
-> Última actualización: 2026-04-14
+> Última actualización: 2026-04-15
 
 ---
 
@@ -29,6 +29,22 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-15 — Plan A (5 fixes Settings/Admin) + Plan B (Database Reset)
+
+**Plan A — 5 bug fixes quirúrgicos:**
+- B1: `purgeEmployees()` ahora pasa `{ confirm: "DELETE" }` — fix silencioso de 400
+- B2: `/admin` route con guard real — pantalla bloqueada si `adminMode === false`
+- B3: Holiday dates persistidas en appSettings (6 campos nuevos: nenmatsu/gw/obon)
+- B4: `handleBulkCalendar()` valida campos vacíos antes de enviar
+- B5: `AdminCrudTab` completo — select tabla, list rows, insert form, delete con ConfirmDialog
+
+**Plan B — Database Reset:**
+- `POST /api/admin/reset-all` — borra 8 tablas en transacción atómica, audit_log entry post-tx
+- UI Danger Zone en Settings — input `RESET` requerido, counts del DB en tiempo real, redirect post-reset
+- 7 tests nuevos (762 total); drift guard actualizado a 30 route files
+
+**Estado actual:** 762/762 tests, typecheck limpio, pushed a master (fe0ed21).
 
 ## Sesión 2026-04-14 — Audit-pro security + Excel import + light mode
 
