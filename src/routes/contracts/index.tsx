@@ -29,7 +29,7 @@ import {
 } from "@tanstack/react-table";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, Building2, Calendar, CheckSquare, ChevronRight, Eye, EyeOff, FileText, FolderOpen, History, Package, Plus, Search, Trash2, Users, Zap } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { TableSkeleton } from "./-contracts-skeleton";
 import { contractColumns } from "./-contracts-columns";
@@ -511,7 +511,7 @@ function ContractsList() {
                   const someGroupSelected = groupIds.some((id) => selected.has(id));
 
                   return (
-                    <>
+                    <Fragment key={group.key}>
                       {/* ── Group header row ── */}
                       <motion.tr
                         key={`group-${group.key}`}
@@ -658,7 +658,7 @@ function ContractsList() {
                           </motion.tr>
                         );
                       })}
-                    </>
+                    </Fragment>
                   );
                 })}
               </motion.tbody>
