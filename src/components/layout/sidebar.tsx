@@ -134,7 +134,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
-            className="ml-auto rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-white/10 hover:text-foreground lg:hidden cursor-pointer"
+            className="ml-auto rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground lg:hidden cursor-pointer"
             aria-label="閉じる"
           >
             <X className="h-4 w-4" />
@@ -196,7 +196,7 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       {/* Footer — info empresa */}
       <div className="px-4 py-4">
-        <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5 ring-1 ring-border/20 dark:ring-white/[0.05]">
+        <div className="flex items-center gap-3 rounded-xl bg-muted/30 px-3 py-2.5 ring-1 ring-border/20">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--gradient-accent-from)]/20 to-[var(--gradient-accent-to)]/10 ring-1 ring-[var(--gradient-accent-from)]/20">
             <span className="text-[10px] font-bold text-primary/80">管</span>
           </div>
@@ -209,7 +209,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             </p>
           </div>
           <div className="ml-auto flex h-2 w-2 shrink-0 items-center justify-center">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
           </div>
         </div>
       </div>
