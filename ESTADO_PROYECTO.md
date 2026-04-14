@@ -46,6 +46,33 @@
 
 **Tests:** 755/755 ✅ | Typecheck ✅ | Lint 19 warnings (preexistentes) ✅
 
+## Sesión 2026-04-14 (tarde) — UI/UX Modernización LUNARIS v2
+
+**Alcance:** Cirugía + polish completo — 13 tasks con subagent-driven development (spec+quality review por task).
+
+**Fase 1 — Bugs dark/light mode (8 bugs):**
+- `index.css`: 3 keyframes `rgba(5,150,105,...)` → `color-mix(in srgb, var(--color-primary) N%, transparent)`
+- `sidebar.tsx`: `hover:bg-white/10` → `bg-muted/50`, footer `bg-white/[0.03]` → `bg-muted/30`, status dot `bg-emerald-500` → `bg-primary`
+- `button.tsx`: variante `success` → tokens `bg-success text-success-foreground`
+- `badge.tsx` + `confirm-dialog.tsx`: paleta `red-*` → `bg-destructive/10 text-destructive`
+- `input.tsx`: `aria-invalid={error ? true : undefined}` en ambos branches
+
+**Fase 2 — Dashboard:**
+- Skeleton loaders: `StatCardSkeleton`, `DashboardSkeleton`, `ChartSkeleton` reemplazan spinners
+- `NumberTicker`: faltaba `useReducedMotion()` — corregido
+- Hover states en StatCard: `whileHover={{ scale: 1.02, y: -2 }}` + `whileTap`
+- Stagger animation en 3 listas de alertas (expiring, teishokubi, visa)
+
+**Fase 3 — Contratos + Empleados:**
+- Stagger en tabla de contratos (`motion.tbody` + `motion.tr`, `staggerChildren: 0.05`)
+- `aria-live="polite"` en bulk action bar de contratos
+- Stagger compatible con `useVirtualizer` en empleados (motion.tr individual, sin staggerChildren)
+- Auditoría page transitions: 8 rutas ya tenían `<AnimatedPage>` — sin cambios
+
+**Fix post-review:** `<Fragment key={group.key}>` en groupedContracts.map; hardcodes residuales `red-*`/`emerald-*` en dashboard-alerts → tokens; `ChartSkeleton` shadow → `shadow-[var(--shadow-card)]`
+
+**Tests:** 755/755 ✅ | Typecheck ✅ (cero errores nuevos) | Push: `704ae0e..8602acc`
+
 ---
 
 ## Sesión 2026-04-09b — Audit-pro fixes: chart colors + typing

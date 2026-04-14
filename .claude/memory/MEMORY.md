@@ -1,3 +1,2 @@
 - [Sesion 2026-04-07b — pendientes resueltos + backup rotacion](session_2026-04-07b.md) — recordPdfVersion batch; pdf-lib; EmptyState 6 rutas; deprecacion employeeIds; refactor imports; backup rotacion
 - [Sesion 2026-04-08 — conflictDateOverride + auditoría imports + fixes](session_2026-04-08.md) — feature 抵触日 override por contrato; 3 fixes auditoría Excel; 待機中→onLeave; CLAUDE.md actualizado
-- [Sesion 2026-04-14 — audit-pro + Excel fix + UI/UX modernización completa](session_2026-04-14.md) — 13 tasks LUNARIS v2: fix 8 bugs dark/light mode, skeleton loaders, stagger animations, hover states, aria-live
