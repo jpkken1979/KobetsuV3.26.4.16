@@ -75,7 +75,7 @@ function StatCard({
                   className={cn(
                     "flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold",
                     trend === "up"
-                      ? "bg-emerald-500/10 text-emerald-500"
+                      ? "bg-primary/10 text-primary"
                       : "bg-muted/50 text-muted-foreground",
                   )}
                 >

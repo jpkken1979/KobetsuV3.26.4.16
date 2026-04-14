@@ -23,7 +23,7 @@ const buttonVariants = cva(
         cyan:
           "bg-cyan-800 text-white font-bold hover:-translate-y-0.5 dark:bg-gradient-to-r dark:from-cyan-400 dark:to-cyan-500 dark:text-foreground dark:shadow-[0_0_16px_rgba(0,245,212,0.3)]",
         success:
-          "bg-emerald-600 text-white hover:bg-emerald-700",
+          "bg-success text-success-foreground hover:bg-success/90",
       },
       size: {
         default: "h-10 px-4 py-2 text-sm",
