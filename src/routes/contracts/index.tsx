@@ -687,62 +687,62 @@ function ContractsList() {
         aria-live="polite"
         aria-label="一括操作"
       >
-      <AnimatePresence>
-        {selected.size > 0 && (
-          <motion.div
-            {...(shouldReduceMotion
-              ? {}
-              : {
-                  initial: { opacity: 0, y: 40 },
-                  animate: { opacity: 1, y: 0 },
-                  exit: { opacity: 0, y: 40 },
-                  transition: { type: "spring", stiffness: 400, damping: 30 },
-                })}
-            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
-          >
-            <div className="animate-in flex items-center gap-3 rounded-[var(--radius-lg)] border border-primary/30 bg-primary/10 px-4 py-2.5 backdrop-blur-xl shadow-2xl shadow-black/20">
-              <div className="flex items-center gap-2">
-                <CheckSquare className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">{selected.size}件選択中</span>
+        <AnimatePresence>
+          {selected.size > 0 && (
+            <motion.div
+              {...(shouldReduceMotion
+                ? {}
+                : {
+                    initial: { opacity: 0, y: 40 },
+                    animate: { opacity: 1, y: 0 },
+                    exit: { opacity: 0, y: 40 },
+                    transition: { type: "spring", stiffness: 400, damping: 30 },
+                  })}
+              className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+            >
+              <div className="animate-in flex items-center gap-3 rounded-[var(--radius-lg)] border border-primary/30 bg-primary/10 px-4 py-2.5 backdrop-blur-xl shadow-2xl shadow-black/20">
+                <div className="flex items-center gap-2">
+                  <CheckSquare className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">{selected.size}件選択中</span>
+                </div>
+
+                <div className="h-5 w-px bg-border/40" />
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelected(new Set())}
+                >
+                  選択解除
+                </Button>
+
+                {showCancelled ? (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handlePurge}
+                    disabled={purge.isPending}
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {purge.isPending ? "削除中..." : "完全削除"}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleBulkDelete}
+                    disabled={bulkDelete.isPending}
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {bulkDelete.isPending ? "取消中..." : "一括取消"}
+                  </Button>
+                )}
               </div>
-
-              <div className="h-5 w-px bg-border/40" />
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSelected(new Set())}
-              >
-                選択解除
-              </Button>
-
-              {showCancelled ? (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handlePurge}
-                  disabled={purge.isPending}
-                  className="inline-flex items-center gap-1.5"
-                >
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  {purge.isPending ? "削除中..." : "完全削除"}
-                </Button>
-              ) : (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                  disabled={bulkDelete.isPending}
-                  className="inline-flex items-center gap-1.5"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {bulkDelete.isPending ? "取消中..." : "一括取消"}
-                </Button>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Confirm dialogs */}
