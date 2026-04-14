@@ -7,8 +7,8 @@ import { getAppSettings, updateAppSettings } from "@/lib/app-settings";
 import { queryKeys } from "@/lib/query-keys";
 import { useTheme } from "@/lib/hooks/use-theme";
 import { cn } from "@/lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import {
     AlertTriangle,
@@ -49,6 +49,40 @@ export const Route = createFileRoute("/settings/")({
 
 function SettingsPage() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // Estado para el diálogo de reset
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState("");
+
+  // Query de stats para mostrar conteos actuales
+  const { data: dbStats } = useQuery({
+    queryKey: queryKeys.dashboard.stats(),
+    queryFn: () => api.getDashboardStats(),
+    staleTime: 30_000,
+  });
+
+  // Mutación de reset
+  const resetMutation = useMutation({
+    mutationFn: () => api.resetAllData({ confirm: "RESET" }),
+    onSuccess: (data) => {
+      const d = data.deleted;
+      toast.success(
+        `Base de datos reseteada. Se borraron ${d.contracts} contratos, ${d.employees} empleados, ${d.clientCompanies} empresas.`,
+      );
+      void queryClient.invalidateQueries();
+      setShowResetDialog(false);
+      setResetConfirmText("");
+      setTimeout(() => {
+        void navigate({ to: "/" });
+      }, 1500);
+    },
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : "Error al resetear la base de datos";
+      toast.error(message);
+    },
+  });
+
   const { isDark, toggleTheme } = useTheme();
   const [backingUp, setBackingUp] = useState(false);
   const [clearingEmployees, setClearingEmployees] = useState(false);
@@ -628,6 +662,85 @@ function SettingsPage() {
             </Link>
           </div>
         )}
+      </motion.section>
+
+      {/* ─── Danger Zone ─────────────────────────────────────── */}
+      <motion.section
+        initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
+        animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+        transition={shouldReduceMotion ? undefined : { duration: 0.3, delay: 0.35 }}
+        className="space-y-4"
+      >
+        <div className="border border-destructive/30 rounded-2xl p-6 space-y-4">
+          {/* Header */}
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+            <h2 className="text-sm font-semibold text-destructive">Zona de peligro</h2>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Estas acciones son irreversibles. El audit log se conserva.
+          </p>
+
+          {/* Reset card */}
+          <div className="flex items-start justify-between gap-4 rounded-xl bg-muted/30 px-4 py-3">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-destructive/10 p-2 shrink-0 mt-0.5">
+                <Database className="h-4 w-4 text-destructive" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">Reset completo de base de datos</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Borra todos los contratos, empleados, empresas y fábricas.
+                  {dbStats && (
+                    <span className="ml-1 text-muted-foreground/70">
+                      ({dbStats.totalContracts} contratos · {dbStats.activeEmployees} empleados · {dbStats.companies} empresas · {dbStats.factories} fábricas)
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowResetDialog(true)}
+              className="shrink-0"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              Borrar todo
+            </Button>
+          </div>
+        </div>
+
+        {/* ConfirmDialog con input RESET */}
+        <ConfirmDialog
+          open={showResetDialog}
+          onClose={() => {
+            setShowResetDialog(false);
+            setResetConfirmText("");
+          }}
+          onConfirm={() => resetMutation.mutate()}
+          title="Reset total de base de datos"
+          description={`Esta acción borrará TODOS los datos operativos (${dbStats?.totalContracts ?? 0} contratos, ${dbStats?.activeEmployees ?? 0} empleados, ${dbStats?.companies ?? 0} empresas, ${dbStats?.factories ?? 0} fábricas). El audit log se conserva. Esta operación es irreversible.`}
+          confirmLabel="Confirmar borrado"
+          variant="destructive"
+          isPending={resetMutation.isPending}
+          confirmDisabled={resetConfirmText !== "RESET" || resetMutation.isPending}
+          extraContent={
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Escribí <span className="font-mono font-bold text-foreground">RESET</span> para confirmar:
+              </p>
+              <input
+                className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-sm font-mono focus:border-destructive/50 focus:outline-none"
+                placeholder="RESET"
+                value={resetConfirmText}
+                onChange={(e) => setResetConfirmText(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+          }
+        />
       </motion.section>
     </AnimatedPage>
   );
