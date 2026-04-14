@@ -155,6 +155,7 @@ export const api = {
   purgeEmployees: () =>
     request<{ success: boolean; deleted: number; backup: string | null }>("/employees/purge", {
       method: "POST",
+      body: JSON.stringify({ confirm: "DELETE" }),
     }),
 
   // Contracts
