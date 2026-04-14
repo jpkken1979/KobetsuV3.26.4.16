@@ -41,6 +41,7 @@ import type {
   AdminRowResult,
   AdminSqlResult,
   AdminStats,
+  ResetAllResponse,
 } from "./api-types";
 
 const API_BASE = "/api";
@@ -237,6 +238,14 @@ export const api = {
     request<EmployeeDiffResult>("/import/employees/diff", { method: "POST", body: JSON.stringify(data) }),
   diffFactories: (data: { data: Record<string, unknown>[] }) =>
     request<DiffResult>("/import/factories/diff", { method: "POST", body: JSON.stringify(data) }),
+
+  // Admin
+  resetAllData: (body: { confirm: string }) =>
+    request<ResetAllResponse>("/admin/reset-all", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
 
   // Dashboard
   getDashboardStats: (warningDays = 30) => request<DashboardStats>(`/dashboard/stats?warningDays=${warningDays}`),

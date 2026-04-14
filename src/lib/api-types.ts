@@ -428,6 +428,22 @@ export interface DashboardStats {
   expiringInDays: number;
 }
 
+export interface ResetAllDeletedCounts {
+  clientCompanies: number;
+  factories: number;
+  employees: number;
+  contracts: number;
+  contractEmployees: number;
+  factoryCalendars: number;
+  shiftTemplates: number;
+  pdfVersions: number;
+}
+
+export interface ResetAllResponse {
+  success: true;
+  deleted: ResetAllDeletedCounts;
+}
+
 export interface CascadeData {
   flat: Factory[];
   grouped: Record<string, Record<string, Factory[]>>;
