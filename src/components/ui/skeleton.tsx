@@ -57,3 +57,35 @@ export function SkeletonTable({ rows = 8, columns = 6, className }: SkeletonTabl
   );
 }
 
+export function StatCardSkeleton() {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-2">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-9 w-16" />
+        </div>
+        <Skeleton className="h-10 w-10 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+export function DashboardSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <StatCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+export function ChartSkeleton() {
+  return (
+    <div className="rounded-2xl border border-border/40 bg-card p-6 shadow-lg">
+      <Skeleton className="mb-4 h-5 w-32" />
+      <Skeleton className="h-[220px] w-full rounded-xl" />
+    </div>
+  );
+}

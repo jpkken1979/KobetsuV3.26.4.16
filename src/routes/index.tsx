@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { ChartSkeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { getAppSettings } from "@/lib/app-settings";
 import { queryKeys } from "@/lib/query-keys";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
 import { DashboardAlerts } from "./-dashboard-alerts";
 import { Suspense, lazy } from "react";
 import { AnimatedPage, DashboardHeader, DashboardStats } from "./-dashboard-stats";
@@ -29,8 +29,21 @@ export const Route = createFileRoute("/")({
     </div>
   ),
   pendingComponent: () => (
-    <div className="flex items-center justify-center py-20">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    <div className="relative space-y-8 pb-12">
+      <div className="h-12 w-48 animate-pulse rounded-xl bg-muted/40" />
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="space-y-2">
+                <div className="h-3 w-20 animate-pulse rounded bg-muted/40" />
+                <div className="h-9 w-16 animate-pulse rounded bg-muted/40" />
+              </div>
+              <div className="h-10 w-10 animate-pulse rounded-xl bg-muted/40" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   ),
 });
@@ -68,11 +81,7 @@ function Dashboard() {
     queryFn: api.getByCompanyStats,
   });
 
-  const chartFallback = (
-    <div className="flex h-[220px] items-center justify-center rounded-2xl border border-border/40 bg-card p-6 shadow-lg">
-      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/40" />
-    </div>
-  );
+  const chartFallback = <ChartSkeleton />;
 
   return (
     <AnimatedPage className="relative space-y-8 pb-12">
@@ -118,8 +127,13 @@ function Dashboard() {
         <Suspense
           fallback={
             <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-[var(--shadow-card)]">
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground/40" />
+              <div className="space-y-3">
+                <div className="h-4 w-32 animate-pulse rounded bg-muted/40" />
+                <div className="grid grid-cols-3 gap-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-10 animate-pulse rounded-xl bg-muted/40" />
+                  ))}
+                </div>
               </div>
             </div>
           }
