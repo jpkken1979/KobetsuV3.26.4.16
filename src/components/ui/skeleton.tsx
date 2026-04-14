@@ -83,7 +83,7 @@ export function DashboardSkeleton() {
 
 export function ChartSkeleton() {
   return (
-    <div className="rounded-2xl border border-border/40 bg-card p-6 shadow-lg">
+    <div className="rounded-2xl border border-border/40 bg-card p-6 shadow-[var(--shadow-card)]">
       <Skeleton className="mb-4 h-5 w-32" />
       <Skeleton className="h-[220px] w-full rounded-xl" />
     </div>

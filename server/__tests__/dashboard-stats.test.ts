@@ -14,7 +14,7 @@
  * Data-setup is done via the Hono app routes to stay consistent
  * with integration test conventions in this repo.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   getDashboardStats,
   getExpiringContracts,

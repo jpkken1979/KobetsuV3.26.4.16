@@ -161,7 +161,7 @@ function ExpiringContractsList({ data }: { data: ExpiringContract[] }) {
               className={cn(
                 "shrink-0 rounded-full px-2 py-0.5 font-bold tabular-nums",
                 days <= 7
-                  ? "bg-red-500/15 text-red-500"
+                  ? "bg-destructive/15 text-destructive"
                   : "bg-amber-500/15 text-amber-500",
               )}
             >
@@ -206,7 +206,7 @@ function TeishokubiList({ data }: { data: TeishokubiAlert[] }) {
             <span className="mx-2 max-w-[8rem] truncate text-muted-foreground">
               {f.department} {f.lineName}
             </span>
-            <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 font-bold tabular-nums text-red-500">
+            <span className="shrink-0 rounded-full bg-destructive/15 px-2 py-0.5 font-bold tabular-nums text-destructive">
               {days}日
             </span>
           </motion.div>
@@ -306,10 +306,10 @@ function AllClearState() {
       initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.95 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}
       transition={shouldReduceMotion ? undefined : { duration: 0.4, delay: 0.1 }}
-      className="flex items-center gap-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4"
+      className="flex items-center gap-4 rounded-xl border border-success/20 bg-success/5 p-4"
     >
-      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
-        <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
+        <CheckCircle2 className="h-6 w-6 text-success" />
       </div>
       <div>
         <p className="text-sm font-semibold text-foreground">問題なし</p>
@@ -370,10 +370,10 @@ export function DashboardAlerts({
       {urgentExpiring.length > 0 && (
         <CriticalAlertCard
           icon={AlertTriangle}
-          borderColor="border-l-red-500"
-          iconBg="bg-red-500/10"
-          iconColor="text-red-500"
-          countColor="text-red-500"
+          borderColor="border-l-destructive"
+          iconBg="bg-destructive/10"
+          iconColor="text-destructive"
+          countColor="text-destructive"
           title="契約期限切れ間近"
           description="7日以内に期限切れの契約があります"
           count={urgentExpiring.length}
