@@ -296,6 +296,15 @@ export const api = {
     const qs = query.toString();
     return request<AdminRowResult>(`/admin/rows${qs ? `?${qs}` : ""}`);
   },
+  adminInsert: (table: string, data: Record<string, string>) =>
+    request<{ id: number }>(`/admin/crud/${table}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+  adminDelete: (table: string, id: number) =>
+    request<{ success: boolean }>(`/admin/crud/${table}/${id}`, {
+      method: "DELETE",
+    }),
   executeSql: (sql: string) => request<AdminSqlResult>("/admin/sql", {
     method: "POST",
     body: JSON.stringify({ sql }),

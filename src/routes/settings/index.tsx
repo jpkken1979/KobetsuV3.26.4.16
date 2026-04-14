@@ -70,6 +70,21 @@ function SettingsPage() {
   const calendarPreview = `土曜日・日曜日・年末年始（${nenmatsuFrom}～${nenmatsuTo}）・GW（${gwFrom}～${gwTo}）・夏季休暇（${obonFrom}～${obonTo}）`;
 
   const handleBulkCalendar = async () => {
+    // Validate no empty fields
+    const fields = [
+      { label: "年末年始 開始", value: nenmatsuFrom },
+      { label: "年末年始 終了", value: nenmatsuTo },
+      { label: "GW 開始", value: gwFrom },
+      { label: "GW 終了", value: gwTo },
+      { label: "夏季休暇 開始", value: obonFrom },
+      { label: "夏季休暇 終了", value: obonTo },
+    ];
+    const emptyField = fields.find((f) => !f.value.trim());
+    if (emptyField) {
+      toast.error(`入力エラー: ${emptyField.label}が空です`);
+      return;
+    }
+
     // Persist holiday dates to appSettings before applying
     updateAppSettings({ nenmatsuFrom, nenmatsuTo, gwFrom, gwTo, obonFrom, obonTo });
     try {

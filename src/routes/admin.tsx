@@ -51,6 +51,11 @@ const StatsDashboardLazy = lazy(async () => {
   return { default: mod.StatsDashboard };
 });
 
+const AdminCrudTabLazy = lazy(async () => {
+  const mod = await import("./admin/-crud-tab");
+  return { default: mod.AdminCrudTab };
+});
+
 const TABS = [
   { id: "tables", label: "Tables", icon: Table2 },
   { id: "sql", label: "SQL", icon: Terminal },
@@ -162,9 +167,9 @@ function AdminPage() {
             </Suspense>
           )}
           {activeTab === "crud" && (
-            <div className="text-muted-foreground py-8 text-center">
-              CRUD — requires adminMode ON
-            </div>
+            <Suspense fallback={tabFallback}>
+              <AdminCrudTabLazy />
+            </Suspense>
           )}
           {activeTab === "contracts" && (
             <Suspense fallback={tabFallback}>
