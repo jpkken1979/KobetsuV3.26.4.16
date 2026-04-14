@@ -18,6 +18,17 @@ import {
 import type React from "react";
 import { useState } from "react";
 
+// Variants defined at module level — outside all components (required pattern)
+const alertListVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06 } },
+};
+
+const alertItemVariants = {
+  hidden: { opacity: 0, x: -8 },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" as const } },
+};
+
 function daysUntil(dateStr: string): number {
   const d = new Date(dateStr);
   const now = new Date();
@@ -116,6 +127,7 @@ function CriticalAlertCard({
 
 /* ── Expiring contracts — top items preview ── */
 function ExpiringContractsList({ data }: { data: ExpiringContract[] }) {
+  const shouldReduceMotion = useReducedMotion();
   if (data.length === 0)
     return (
       <div className="mt-1 border-t border-border/40 pt-3">
@@ -125,12 +137,18 @@ function ExpiringContractsList({ data }: { data: ExpiringContract[] }) {
       </div>
     );
   return (
-    <div className="mt-1 space-y-1.5 border-t border-border/40 pt-3">
+    <motion.div
+      className="mt-1 space-y-1.5 border-t border-border/40 pt-3"
+      variants={alertListVariants}
+      initial={shouldReduceMotion ? false : "hidden"}
+      animate="visible"
+    >
       {data.slice(0, 3).map((c) => {
         const days = daysUntil(c.endDate);
         return (
-          <div
+          <motion.div
             key={c.id}
+            variants={alertItemVariants}
             className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 text-xs"
           >
             <span className="max-w-[8rem] truncate font-mono font-semibold text-foreground/80">
@@ -149,15 +167,16 @@ function ExpiringContractsList({ data }: { data: ExpiringContract[] }) {
             >
               {days}日
             </span>
-          </div>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 }
 
 /* ── Teishokubi top items preview ── */
 function TeishokubiList({ data }: { data: TeishokubiAlert[] }) {
+  const shouldReduceMotion = useReducedMotion();
   if (data.length === 0)
     return (
       <div className="mt-1 border-t border-border/40 pt-3">
@@ -167,12 +186,18 @@ function TeishokubiList({ data }: { data: TeishokubiAlert[] }) {
       </div>
     );
   return (
-    <div className="mt-1 space-y-1.5 border-t border-border/40 pt-3">
+    <motion.div
+      className="mt-1 space-y-1.5 border-t border-border/40 pt-3"
+      variants={alertListVariants}
+      initial={shouldReduceMotion ? false : "hidden"}
+      animate="visible"
+    >
       {data.slice(0, 3).map((f) => {
         const days = daysUntil(f.conflictDate);
         return (
-          <div
+          <motion.div
             key={f.id}
+            variants={alertItemVariants}
             className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 text-xs"
           >
             <span className="max-w-[10rem] truncate font-semibold text-foreground/80">
@@ -184,10 +209,10 @@ function TeishokubiList({ data }: { data: TeishokubiAlert[] }) {
             <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 font-bold tabular-nums text-red-500">
               {days}日
             </span>
-          </div>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 }
 
@@ -312,6 +337,7 @@ export function DashboardAlerts({
   visaExpiry: VisaExpiryAlert[];
   loadingVisa: boolean;
 }) {
+  const shouldReduceMotion = useReducedMotion();
   const isLoading = loadingTeishokubi || loadingExpiring || loadingVisa;
 
   if (isLoading) {
@@ -412,17 +438,25 @@ export function DashboardAlerts({
           linkLabel="確認"
           delay={0.2}
         >
-          <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
-            {visaExpiry.length === 0 ? (
+          {visaExpiry.length === 0 ? (
+            <div className="mt-3 border-t border-border/40 pt-3">
               <p className="text-center text-sm text-muted-foreground">
                 該当する社員はいません
               </p>
-            ) : (
-              visaExpiry.slice(0, 5).map((e) => {
+            </div>
+          ) : (
+            <motion.div
+              className="mt-3 space-y-1.5 border-t border-border/40 pt-3"
+              variants={alertListVariants}
+              initial={shouldReduceMotion ? false : "hidden"}
+              animate="visible"
+            >
+              {visaExpiry.slice(0, 5).map((e) => {
                 const days = daysUntil(e.visaExpiry);
                 return (
-                  <div
+                  <motion.div
                     key={e.id}
+                    variants={alertItemVariants}
                     className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 text-xs"
                   >
                     <span className="max-w-[10rem] truncate font-semibold text-foreground/80">
@@ -441,11 +475,11 @@ export function DashboardAlerts({
                     >
                       {days}日
                     </span>
-                  </div>
+                  </motion.div>
                 );
-              })
-            )}
-          </div>
+              })}
+            </motion.div>
+          )}
         </InfoAlertCard>
       )}
     </div>
