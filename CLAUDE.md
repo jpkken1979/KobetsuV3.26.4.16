@@ -194,7 +194,7 @@ src/
 
 ### Large Files Warning
 - Several route/component files exceed 500 lines. Consider splitting when adding features:
-  - `companies/-koritsu-components.tsx` (805L), `companies/koritsu.tsx` (768L), `contracts/index.tsx` (762L), `import/-import-page.tsx` (761L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `employees/index.tsx` (692L), `settings/index.tsx` (617L), `contracts/mid-hires.tsx` (586L), `contracts/new-hires.tsx` (552L), `history/index.tsx` (538L)
+  - `companies/-koritsu-components.tsx` (805L), `companies/koritsu.tsx` (768L), `contracts/index.tsx` (786L), `import/-import-page.tsx` (761L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `employees/index.tsx` (705L), `settings/index.tsx` (617L), `contracts/mid-hires.tsx` (586L), `contracts/new-hires.tsx` (552L), `history/index.tsx` (538L)
   - Server: `services/koritsu-pdf-parser.ts` (759L), `routes/factories.ts` (644L), `services/import-factories-service.ts` (643L)
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
@@ -213,7 +213,7 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 4. Connect in `server/routes/documents-generate.ts`
 5. For details on PDF rules: see `.claude/rules/pdf-rules.md` (auto-injected)
 
-## Database (8 Tables — NOT 9 despite db/schema.ts comment saying "9 tables")
+## Database (9 Tables)
 
 | Table | Purpose | Key relationships |
 |-------|---------|-------------------|
@@ -225,6 +225,7 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 | `factory_calendars` | Work calendars | FK → factories. Unique (factoryId, year) |
 | `shift_templates` | Reusable shift/break patterns | Standalone |
 | `audit_log` | Audit trail | Records all mutations |
+| `pdf_versions` | PDF generation log | SHA256 + metadata per generated document |
 
 Schema defined in `server/db/schema.ts`. Drizzle config in `drizzle.config.ts`.
 
@@ -323,6 +324,8 @@ Different format from all other companies — 3 separate generators in `server/p
 ### UI Accessibility — CRITICAL
 - All `motion` animations (`animate=`, `whileHover`, `whileTap`, `transition=`) MUST check `useReducedMotion()` first
 - Pattern established in `src/components/ui/animated.tsx` and `src/components/ui/dialog.tsx` — replicate in every component using motion (audit C-001 closed)
+- `staggerChildren` on `<motion.tbody>` is **incompatible with `useVirtualizer`** — use individual `motion.tr` with `initial/animate` instead (employees table pattern)
+- Motion variants must be defined at **module level** (outside component body) — never inline
 
 ## TypeScript & Build
 
