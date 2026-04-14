@@ -59,17 +59,19 @@ function SettingsPage() {
   const [adminMode, setAdminMode] = useState(() => getAppSettings().adminMode);
   const shouldReduceMotion = useReducedMotion();
 
-  // Holiday date ranges — pre-filled with typical Toyota calendar values
-  const [nenmatsuFrom, setNenmatsuFrom] = useState("12月26日");
-  const [nenmatsuTo, setNenmatsuTo] = useState("1月5日");
-  const [gwFrom, setGwFrom] = useState("4月29日");
-  const [gwTo, setGwTo] = useState("5月5日");
-  const [obonFrom, setObonFrom] = useState("8月8日");
-  const [obonTo, setObonTo] = useState("8月16日");
+  // Holiday date ranges — persisted in appSettings (localStorage)
+  const [nenmatsuFrom, setNenmatsuFrom] = useState(() => getAppSettings().nenmatsuFrom);
+  const [nenmatsuTo, setNenmatsuTo] = useState(() => getAppSettings().nenmatsuTo);
+  const [gwFrom, setGwFrom] = useState(() => getAppSettings().gwFrom);
+  const [gwTo, setGwTo] = useState(() => getAppSettings().gwTo);
+  const [obonFrom, setObonFrom] = useState(() => getAppSettings().obonFrom);
+  const [obonTo, setObonTo] = useState(() => getAppSettings().obonTo);
 
   const calendarPreview = `土曜日・日曜日・年末年始（${nenmatsuFrom}～${nenmatsuTo}）・GW（${gwFrom}～${gwTo}）・夏季休暇（${obonFrom}～${obonTo}）`;
 
   const handleBulkCalendar = async () => {
+    // Persist holiday dates to appSettings before applying
+    updateAppSettings({ nenmatsuFrom, nenmatsuTo, gwFrom, gwTo, obonFrom, obonTo });
     try {
       setCalendarUpdating(true);
       const result = await api.bulkUpdateCalendar(calendarPreview);
