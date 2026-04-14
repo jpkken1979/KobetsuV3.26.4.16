@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AnimatedPage } from "@/components/ui/animated";
 import { PageHeader } from "@/components/ui/page-header";
 import { cn } from "@/lib/utils";
+import { getAppSettings } from "@/lib/app-settings";
 import {
   Table2,
   Terminal,
@@ -83,11 +84,41 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const [activeTab, setActiveTab] = useState<string>("tables");
+  const adminMode = getAppSettings().adminMode;
+
   const tabFallback = (
     <div className="flex items-center justify-center py-14">
       <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
     </div>
   );
+
+  if (!adminMode) {
+    return (
+      <AnimatedPage>
+        <PageHeader
+          title="データベース管理"
+          subtitle="Admin Database Panel"
+        />
+        <div className="p-6">
+          <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border/60 bg-card p-12 text-center">
+            <div className="rounded-full bg-amber-500/10 p-4">
+              <ShieldAlert className="h-8 w-8 text-amber-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">Modo Developer desactivado</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Activá el Modo Developer en{" "}
+                <a href="/settings" className="text-primary underline underline-offset-2">
+                  Settings
+                </a>{" "}
+                para acceder a este panel.
+              </p>
+            </div>
+          </div>
+        </div>
+      </AnimatedPage>
+    );
+  }
 
   return (
     <AnimatedPage>
@@ -96,15 +127,6 @@ function AdminPage() {
         subtitle="Admin Database Panel"
       />
       <div className="p-6 space-y-4">
-        {/* Admin mode warning banner */}
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-sm">
-          <ShieldAlert className="w-4 h-4 flex-shrink-0" />
-          <span>
-            Modo Developer desactivado. Activar en Settings para usar este
-            panel.
-          </span>
-        </div>
-
         {/* Tab navigation */}
         <div className="flex flex-wrap gap-1 p-1 bg-muted rounded-lg w-fit">
           {TABS.map((tab) => {
