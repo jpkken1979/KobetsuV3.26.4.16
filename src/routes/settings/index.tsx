@@ -29,7 +29,7 @@ import {
     Trash2,
     Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings/")({
@@ -54,6 +54,14 @@ function SettingsPage() {
   // Estado para el diálogo de reset
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
+  const [resetDone, setResetDone] = useState(false);
+
+  // Redirect con cleanup cuando el reset es exitoso
+  useEffect(() => {
+    if (!resetDone) return;
+    const timer = setTimeout(() => void navigate({ to: "/" }), 1500);
+    return () => clearTimeout(timer);
+  }, [resetDone, navigate]);
 
   // Query de stats para mostrar conteos actuales
   const { data: dbStats } = useQuery({
@@ -73,9 +81,7 @@ function SettingsPage() {
       void queryClient.invalidateQueries();
       setShowResetDialog(false);
       setResetConfirmText("");
-      setTimeout(() => {
-        void navigate({ to: "/" });
-      }, 1500);
+      setResetDone(true);
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Error al resetear la base de datos";
