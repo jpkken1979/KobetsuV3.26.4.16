@@ -81,8 +81,7 @@ export function AdminCrudTab() {
   // Rows are in AdminRowResult.rows
   const rowData = (rows as { rows?: Record<string, unknown>[] } | undefined)?.rows ?? [];
   const displayColumns = (currentMeta?.columns ?? [])
-    .filter((c) => c.name !== "id")
-    .slice(0, 5);
+    .filter((c) => c.name !== "id");
 
   return (
     <div className="space-y-4">
@@ -214,7 +213,7 @@ export function AdminCrudTab() {
               {rowData.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={displayColumns.length + 2}
                     className="px-3 py-8 text-center text-muted-foreground"
                   >
                     データがありません
