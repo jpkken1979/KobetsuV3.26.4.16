@@ -22,6 +22,7 @@ import { adminRowsRouter } from "./routes/admin-rows.js";
 import { adminCrudRouter } from "./routes/admin-crud.js";
 import { adminBackupRouter } from "./routes/admin-backup.js";
 import { adminStatsRouter } from "./routes/admin-stats.js";
+import { adminResetRouter } from "./routes/admin-reset.js";
 import { pdfVersionsRouter } from "./routes/pdf-versions.js";
 import { bodyLimit } from "hono/body-limit";
 import { adminGuardMiddleware, securityHeadersMiddleware } from "./middleware/security.js";
@@ -111,6 +112,7 @@ api.route("/admin/rows", adminRowsRouter);
 api.route("/admin/crud", adminCrudRouter);
 api.route("/admin/stats", adminStatsRouter);
 api.route("/admin/backup", adminBackupRouter);
+api.route("/admin/reset-all", adminResetRouter);
 api.route("/pdf-versions", pdfVersionsRouter);
 
 app.route("/", api);
