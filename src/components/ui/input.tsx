@@ -29,6 +29,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           <input
             ref={ref}
+            aria-invalid={error ? true : undefined}
             className={cn(
               baseInputClass,
               Icon ? "pl-10 pr-3 py-2.5" : "px-3 py-2.5",
@@ -53,6 +54,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       <div className="w-full">
         <input
           ref={ref}
+          aria-invalid={error ? true : undefined}
           className={cn(baseInputClass, "px-3 py-2.5", className)}
           {...props}
         />

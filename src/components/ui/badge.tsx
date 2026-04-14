@@ -17,7 +17,7 @@ const variantStyles: Record<string, string> = {
   warning:
     "bg-warning-muted text-warning-foreground border border-warning/30",
   destructive:
-    "bg-red-50 text-red-700 ring-red-200 dark:bg-red-900/30 dark:text-red-300 dark:ring-red-700/50",
+    "bg-destructive/10 text-destructive ring-destructive/20",
   outline:
     "border border-border/60 text-muted-foreground bg-transparent ring-0",
   active:
@@ -33,7 +33,7 @@ const dotColors: Record<string, string> = {
   secondary: "bg-muted-foreground",
   success: "bg-success",
   warning: "bg-warning-foreground",
-  destructive: "bg-red-500",
+  destructive: "bg-destructive",
   outline: "bg-muted-foreground",
   active: "bg-success",
   alert: "bg-alert-foreground",

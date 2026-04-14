@@ -34,8 +34,8 @@ export function ConfirmDialog({
     <Dialog open={open} onClose={onClose} className="max-w-md">
       <DialogHeader>
         {variant === "destructive" && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/50">
-            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden="true" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-destructive/10">
+            <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" />
           </div>
         )}
         <div className="flex-1">
