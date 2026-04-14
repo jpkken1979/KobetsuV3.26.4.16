@@ -84,6 +84,7 @@ export function NumberTicker({
   inView = true,
 }: NumberTickerProps) {
   const ref = useRef<HTMLSpanElement>(null);
+  const shouldReduceMotion = useReducedMotion();
   const isInView = useInView(ref, { once: true, margin: "-40px" });
   const motionValue = useMotionValue(0);
   const springValue = useSpring(motionValue, {
@@ -95,12 +96,24 @@ export function NumberTicker({
   const shouldAnimate = inView ? isInView : true;
 
   useEffect(() => {
-    if (shouldAnimate) {
+    if (shouldAnimate && !shouldReduceMotion) {
       motionValue.set(value);
+    } else if (shouldReduceMotion && ref.current) {
+      // When motion is reduced, set value directly
+      const num = decimals > 0 ? value.toFixed(decimals) : Math.round(value);
+      const display = format
+        ? Number(num).toLocaleString("ja-JP", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+          })
+        : String(num);
+      ref.current.textContent = `${prefix}${display}${suffix}`;
     }
-  }, [shouldAnimate, value, motionValue]);
+  }, [shouldAnimate, value, motionValue, shouldReduceMotion, format, decimals, prefix, suffix]);
 
   useEffect(() => {
+    if (shouldReduceMotion) return;
+
     const unsubscribe = springValue.on("change", (latest) => {
       if (ref.current) {
         const num = decimals > 0 ? latest.toFixed(decimals) : Math.round(latest);
@@ -114,7 +127,7 @@ export function NumberTicker({
       }
     });
     return unsubscribe;
-  }, [springValue, format, decimals, prefix, suffix]);
+  }, [springValue, format, decimals, prefix, suffix, shouldReduceMotion]);
 
   return (
     <span

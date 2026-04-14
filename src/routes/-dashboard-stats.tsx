@@ -105,6 +105,8 @@ function StatCard({
       initial={shouldReduceMotion ? undefined : { opacity: 0, y: 16 }}
       animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
       transition={shouldReduceMotion ? undefined : { duration: 0.35, delay }}
+      whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -2 }}
+      whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
     >
       {to ? (
         <Link to={to} className="block cursor-pointer">
