@@ -36,6 +36,17 @@ import { contractColumns } from "./-contracts-columns";
 import { ExpiryDateDisplay, EmployeeNames } from "./-contracts-helpers";
 import { SetOptionsModal, type SetOptions } from "./-set-options-modal";
 
+// Variants at module level — outside all components (required pattern)
+const tableBodyVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.04 } },
+};
+
+const tableRowVariants = {
+  hidden: { opacity: 0, y: 4 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" as const } },
+};
+
 export const Route = createFileRoute("/contracts/")(
   {
     component: ContractsList,
@@ -488,7 +499,11 @@ function ContractsList() {
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <motion.tbody
+                variants={tableBodyVariants}
+                initial={shouldReduceMotion ? false : "hidden"}
+                animate="visible"
+              >
                 {groupedContracts.map((group) => {
                   const isGroupCollapsed = collapsed.has(group.key);
                   const groupIds = group.contracts.map((c) => c.id);
@@ -498,11 +513,13 @@ function ContractsList() {
                   return (
                     <>
                       {/* ── Group header row ── */}
-                      <tr
+                      <motion.tr
                         key={`group-${group.key}`}
+                        variants={tableRowVariants}
                         className="bg-muted/30 border-b border-border/80 cursor-pointer hover:bg-muted/50 transition-colors"
                         onClick={() => toggleCollapse(group.key)}
                       >
+
                         <td className="w-10 px-3 py-2.5">
                           <input
                             type="checkbox"
@@ -556,14 +573,15 @@ function ContractsList() {
                             </div>
                           </div>
                         </td>
-                      </tr>
+                      </motion.tr>
 
                       {/* ── Contract rows (hidden when collapsed) ── */}
                       {!isGroupCollapsed && group.contracts.map((c: Contract) => {
                         const isSelected = selected.has(c.id);
                         return (
-                          <tr
+                          <motion.tr
                             key={c.id}
+                            variants={tableRowVariants}
                             className={cn(
                               "group border-b border-border/50 transition-colors hover:bg-primary/5",
                               isSelected ? "bg-primary/[0.06] dark:bg-primary/[0.08]" : ""
@@ -637,13 +655,13 @@ function ContractsList() {
                                 </div>
                               </TooltipProvider>
                             </td>
-                          </tr>
+                          </motion.tr>
                         );
                       })}
                     </>
                   );
                 })}
-              </tbody>
+              </motion.tbody>
             </table>
           </div>
         </motion.div>
@@ -664,6 +682,11 @@ function ContractsList() {
       )}
 
       {/* ── Floating bulk action bar ── */}
+      <div
+        role="region"
+        aria-live="polite"
+        aria-label="一括操作"
+      >
       <AnimatePresence>
         {selected.size > 0 && (
           <motion.div
@@ -720,6 +743,7 @@ function ContractsList() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
 
       {/* Confirm dialogs */}
       <ConfirmDialog
