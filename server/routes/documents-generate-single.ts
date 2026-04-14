@@ -36,7 +36,7 @@ import {
   buildHakenmotoDaichoData,
 } from "../services/pdf-data-builders.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
-import fs from "node:fs";
+import { readFile } from "node:fs/promises";
 
 export async function handleGenerateSingle(c: Context) {
   try {
@@ -151,7 +151,7 @@ export async function handleGenerateSingle(c: Context) {
       await writeToFile(doc1, filePath1);
       // Versionar el PDF para trazabilidad legal (派遣法)
       try {
-        const buf1 = fs.readFileSync(filePath1);
+        const buf1 = await readFile(filePath1);
         await recordPdfVersion({
           pdfType: "kobetsu",
           buffer: buf1,

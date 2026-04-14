@@ -42,7 +42,7 @@ api.use(
   "*",
   cors({
     origin: frontendOrigin,
-    allowHeaders: ["Content-Type"],
+    allowHeaders: ["Content-Type", "x-admin-token"],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   }),
 );

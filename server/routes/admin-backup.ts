@@ -119,6 +119,11 @@ adminBackupRouter.post("/restore", async (c) => {
 
     const backupPath = path.join(DATA_DIR, filename);
 
+    // Path confinement: prevent directory traversal
+    if (!backupPath.startsWith(DATA_DIR + path.sep)) {
+      return c.json({ error: "Invalid path." }, 400);
+    }
+
     if (!fs.existsSync(backupPath)) {
       return c.json({ error: `Backup file not found: ${filename}` }, 404);
     }
@@ -170,6 +175,11 @@ adminBackupRouter.delete("/:filename", async (c) => {
     }
 
     const filePath = path.join(DATA_DIR, filename);
+
+    // Path confinement: prevent directory traversal
+    if (!filePath.startsWith(DATA_DIR + path.sep)) {
+      return c.json({ error: "Invalid path." }, 400);
+    }
 
     if (!fs.existsSync(filePath)) {
       return c.json({ error: `Backup file not found: ${filename}` }, 404);

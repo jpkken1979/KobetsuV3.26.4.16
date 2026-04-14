@@ -1,9 +1,14 @@
 import type { Context, Next } from "hono";
+import { timingSafeEqual } from "node:crypto";
 
 const RATE_LIMIT_WINDOW_MS = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? 60_000);
 const RATE_LIMIT_MAX = Number(process.env.API_RATE_LIMIT_MAX ?? 180);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN?.trim() ?? "";
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 type RateBucket = {
   count: number;
@@ -73,17 +78,15 @@ export async function adminGuardMiddleware(c: Context, next: Next) {
 
   if (isAdminPath(path)) {
     if (!ADMIN_TOKEN) {
-      if (IS_PRODUCTION) {
-        return c.json(
-          { error: "Admin routes are disabled: ADMIN_TOKEN is not configured." },
-          503,
-        );
-      }
-    } else {
-      const provided = c.req.header("x-admin-token")?.trim();
-      if (!provided || provided !== ADMIN_TOKEN) {
-        return c.json({ error: "Unauthorized admin access." }, 401);
-      }
+      return c.json(
+        { error: "Admin routes are disabled: ADMIN_TOKEN is not configured." },
+        503,
+      );
+    }
+
+    const provided = c.req.header("x-admin-token")?.trim();
+    if (!provided || !safeCompare(provided, ADMIN_TOKEN)) {
+      return c.json({ error: "Unauthorized admin access." }, 401);
     }
   }
 

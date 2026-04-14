@@ -34,7 +34,7 @@ import {
   buildHakenmotoDaichoData,
 } from "../services/pdf-data-builders.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
-import fs from "node:fs";
+import { readFile } from "node:fs/promises";
 
 const generateBatchSchema = z.object({
   contractIds: z.array(z.number().int().positive()).min(1, "contractIds must be a non-empty array"),
@@ -133,7 +133,7 @@ export async function handleGenerateBatch(c: Context) {
       const fn1 = `個別契約書_${prefix}.pdf`;
       await writeToFile(doc1, path.join(batchOutputDir, fn1));
       try {
-        const buf1 = fs.readFileSync(path.join(batchOutputDir, fn1));
+        const buf1 = await readFile(path.join(batchOutputDir, fn1));
         await recordPdfVersion({
           pdfType: "kobetsu",
           buffer: buf1,

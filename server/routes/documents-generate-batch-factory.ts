@@ -34,7 +34,7 @@ import {
 } from "../services/pdf-data-builders.js";
 import { mergePdfs } from "./documents-generate-batch-utils.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
-import fs from "node:fs";
+import { readFile } from "node:fs/promises";
 
 const generateFactorySchema = z.object({
   factoryId: z.number().int().positive("factoryId must be a positive integer"),
@@ -136,7 +136,7 @@ export async function handleGenerateFactory(c: Context) {
             const fnHS = `個別契約書_派遣先用_${prefix}.pdf`;
             await writeToFile(docHS, path.join(outputDir, fnHS));
             try {
-              const bufHS = fs.readFileSync(path.join(outputDir, fnHS));
+              const bufHS = await readFile(path.join(outputDir, fnHS));
               await recordPdfVersion({
                 pdfType: "kobetsu",
                 buffer: bufHS,
@@ -166,7 +166,7 @@ export async function handleGenerateFactory(c: Context) {
             const fn1 = `個別契約書_${prefix}.pdf`;
             await writeToFile(doc1, path.join(outputDir, fn1));
             try {
-              const bufK = fs.readFileSync(path.join(outputDir, fn1));
+              const bufK = await readFile(path.join(outputDir, fn1));
               await recordPdfVersion({
                 pdfType: "kobetsu",
                 buffer: bufK,

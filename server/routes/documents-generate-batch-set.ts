@@ -2,6 +2,7 @@
 import type { Context } from "hono";
 import { z } from "zod";
 import fs from "node:fs";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { db } from "../db/index.js";
 import { contracts, auditLog } from "../db/schema.js";
@@ -166,7 +167,7 @@ export async function handleGenerateSet(c: Context) {
         const fnKobetsu = `SET_個別契約書_${setPrefix}.pdf`;
         await writeToFile(docKobetsu, path.join(SET_OUTPUT_DIR, fnKobetsu));
         try {
-          const bufSet = fs.readFileSync(path.join(SET_OUTPUT_DIR, fnKobetsu));
+          const bufSet = await readFile(path.join(SET_OUTPUT_DIR, fnKobetsu));
           await recordPdfVersion({
             pdfType: "kobetsu",
             buffer: bufSet,

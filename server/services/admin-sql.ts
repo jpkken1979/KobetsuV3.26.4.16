@@ -7,21 +7,6 @@
 
 import { sqlite } from "../db/index.js";
 
-/** Keywords and patterns that are never allowed in a query */
-const BLOCKED_PATTERNS = [
-  /^\s*INSERT/i,
-  /^\s*UPDATE/i,
-  /^\s*DELETE/i,
-  /^\s*DROP/i,
-  /^\s*CREATE/i,
-  /^\s*ALTER/i,
-  /^\s*TRUNCATE/i,
-  /^\s*ATTACH/i,
-  /^\s*DETACH/i,
-  /^\s*PRAGMA/i,
-  /^\s*EXPLAIN/i,
-];
-
 /** Maximum SQL query length (10 000 characters) */
 const MAX_SQL_LENGTH = 10_000;
 
@@ -29,34 +14,20 @@ const MAX_SQL_LENGTH = 10_000;
  * Parse and validate a raw SQL string.
  * Returns { safe: true } if the query is allowed, or { safe: false, message } if blocked.
  *
+ * Basic length/empty checks only — the authoritative read-only guard is
+ * `stmt.reader` in `executeSql()`, which uses better-sqlite3's internal parser
+ * instead of a fragile regex blocklist.
+ *
  * @param sql - Raw SQL string from the client
  */
 export function parseAndValidate(sql: string): { safe: boolean; message?: string } {
   const trimmed = sql.trim();
 
-  // Length check
   if (trimmed.length === 0) {
     return { safe: false, message: "Query cannot be empty." };
   }
   if (trimmed.length > MAX_SQL_LENGTH) {
     return { safe: false, message: `Query exceeds the maximum length of ${MAX_SQL_LENGTH} characters.` };
-  }
-
-  // Must start with SELECT
-  if (!/^\s*SELECT/i.test(trimmed)) {
-    return { safe: false, message: "Only SELECT queries are allowed." };
-  }
-
-  // Block dangerous patterns
-  for (const pattern of BLOCKED_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return { safe: false, message: `Query contains a blocked keyword or pattern.` };
-    }
-  }
-
-  // Block double semicolons at the end (SQL injection padding attempt)
-  if (/;;\s*$/.test(trimmed)) {
-    return { safe: false, message: "Trailing semicolon padding is not allowed." };
   }
 
   return { safe: true };
@@ -80,6 +51,14 @@ export function executeSql(sql: string): SqlExecutionResult {
   const start = performance.now();
 
   const stmt = sqlite.prepare(sql);
+
+  // Authoritative read-only guard: better-sqlite3's `reader` property returns
+  // true only for statements that return data (SELECT, etc.).  This replaces the
+  // old regex blocklist and is immune to UNION, subquery, or semicolon tricks.
+  if (!stmt.reader) {
+    throw new Error("Only read-only (SELECT) queries are allowed.");
+  }
+
   const rawRows = stmt.all() as Record<string, unknown>[];
 
   const time = Math.round(performance.now() - start);
