@@ -14,7 +14,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { differenceInDays } from "date-fns";
 import { AlertTriangle, ArrowDown, ArrowUp, Edit2, RotateCcw, Search, Upload, Users } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+// Variants at module level — outside all components (required pattern)
+// Note: virtual scrolling renders rows individually, so each row animates on mount
+// rather than using staggerChildren (which requires all children present simultaneously)
+const tableRowVariants = {
+  hidden: { opacity: 0, y: 4 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" as const } },
+};
 
 const EmployeeImportDialogLazy = lazy(async () => {
   const mod = await import("./-employee-import-dialog");
@@ -338,6 +347,7 @@ function VisaBadge({ expiryDate }: { expiryDate: string | null | undefined }) {
 // ─── Main Component ────────────────────────────────────────────────────
 
 function EmployeesList() {
+  const shouldReduceMotion = useReducedMotion();
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [activeOnly, setActiveOnly] = useState(true);
@@ -567,9 +577,12 @@ function EmployeesList() {
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                       const emp = filteredEmployees[virtualRow.index];
                       return (
-                        <tr
+                        <motion.tr
                           key={emp.id}
                           data-index={virtualRow.index}
+                          variants={tableRowVariants}
+                          initial={shouldReduceMotion ? false : "hidden"}
+                          animate="visible"
                           className={cn(
                             "group border-b border-border/50 last:border-0 transition-colors duration-150",
                             "hover:bg-primary/5",
@@ -634,7 +647,7 @@ function EmployeesList() {
                           <td className="overflow-hidden px-3 py-2.5">
                             <EmployeeStatusBadge status={emp.status} />
                           </td>
-                        </tr>
+                        </motion.tr>
                       );
                     })}
                     {rowVirtualizer.getVirtualItems().length > 0 && (
