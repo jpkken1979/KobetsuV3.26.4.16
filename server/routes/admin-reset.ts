@@ -32,29 +32,39 @@ adminResetRouter.post("/", async (c) => {
   }
 
   try {
-    // Contar filas antes de borrar (sync con better-sqlite3 + Drizzle)
-    const [ceResult] = db.select({ n: count() }).from(contractEmployees).all();
-    const [pvResult] = db.select({ n: count() }).from(pdfVersions).all();
-    const [cResult] = db.select({ n: count() }).from(contracts).all();
-    const [fcResult] = db.select({ n: count() }).from(factoryCalendars).all();
-    const [empResult] = db.select({ n: count() }).from(employees).all();
-    const [stResult] = db.select({ n: count() }).from(shiftTemplates).all();
-    const [fResult] = db.select({ n: count() }).from(factories).all();
-    const [ccResult] = db.select({ n: count() }).from(clientCompanies).all();
-
+    // Contar y borrar en una sola transacción atómica (evita race conditions)
     const deletedCounts = {
-      contractEmployees: ceResult?.n ?? 0,
-      pdfVersions: pvResult?.n ?? 0,
-      contracts: cResult?.n ?? 0,
-      factoryCalendars: fcResult?.n ?? 0,
-      employees: empResult?.n ?? 0,
-      shiftTemplates: stResult?.n ?? 0,
-      factories: fResult?.n ?? 0,
-      clientCompanies: ccResult?.n ?? 0,
+      contractEmployees: 0,
+      pdfVersions: 0,
+      contracts: 0,
+      factoryCalendars: 0,
+      employees: 0,
+      shiftTemplates: 0,
+      factories: 0,
+      clientCompanies: 0,
     };
 
-    // Borrar en orden: hijos antes que padres (FK integrity)
     sqlite.transaction(() => {
+      // Contar antes de borrar (dentro de la transacción)
+      const [ceResult] = db.select({ n: count() }).from(contractEmployees).all();
+      const [pvResult] = db.select({ n: count() }).from(pdfVersions).all();
+      const [cResult] = db.select({ n: count() }).from(contracts).all();
+      const [fcResult] = db.select({ n: count() }).from(factoryCalendars).all();
+      const [empResult] = db.select({ n: count() }).from(employees).all();
+      const [stResult] = db.select({ n: count() }).from(shiftTemplates).all();
+      const [fResult] = db.select({ n: count() }).from(factories).all();
+      const [ccResult] = db.select({ n: count() }).from(clientCompanies).all();
+
+      deletedCounts.contractEmployees = ceResult?.n ?? 0;
+      deletedCounts.pdfVersions = pvResult?.n ?? 0;
+      deletedCounts.contracts = cResult?.n ?? 0;
+      deletedCounts.factoryCalendars = fcResult?.n ?? 0;
+      deletedCounts.employees = empResult?.n ?? 0;
+      deletedCounts.shiftTemplates = stResult?.n ?? 0;
+      deletedCounts.factories = fResult?.n ?? 0;
+      deletedCounts.clientCompanies = ccResult?.n ?? 0;
+
+      // Borrar en orden: hijos antes que padres (FK integrity)
       db.delete(contractEmployees).run();
       db.delete(pdfVersions).run();
       db.delete(contracts).run();
@@ -78,9 +88,7 @@ adminResetRouter.post("/", async (c) => {
 
     return c.json({ success: true, deleted: deletedCounts });
   } catch (err: unknown) {
-    return c.json(
-      { error: err instanceof Error ? err.message : "Reset failed" },
-      500,
-    );
+    console.error("[admin-reset] Transaction failed:", err);
+    return c.json({ error: "Reset failed" }, 500);
   }
 });
