@@ -48,9 +48,11 @@ importFactoriesRouter.post("/factories", async (c) => {
         deleted: result.deleted,
         skipped: result.skipped,
         errors: result.errors.length,
+        warnings: result.warnings.length,
         companiesUpdated: result.companiesUpdated,
       },
       errors: result.errors.slice(0, 20),
+      warnings: result.warnings.slice(0, 20),
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";

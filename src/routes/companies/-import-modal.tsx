@@ -48,7 +48,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
       const rows = worksheet ? parseCompanySheet(worksheet) : [];
 
       // Validar que la hoja tiene headers reconocibles
-      const EXPECTED_HEADERS = ["工場名", "部署名", "派遣先責任者氏名", "指揮命令者氏名", "会社名"];
+      const EXPECTED_HEADERS = ["工場名", "部署", "派遣先責任者氏名", "指揮命令者氏名", "会社名"];
       const firstRow = rows[0] ?? {};
       const keys = Object.keys(firstRow);
       const hasValidHeaders = EXPECTED_HEADERS.some((h) => keys.includes(h));
@@ -162,10 +162,29 @@ export function ImportModal({ onClose }: ImportModalProps) {
         if (nextResult.summary.deleted > 0) {
           summaryParts.push(`${nextResult.summary.deleted}件削除`);
         }
+        if (nextResult.summary.skipped > 0) {
+          summaryParts.push(`${nextResult.summary.skipped}件スキップ`);
+        }
         if (nextResult.summary.companiesUpdated && nextResult.summary.companiesUpdated > 0) {
           summaryParts.push(`${nextResult.summary.companiesUpdated}社の企業情報補完`);
         }
+
+        // Toast principal con resumen
         toast.success(`インポート完了: ${summaryParts.join(", ")}`);
+
+        // Advertencia si hay warnings o errores no críticos
+        if ((nextResult.summary.warnings ?? 0) > 0) {
+          toast.warning(
+            `⚠️ ${nextResult.summary.warnings}件のデータに問題があります。詳細を確認してください。`,
+            { duration: 6000 },
+          );
+        }
+        if ((nextResult.summary.errors ?? 0) > 0) {
+          toast.error(
+            `❌ ${nextResult.summary.errors}件のエラーがあります。詳細を確認してください。`,
+            { duration: 6000 },
+          );
+        }
       }
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "インポートに失敗しました");
@@ -502,14 +521,34 @@ export function ImportModal({ onClose }: ImportModalProps) {
                   エラーが発生しました
                 </div>
               )}
-              {result.errors?.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {result.errors.map((error, index) => (
-                    <p key={index} className="text-xs text-red-400">
-                      {error}
-                    </p>
-                  ))}
-                </div>
+              {result.warnings && result.warnings.length > 0 && (
+                <details className="mt-2" open>
+                  <summary className="cursor-pointer text-xs font-bold text-amber-400 hover:text-amber-300">
+                    ⚠️ {result.warnings.length}件の警告 — データに問題があります
+                  </summary>
+                  <div className="mt-2 space-y-1 rounded border border-amber-500/20 bg-amber-500/[0.03] p-3">
+                    {result.warnings.map((warning, index) => (
+                      <p key={index} className="text-xs text-amber-300">
+                        {warning}
+                      </p>
+                    ))}
+                  </div>
+                </details>
+              )}
+
+              {result.errors && result.errors.length > 0 && (
+                <details className="mt-2">
+                  <summary className="cursor-pointer text-xs font-bold text-red-400 hover:text-red-300">
+                    ❌ {result.errors.length}件のエラー
+                  </summary>
+                  <div className="mt-2 space-y-1 rounded border border-red-500/20 bg-red-500/[0.03] p-3">
+                    {result.errors.map((error, index) => (
+                      <p key={index} className="text-xs text-red-300">
+                        {error}
+                      </p>
+                    ))}
+                  </div>
+                </details>
               )}
             </div>
           )}

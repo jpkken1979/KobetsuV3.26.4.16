@@ -19,6 +19,7 @@ export interface FactoryImportResult {
   skipped: number;
   deleted: number;
   errors: string[];
+  warnings: string[];
   companiesUpdated: number;
 }
 
@@ -307,6 +308,7 @@ export async function importFactories(
     let txUpdated = 0;
     let txSkipped = 0;
     const txErrors: string[] = [];
+    const txWarnings: string[] = [];
 
     for (const rawRow of rows) {
       const row = normalizeImportRow(rawRow);
@@ -329,6 +331,21 @@ export async function importFactories(
         if (!factoryName) { txSkipped++; continue; }
 
         const factoryData = buildFactoryData(row, companyId);
+
+        // Validaciones de advertencia (no bloquean importación)
+        const warnings: string[] = [];
+        if (!factoryData.supervisorName) warnings.push(`${rowFactoryName}: 指揮命令者氏名が未入力です`);
+        if (!factoryData.hakensakiManagerName) warnings.push(`${rowFactoryName}: 派遣先責任者氏名が未入力です`);
+        if (!factoryData.address) warnings.push(`${rowFactoryName}: 住所が未入力です`);
+        if (!factoryData.workHours) warnings.push(`${rowFactoryName}: 就業時間が未入力です`);
+        if (!factoryData.conflictDate) warnings.push(`${rowFactoryName}: 抵触日が未設定です`);
+        if (!factoryData.hourlyRate) warnings.push(`${rowFactoryName}: 単価が未設定です`);
+        if (!factoryData.managerUnsName) warnings.push(`${rowFactoryName}: 派遣元責任者氏名が未入力です`);
+        if (!factoryData.managerUnsPhone) warnings.push(`${rowFactoryName}: 派遣元責任者TELが未入力です`);
+
+        if (warnings.length > 0) {
+          txWarnings.push(...warnings);
+        }
         const department = factoryData.department ?? "";
         const lineName = factoryData.lineName ?? "";
 
@@ -428,6 +445,7 @@ export async function importFactories(
       skipped: txSkipped,
       deleted: txDeleted,
       errors: txErrors,
+      warnings: txWarnings,
       companiesUpdated: txCompaniesUpdated,
     };
   })();

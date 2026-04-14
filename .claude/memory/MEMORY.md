@@ -1,4 +1,4 @@
-- [Sesion 2026-04-07b — pendientes resueltos + backup rotacion](session_2026-04-07b.md) — recordPdfVersion batch; pdf-lib; EmptyState 6 rutas; deprecacion employeeIds; refactor imports; backup rotacion
+- [Sesion 2026-04-14 — audit-pro security + Excel import + light mode](session_2026-04-14.md) — audit 11 fases; 7 fixes seguridad; tests admin-sql/dashboard-stats; parser Excel fix; tabla light mode fix
+- [Sesion 2026-04-13](session_2026-04-13.md) — (ver archivo para detalles)
 - [Sesion 2026-04-08 — conflictDateOverride + auditoría imports + fixes](session_2026-04-08.md) — feature 抵触日 override por contrato; 3 fixes auditoría Excel; 待機中→onLeave; CLAUDE.md actualizado
-- [Sesion 2026-04-09 — Enhanced Mid-Hires: auto-period + preview agrupado](session_2026-04-09.md) — company.conflictDate auto-period; preview agrupado por fábrica; CompanyEditDialog; toLocalDateStr; isPreviewStale
-- [Sesion 2026-04-09b — Audit-pro fixes: chart colors + typing](session_2026-04-09b.md) — CHART_COLORS centralizado; PIE_COLORS/COLORS removidos; _raw: Contract tipado; CLAUDE.md L-04
+- [Sesion 2026-04-07b — pendientes resueltos + backup rotacion](session_2026-04-07b.md) — recordPdfVersion batch; pdf-lib; EmptyState 6 rutas; deprecacion employeeIds; refactor imports; backup rotacion

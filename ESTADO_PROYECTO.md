@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.3.25
 
-> Última actualización: 2026-04-09
+> Última actualización: 2026-04-14
 
 ---
 
@@ -29,6 +29,24 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-14 — Audit-pro security + Excel import + light mode
+
+**Audit-pro:** 11 fases, 1 CRITICAL (SQL injection admin-sql), 4 HIGH, 10 MEDIUM, 6 LOW. Todos resueltos.
+
+**Seguridad:** admin-sql regex -> stmt.reader; admin guard requiere token siempre; CORS x-admin-token; path confinement backup; timingSafeEqual; readFileSync -> async en 5 rutas docs.
+
+**Tests:** admin-sql.test.ts (18 tests) + dashboard-stats.test.ts (34 tests). Coverage: admin-sql 0%->100%, dashboard-stats 25%->100%.
+
+**Bug Excel parser:** Row 1 del Excel tenía headers mergeados (基本情報, 派遣先責任者...). Parser ahora detecta "会社名" como ancla. El Excel de 中山 ya estaba importado en DB.
+
+**Bug light mode:** Tabla CompanyTableGrid usaba background transparente. Fix: bg-background en area scrolleable.
+
+**Pendiente no bloqueante:** CLAUDE.md dice 8 tablas, hay 9 (falta pdfVersions). npm audit CVEs en esbuild/drizzle-kit (dev-only).
+
+**Tests:** 755/755 ✅ | Typecheck ✅ | Lint 19 warnings (preexistentes) ✅
+
+---
 
 ## Sesión 2026-04-09b — Audit-pro fixes: chart colors + typing
 

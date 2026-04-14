@@ -435,8 +435,9 @@ export interface CascadeData {
 
 export interface ImportResult {
   success: boolean;
-  summary: { total: number; inserted: number; updated: number; deleted: number; skipped: number; errors: number; companiesUpdated?: number };
+  summary: { total: number; inserted: number; updated: number; deleted: number; skipped: number; errors: number; warnings: number; companiesUpdated?: number };
   errors: string[];
+  warnings?: string[];
 }
 
 export interface DiffChange { old: unknown; new: unknown }

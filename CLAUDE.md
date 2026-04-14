@@ -90,19 +90,19 @@ The proxy is configured in `vite.config.ts`. In production, `npm run build` outp
 server/
 ├── index.ts               # Hono entry, health check, backup (port 8026)
 ├── db/
-│   ├── schema.ts           # 9 tables + relations + indexes
+│   ├── schema.ts           # 8 tables + relations + indexes (comment says "9" incorrectly)
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
-├── routes/                 # One Hono router per entity (18 routers)
-├── services/               # Business logic (22 modules)
+├── routes/                 # 29 route files (CRUD, docs, batch, imports, admin)
+├── services/               # Business logic (29 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
 ```
 
-**Route files (29, grouped by purpose):**
-- **Domain CRUD:** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`
-- **Document generation:** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
-- **Imports:** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
-- **Admin panel** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`
+**Route files (29 files, grouped by purpose):**
+- **Domain CRUD (11):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`
+- **Document generation (10):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
+- **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
+- **Admin panel (6)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`
 
 **PDF generators (9 generators + utilities):**
 | Module | Document |
@@ -119,7 +119,7 @@ server/
 | `helpers.ts` | Grid functions, font registration, `getTakaoJigyosho()` |
 | `types.ts` | Shared type definitions for PDF data |
 
-**Service modules (29):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `pdf-data-builders`, `pdf-versioning`, `takao-detection`, `validation`
+**Service modules (29):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `pdf-data-builders`, `pdf-versioning`, `takao-detection`, `validation` (verified: 29 modules)
 
 **Conventions:**
 - Routes use `try/catch (err: unknown)` with JSON error responses `{ error: string }`
@@ -213,7 +213,7 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 4. Connect in `server/routes/documents-generate.ts`
 5. For details on PDF rules: see `.claude/rules/pdf-rules.md` (auto-injected)
 
-## Database (8 Tables)
+## Database (8 Tables — NOT 9 despite db/schema.ts comment saying "9 tables")
 
 | Table | Purpose | Key relationships |
 |-------|---------|-------------------|

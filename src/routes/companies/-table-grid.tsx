@@ -171,8 +171,8 @@ export function CompanyTableGrid({
           <div
             className={
               isFullscreen
-                ? "max-h-[calc(100vh-270px)] overflow-y-auto"
-                : "max-h-[calc(100vh-350px)] overflow-y-auto"
+                ? "max-h-[calc(100vh-270px)] overflow-y-auto bg-background"
+                : "max-h-[calc(100vh-350px)] overflow-y-auto bg-background"
             }
           >
             {rowData.map((row, index) => (

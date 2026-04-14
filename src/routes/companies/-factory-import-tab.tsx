@@ -30,17 +30,38 @@ export function FactoryImportTab() {
     const workbook = await loadExcelWorkbook(f);
     const ws = workbook.getWorksheet(1);
     if (!ws) return [];
+
+    // Template-style Excel files have merged category headers in row 1.
+    // "会社名" is the anchor: the row that contains it is the real header row.
+    // Row 2 always contains "会社名" in TBKaisha format.
+    const row1 = ws.getRow(1);
+    const row2 = ws.getRow(2);
+    const r1Cells: string[] = [];
+    const r2Cells: string[] = [];
+    row1.eachCell((c) => { r1Cells.push(String(c.text ?? "").trim()); });
+    row2.eachCell((c) => { r2Cells.push(String(c.text ?? "").trim()); });
+
+    const r2HasCompany = r2Cells.includes("会社名");
+    // Prefer row 2 if it has the anchor field "会社名"; otherwise use the row with more cells
+    const useRow2 = r2HasCompany || r2Cells.length >= r1Cells.length;
+    const headerRow = useRow2 ? row2 : row1;
+    const skipNum = useRow2 ? 2 : 1;
+
     const headers: string[] = [];
-    ws.getRow(1).eachCell((cell) => {
+    headerRow.eachCell((cell) => {
       headers.push(String(cell.text ?? "").trim());
     });
+
     const rows: Record<string, unknown>[] = [];
     ws.eachRow((row, rowNum) => {
-      if (rowNum === 1) return;
+      if (rowNum < skipNum) return;
       const obj: Record<string, unknown> = {};
       row.eachCell((cell, col) => {
         obj[headers[col - 1]] = cell.text;
       });
+      // Skip rows where the "会社名" field is empty or just whitespace
+      const companyVal = obj["会社名"];
+      if (!companyVal || String(companyVal).trim() === "") return;
       rows.push(obj);
     });
     return rows;
