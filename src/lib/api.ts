@@ -302,7 +302,7 @@ export const api = {
       body: JSON.stringify(data),
     }),
   adminDelete: (table: string, id: number) =>
-    request<{ success: boolean }>(`/admin/crud/${table}/${id}`, {
+    request<{ deleted: boolean; id: number }>(`/admin/crud/${table}/${id}`, {
       method: "DELETE",
     }),
   executeSql: (sql: string) => request<AdminSqlResult>("/admin/sql", {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/lib/api";
+import { api, AdminTableMeta } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -17,16 +17,6 @@ const ALLOWED_TABLES = [
 ] as const;
 
 type AllowedTable = (typeof ALLOWED_TABLES)[number];
-
-interface TableColumn {
-  name: string;
-  type: string;
-}
-
-interface TableMeta {
-  name: string;
-  columns: TableColumn[];
-}
 
 export function AdminCrudTab() {
   const queryClient = useQueryClient();
@@ -49,7 +39,7 @@ export function AdminCrudTab() {
     staleTime: 10_000,
   });
 
-  const currentMeta = (tableMeta as TableMeta[] | undefined)?.find(
+  const currentMeta = (tableMeta as AdminTableMeta[] | undefined)?.find(
     (t) => t.name === selectedTable,
   );
   // Editable columns: exclude id, createdAt, updatedAt
@@ -79,7 +69,7 @@ export function AdminCrudTab() {
   });
 
   // Rows are in AdminRowResult.rows
-  const rowData = (rows as { rows?: Record<string, unknown>[] } | undefined)?.rows ?? [];
+  const rowData = rows?.rows ?? [];
   const displayColumns = (currentMeta?.columns ?? [])
     .filter((c) => c.name !== "id");
 
