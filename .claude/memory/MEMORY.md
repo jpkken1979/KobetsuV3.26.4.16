@@ -1,3 +1,4 @@
 - [Sesion 2026-04-07b — pendientes resueltos + backup rotacion](session_2026-04-07b.md) — recordPdfVersion batch; pdf-lib; EmptyState 6 rutas; deprecacion employeeIds; refactor imports; backup rotacion
 - [Sesion 2026-04-08 — conflictDateOverride + auditoría imports + fixes](session_2026-04-08.md) — feature 抵触日 override por contrato; 3 fixes auditoría Excel; 待機中→onLeave; CLAUDE.md actualizado
 - [Plan A+B 2026-04-15 — Settings/Admin fixes + Database Reset](project_plan_a_b_2026_04_15.md) — 5 bug fixes + endpoint reset-all + Danger Zone UI; 762 tests; commits e478785..fe0ed21
+- [Sesion 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes](session_2026-04-15b.md) — tsx no cargaba .env; bypass localhost en adminGuardMiddleware; --env-file .env en dev scripts; commit ecd281c
