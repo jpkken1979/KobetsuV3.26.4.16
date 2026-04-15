@@ -123,7 +123,7 @@ describe("POST /reset-all — lógica de negocio", () => {
     expect(typeof body.error).toBe("string");
   });
 
-  it("returns 400 when body is empty string", async () => {
+  it("returns 400 when body is empty object (raw request)", async () => {
     const res = await testApp.fetch(
       new Request("http://localhost/reset-all", {
         method: "POST",
