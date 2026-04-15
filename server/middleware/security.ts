@@ -72,11 +72,28 @@ export async function securityHeadersMiddleware(_c: Context, next: Next) {
   _c.header("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 }
 
+function isLocalhost(c: Context): boolean {
+  const clientId = getClientId(c);
+  return (
+    clientId === "local" ||
+    clientId === "127.0.0.1" ||
+    clientId === "::1" ||
+    clientId === "::ffff:127.0.0.1"
+  );
+}
+
 export async function adminGuardMiddleware(c: Context, next: Next) {
   const method = c.req.method.toUpperCase();
   const path = c.req.path;
 
   if (isAdminPath(path)) {
+    // App local-only: si la request viene de localhost, siempre permitir.
+    if (isLocalhost(c)) {
+      await next();
+      return;
+    }
+
+    // Acceso remoto: requiere ADMIN_TOKEN.
     if (!ADMIN_TOKEN) {
       return c.json(
         { error: "Admin routes are disabled: ADMIN_TOKEN is not configured." },

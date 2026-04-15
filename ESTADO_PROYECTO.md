@@ -30,6 +30,16 @@
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
 
+## Sesión 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes
+
+**Admin token bypass:**
+- Root cause: `tsx watch` no cargaba `.env` → `ADMIN_TOKEN` vacío → todas las rutas `/api/admin/*` devolvían 503
+- Fix: `adminGuardMiddleware` ahora permite acceso libre desde localhost (app local-only); token sigue siendo requerido para acceso remoto
+- Fix: `package.json` dev scripts usan `--env-file .env` para cargar vars correctamente
+- Fix CLAUDE.md: 3 correcciones factuales (conteo tablas/routes/doc-generation, nota .env)
+
+**Estado actual:** typecheck limpio, lint 0 errores, pushed a master.
+
 ## Sesión 2026-04-15 — Plan A (5 fixes Settings/Admin) + Plan B (Database Reset)
 
 **Plan A — 5 bug fixes quirúrgicos:**

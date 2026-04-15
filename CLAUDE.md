@@ -90,9 +90,9 @@ The proxy is configured in `vite.config.ts`. In production, `npm run build` outp
 server/
 ├── index.ts               # Hono entry, health check, backup (port 8026)
 ├── db/
-│   ├── schema.ts           # 8 tables + relations + indexes (comment says "9" incorrectly)
+│   ├── schema.ts           # 9 tables + relations + indexes
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
-├── routes/                 # 29 route files (CRUD, docs, batch, imports, admin)
+├── routes/                 # 30 route files (CRUD, docs, batch, imports, admin)
 ├── services/               # Business logic (29 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
@@ -100,7 +100,7 @@ server/
 
 **Route files (30 files, grouped by purpose):**
 - **Domain CRUD (11):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`
-- **Document generation (10):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
+- **Document generation (9):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
 - **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
 - **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically)
 
@@ -390,7 +390,9 @@ These rules are injected into every session automatically. When they conflict wi
 
 ## Files NOT to Commit
 
-`data/kobetsu.db*`, `output/*.pdf`, `.env*`, `node_modules/`, `dist/`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
+`data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
+
+> **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (ver `.claude/rules/security.md`). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens.
 
 ---
 
