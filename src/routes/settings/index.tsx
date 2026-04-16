@@ -90,8 +90,8 @@ function SettingsPage() {
   });
 
   const { isDark, toggleTheme } = useTheme();
-  const themeLabel = isDark ? "Bugatti" : "Ferrari / Lambo";
-  const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold";
+  const themeLabel = isDark ? "Bugatti" : "Ferrari";
+  const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold / carbon";
   const [backingUp, setBackingUp] = useState(false);
   const [clearingEmployees, setClearingEmployees] = useState(false);
   const [clearEmployeesOpen, setClearEmployeesOpen] = useState(false);

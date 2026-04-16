@@ -19,8 +19,8 @@ const MODE_ITEMS: Array<{ key: LayoutMode; icon: typeof View; label: string; hin
 export function Header({ onMenuClick, layoutMode, onModeChange }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
   const [now, setNow] = useState(new Date());
-  const themeLabel = isDark ? "Bugatti" : "Ferrari / Lambo";
-  const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold";
+  const themeLabel = isDark ? "Bugatti" : "Ferrari";
+  const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold / carbon";
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
