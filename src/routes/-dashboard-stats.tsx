@@ -50,7 +50,7 @@ function DashboardSignal({
 }) {
   return (
     <SpotlightPanel
-      tone={tone === "warning" ? "amber" : tone === "success" ? "emerald" : "cyan"}
+      tone={tone === "warning" ? "amber" : tone === "success" ? "rose" : "amber"}
       spotlightSize={180}
       className={cn(
         "rounded-2xl px-4 py-3 shadow-[var(--shadow-card)]",
@@ -89,6 +89,7 @@ function StatCard({
   value,
   icon: Icon,
   color,
+  tone = "amber",
   gradientFrom,
   gradientTo,
   isLoading,
@@ -100,6 +101,7 @@ function StatCard({
   value: number | string;
   icon: React.ElementType;
   color: string;
+  tone?: "amber" | "rose";
   gradientFrom: string;
   gradientTo: string;
   isLoading?: boolean;
@@ -110,13 +112,7 @@ function StatCard({
   const shouldReduceMotion = useReducedMotion();
   const content = (
     <SpotlightPanel
-      tone={
-        color.includes("red")
-          ? "rose"
-          : color.includes("emerald")
-            ? "emerald"
-            : "cyan"
-      }
+      tone={tone}
       spotlightSize={220}
       className={cn(
         "rounded-3xl bg-gradient-to-br p-4",
@@ -221,7 +217,7 @@ export function DashboardHeader() {
       animate={shouldReduceMotion ? undefined : "visible"}
       className="relative"
     >
-      <SpotlightPanel tone="emerald" spotlightSize={320} className="p-6 md:p-8">
+      <SpotlightPanel tone="amber" spotlightSize={320} className="p-6 md:p-8">
         <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-70 dark:via-white/20" />
         <div className="relative grid gap-6 lg:grid-cols-[1.4fr_0.9fr] lg:items-end">
           <div className="space-y-5">
@@ -238,7 +234,7 @@ export function DashboardHeader() {
 
             <div className="space-y-3">
               <p className="max-w-3xl text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                <GradientText from="var(--color-primary)" to="var(--color-cyan-hi)">
+                <GradientText from="var(--color-primary)" to="var(--color-accent)">
                   UNS dispatch command center
                 </GradientText>
               </p>
@@ -331,8 +327,9 @@ export function DashboardStats({
           title="派遣社員"
           value={stats?.activeEmployees ?? 0}
           icon={Users}
-          color="text-emerald-500 dark:text-emerald-400"
-          gradientFrom="from-emerald-500/8"
+          color="text-primary dark:text-primary"
+          tone="amber"
+          gradientFrom="from-primary/8"
           gradientTo="to-background"
           isLoading={isLoading}
           to="/employees"
@@ -345,8 +342,9 @@ export function DashboardStats({
           title="有効契約"
           value={stats?.activeContracts ?? 0}
           icon={TrendingUp}
-          color="text-blue-500 dark:text-blue-400"
-          gradientFrom="from-blue-500/8"
+          color="text-accent dark:text-accent"
+          tone="rose"
+          gradientFrom="from-accent/8"
           gradientTo="to-background"
           isLoading={isLoading}
           to="/contracts"
@@ -360,6 +358,7 @@ export function DashboardStats({
           value={stats?.expiringInDays ?? 0}
           icon={AlertTriangle}
           color="text-red-500 dark:text-red-400"
+          tone="rose"
           gradientFrom="from-red-500/10"
           gradientTo="to-background"
           isLoading={isLoading}
@@ -372,8 +371,9 @@ export function DashboardStats({
           title="派遣先企業"
           value={stats?.companies ?? 0}
           icon={Building2}
-          color="text-cyan-500 dark:text-cyan-400"
-          gradientFrom="from-cyan-500/8"
+          color="text-foreground dark:text-foreground"
+          tone="amber"
+          gradientFrom="from-foreground/8"
           gradientTo="to-background"
           isLoading={isLoading}
           to="/companies"
@@ -386,8 +386,9 @@ export function DashboardStats({
           title="工場・ライン"
           value={stats?.factories ?? 0}
           icon={Factory}
-          color="text-cyan-500 dark:text-cyan-400"
-          gradientFrom="from-cyan-500/8"
+          color="text-foreground dark:text-foreground"
+          tone="amber"
+          gradientFrom="from-foreground/8"
           gradientTo="to-background"
           isLoading={isLoading}
           to="/companies"
@@ -400,7 +401,8 @@ export function DashboardStats({
           title="契約総数"
           value={stats?.totalContracts ?? 0}
           icon={FileText}
-          color="text-cyan-500 dark:text-cyan-400"
+          color="text-primary dark:text-primary"
+          tone="amber"
           gradientFrom="from-primary/8"
           gradientTo="to-background"
           isLoading={isLoading}

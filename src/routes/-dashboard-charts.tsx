@@ -76,7 +76,7 @@ export function DashboardCharts({
         viewport={{ once: true }}
         className="relative"
       >
-        <SpotlightPanel tone="emerald" spotlightSize={260} className="p-6">
+        <SpotlightPanel tone="amber" spotlightSize={260} className="p-6">
           <div className="mb-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <h2 className="text-sm font-bold tracking-tight">
@@ -159,7 +159,7 @@ export function DashboardCharts({
         viewport={{ once: true }}
         className="relative"
       >
-        <SpotlightPanel tone="cyan" spotlightSize={260} className="p-6">
+        <SpotlightPanel tone="rose" spotlightSize={260} className="p-6">
           <div className="mb-4 flex items-center justify-between">
             <div className="space-y-0.5">
               <h2 className="text-sm font-bold tracking-tight">国籍分布</h2>
@@ -271,9 +271,9 @@ export function DashboardQuickActions() {
       title: "新規契約作成",
       desc: "ウィザードからライン単位で契約を起票",
       badge: "CREATE",
-      accent: "from-blue-500/18 to-cyan-500/6",
-      iconClass: "bg-blue-600 shadow-blue-500/30",
-      tone: "cyan",
+      accent: "from-primary/18 to-accent/6",
+      iconClass: "bg-primary shadow-primary/30",
+      tone: "rose",
       className: "xl:col-span-5",
     },
     {
@@ -282,9 +282,9 @@ export function DashboardQuickActions() {
       title: "書類出力",
       desc: "個別契約書・通知書・台帳をまとめて生成",
       badge: "PDF",
-      accent: "from-emerald-500/18 to-primary/6",
-      iconClass: "bg-emerald-600 shadow-emerald-500/30",
-      tone: "emerald",
+      accent: "from-amber-500/18 to-primary/6",
+      iconClass: "bg-accent shadow-amber-500/30",
+      tone: "amber",
       className: "xl:col-span-4",
     },
     {
@@ -293,9 +293,9 @@ export function DashboardQuickActions() {
       title: "社員管理",
       desc: "在籍・配属・国籍データを横断で確認",
       badge: "STAFF",
-      accent: "from-cyan-500/18 to-background",
-      iconClass: "bg-cyan-600 shadow-cyan-500/30",
-      tone: "cyan",
+      accent: "from-foreground/12 to-background",
+      iconClass: "bg-foreground shadow-black/20",
+      tone: "amber",
       className: "xl:col-span-3",
     },
     {
@@ -305,7 +305,7 @@ export function DashboardQuickActions() {
       desc: "Excel取込と差分反映をまとめて実行",
       badge: "SYNC",
       accent: "from-amber-500/18 to-background",
-      iconClass: "bg-amber-500 shadow-amber-500/30",
+      iconClass: "bg-accent shadow-amber-500/30",
       tone: "amber",
       className: "xl:col-span-12",
     },
@@ -319,7 +319,7 @@ export function DashboardQuickActions() {
       viewport={{ once: true }}
       className="relative"
     >
-      <SpotlightPanel tone="emerald" spotlightSize={300} className="p-6">
+      <SpotlightPanel tone="amber" spotlightSize={300} className="p-6">
         <div className="mb-6 flex items-center gap-3">
           <Zap className="h-5 w-5 text-primary" />
           <h2 className="text-base font-bold tracking-tight">クイック操作</h2>

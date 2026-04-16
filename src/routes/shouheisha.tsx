@@ -908,7 +908,7 @@ function ShouheishaPage() {
                   ))}
                 </div>
                 {result.zipFilename && (
-                  <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-300">
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary dark:text-primary/90">
                     ZIPでまとめて保存しました: {result.zipFilename}
                   </div>
                 )}

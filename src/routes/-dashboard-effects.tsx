@@ -18,10 +18,6 @@ const hoverTransition = {
 };
 
 const ambientToneClass = {
-  emerald:
-    "bg-[radial-gradient(circle_at_top_left,rgba(214,31,42,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,122,24,0.10),transparent_42%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(255,77,79,0.12),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,176,0,0.08),transparent_42%)]",
-  cyan:
-    "bg-[radial-gradient(circle_at_top_right,rgba(8,145,178,0.16),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(34,211,238,0.10),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.13),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(45,212,191,0.10),transparent_40%)]",
   amber:
     "bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.16),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.10),transparent_40%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.13),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(251,191,36,0.09),transparent_40%)]",
   rose:
@@ -29,8 +25,6 @@ const ambientToneClass = {
 } as const;
 
 const spotlightTone = {
-  emerald: "rgba(214, 31, 42, 0.22)",
-  cyan: "rgba(34, 211, 238, 0.22)",
   amber: "rgba(251, 191, 36, 0.22)",
   rose: "rgba(244, 63, 94, 0.18)",
 } as const;
@@ -46,7 +40,7 @@ interface SpotlightPanelProps {
 export function SpotlightPanel({
   children,
   className,
-  tone = "cyan",
+  tone = "amber",
   spotlightSize = 240,
   spotlightClassName,
 }: SpotlightPanelProps) {
