@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.3.25
 
-> Última actualización: 2026-04-15
+> Última actualización: 2026-04-16
 
 ---
 
@@ -29,6 +29,30 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-16 — audit, push preparado y dashboard experimental
+
+**Gobernanza / tooling:**
+- Se creó `.github/copilot-instructions.md` con comandos reales, arquitectura y convenciones operativas del repo para futuras sesiones.
+- Se ejecutó una auditoría amplia y se guardó `.claude/audit_report_20260416_035744.md`.
+- Hallazgos relevantes de auditoría: `hono < 4.12.14` en `npm audit`, `.mcp.json` con rutas absolutas no portables y baseline de `test:run` inicialmente bloqueado por drift de snapshot PDF.
+
+**Git / publicación:**
+- Se preparó la publicación completa del estado local y se creó el commit `2b43254` (`feat(app): agregar config anual y sincronizar cambios`).
+- Se agregó `target -> https://github.com/jokken79/KobetsuV3.26.4.16.git`.
+- El push al repo `target` quedó bloqueado por permisos (HTTPS `Repository not found`, SSH `Permission denied (publickey)`).
+- Se generó bundle portable de respaldo en `~/.copilot/session-state/.../KobetsuV3_26.4.16_push_ready.bundle`.
+
+**Dashboard / UI:**
+- El dashboard fue elevado a una versión **experimental** con hero cinematográfico, glassmorphism y spotlight interactivo.
+- Nuevo helper `src/routes/-dashboard-effects.tsx` con `SpotlightPanel` reutilizable para glow, glass y seguimiento del puntero.
+- `src/routes/-dashboard-stats.tsx`: hero más inmersivo, señales operativas y stat cards con superficies vivas.
+- `src/routes/-dashboard-charts.tsx`: charts premium y quick actions editoriales/asimétricas.
+- `src/routes/index.tsx`: ambient background para dar profundidad al panel completo.
+
+**Tests / snapshots:**
+- Se regeneró `server/__tests__/__snapshots__/pdf-hashes.json` porque el golden de `kobetsu` estaba desfasado respecto al output actual.
+- Verificación final: `npm run typecheck` ✅, `npm run lint` ✅ (18 warnings preexistentes en tests), `npm run test:run` ✅ (**42 archivos, 762 tests**).
 
 ## Sesión 2026-04-15c — factory/company yearly config + table UX fixes
 
