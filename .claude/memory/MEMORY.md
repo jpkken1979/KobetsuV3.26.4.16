@@ -3,5 +3,5 @@
 - [Plan A+B 2026-04-15 — Settings/Admin fixes + Database Reset](project_plan_a_b_2026_04_15.md) — 5 bug fixes + endpoint reset-all + Danger Zone UI; 762 tests; commits e478785..fe0ed21
 - [Sesion 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes](session_2026-04-15b.md) — tsx no cargaba .env; bypass localhost en adminGuardMiddleware; --env-file .env en dev scripts; commit ecd281c
 - [Sesion 2026-04-15c — factory/company yearly config + table UX](session_2026-04-15c.md) — inkan 朱肉; MSGothic font; factory_yearly_config + company_yearly_config cascade; 年度 button tabla; light mode fix
-- [Sesion 2026-04-16 — audit, push bloqueado y dashboard experimental](session_2026-04-16.md) — copilot-instructions; audit report; push preparado pero bloqueado por permisos; dashboard premium + experimental con SpotlightPanel
+- [Sesion 2026-04-16 — audit, hono, mcp portable y cierre UI](session_2026-04-16.md) — copilot-instructions; audit report; push confirmado; hono 4.12.14; .mcp.json portable; layout/UI estable; 762 tests
 - [Sesion 2026-04-16 — 招聘者 page](session_2026-04-16_shouheisha.md) — nueva pagina 招聘者 para orquestar empresa + fabrica + 配属先 + linea; captura datos completos del shouheisha; genera 2 kobetsu + tsuchisho + hakenmoto/hakensaki daicho + roudoukeiyakusho

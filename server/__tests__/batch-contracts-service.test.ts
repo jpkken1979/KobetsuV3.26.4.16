@@ -401,9 +401,12 @@ describe("executeBatchCreate", () => {
       .where(eq(auditLog.entityId, contractId))
       .all();
 
+    const contractAuditEntry = auditEntries.find((entry) => entry.entityType === "contract");
+
     expect(auditEntries.length).toBeGreaterThanOrEqual(1);
-    expect(auditEntries[0].action).toBe("create");
-    expect(auditEntries[0].entityType).toBe("contract");
+    expect(contractAuditEntry).toBeDefined();
+    expect(contractAuditEntry?.action).toBe("create");
+    expect(contractAuditEntry?.entityType).toBe("contract");
   });
 });
 

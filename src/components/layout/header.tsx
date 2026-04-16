@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Moon, Sun, Search, Menu, Columns3, PanelTop, View } from "lucide-react";
+import { Moon, Sun, Search, Menu, Columns3, PanelTop, View, AlignJustify, ListFilter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/hooks/use-theme";
+import { useUIPrefs } from "@/stores/ui-prefs";
 import type { LayoutMode } from "./root-layout";
 
 interface HeaderProps {
@@ -18,6 +19,7 @@ const MODE_ITEMS: Array<{ key: LayoutMode; icon: typeof View; label: string; hin
 
 export function Header({ onMenuClick, layoutMode, onModeChange }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
+  const { density, setDensity } = useUIPrefs();
   const [now, setNow] = useState(new Date());
   const themeLabel = isDark ? "Bugatti" : "Ferrari";
   const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold / carbon";
@@ -26,7 +28,6 @@ export function Header({ onMenuClick, layoutMode, onModeChange }: HeaderProps) {
     const id = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(id);
   }, []);
-
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border/70 bg-background/80 px-4 backdrop-blur-xl md:px-6">
       <div className="flex min-w-0 items-center gap-3">
@@ -74,6 +75,32 @@ export function Header({ onMenuClick, layoutMode, onModeChange }: HeaderProps) {
               <span>{label}</span>
             </button>
           ))}
+        </div>
+
+        <div className="hidden h-5 w-px bg-border/80 md:block" />
+        
+        {/* Density Toggle */}
+        <div className="hidden items-center rounded-full border border-border/70 bg-card/70 p-1 md:flex" title="表示密度">
+          <button
+            onClick={() => setDensity("comfortable")}
+            className={cn(
+              "p-1.5 rounded-full",
+              density === "comfortable" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+            title="標準"
+          >
+            <AlignJustify className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => setDensity("compact")}
+            className={cn(
+              "p-1.5 rounded-full",
+              density === "compact" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+            )}
+            title="コンパクト"
+          >
+            <ListFilter className="h-3.5 w-3.5" />
+          </button>
         </div>
 
         <div className="hidden h-5 w-px bg-border/80 md:block" />

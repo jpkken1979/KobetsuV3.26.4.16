@@ -80,6 +80,19 @@
   --duration-fast: 120ms;
   --duration-normal: 200ms;
   --duration-slow: 300ms;
+
+  /* Density Defaults (Comfortable) */
+  --row-height: 48px;
+  --table-cell-py: 0.75rem;
+  --sidebar-width: 18rem;
+}
+
+[data-density="compact"] {
+  --row-height: 34px;
+  --table-cell-py: 0.35rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.35rem;
+  --radius-lg: 0.5rem;
 }
 
 .dark {

@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
     Building2,
+    ChevronLeft,
+    ChevronRight,
     ClipboardCheck,
     FileDown,
     FileText,
@@ -19,6 +21,7 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import type { ElementType } from "react";
+import { useUIPrefs } from "@/stores/ui-prefs";
 
 
 interface SidebarProps {
@@ -31,27 +34,31 @@ function NavItem({
   label,
   active,
   onClick,
+  collapsed,
 }: {
   to: string;
   icon: ElementType;
   label: string;
   active: boolean;
   onClick?: () => void;
+  collapsed?: boolean;
 }) {
   return (
     <Link
       to={to}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
+      title={collapsed ? label : undefined}
       className={cn(
         "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 cursor-pointer overflow-hidden",
         active
           ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/15 dark:bg-primary/[0.14]"
-          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground hover:translate-x-0.5"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground hover:translate-x-0.5",
+        collapsed && "justify-center px-0"
       )}
     >
       {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
+        <span className={cn("absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary", collapsed && "hidden")} />
       )}
       <Icon
         className={cn(
@@ -61,9 +68,9 @@ function NavItem({
             : "text-muted-foreground/60 group-hover:text-foreground/70 group-hover:scale-110"
         )}
       />
-      <span className="truncate">{label}</span>
+      {!collapsed && <span className="truncate">{label}</span>}
 
-      {active && (
+      {active && !collapsed && (
         <span className="ml-auto h-2 w-2 rounded-full bg-primary shadow-[0_0_6px_var(--color-primary)]" />
       )}
     </Link>
@@ -71,6 +78,7 @@ function NavItem({
 }
 
 export function Sidebar({ onClose }: SidebarProps) {
+  const { sidebarCollapsed, toggleSidebar } = useUIPrefs();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const adminMode = getAppSettings().adminMode;
@@ -113,32 +121,39 @@ export function Sidebar({ onClose }: SidebarProps) {
   ], [adminMode]);
 
   return (
-    <aside className="relative z-20 flex h-screen w-[18rem] flex-col overflow-hidden border-r border-border/70 bg-sidebar/90 text-sidebar-foreground backdrop-blur-xl shadow-[12px_0_40px_rgba(18,19,22,0.04)] dark:shadow-[12px_0_40px_rgba(0,0,0,0.28)]">
+    <aside className={cn(
+      "relative z-20 flex h-screen flex-col overflow-hidden border-r border-border/70 bg-sidebar/90 text-sidebar-foreground backdrop-blur-xl transition-all duration-300 ease-in-out shadow-[12px_0_40px_rgba(18,19,22,0.04)] dark:shadow-[12px_0_40px_rgba(0,0,0,0.28)]",
+      sidebarCollapsed ? "w-[4.8rem]" : "w-[18rem]"
+    )}>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.35),transparent_22%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%)]" />
       <div aria-hidden="true" className="pointer-events-none absolute left-4 top-4 h-36 w-36 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="relative border-b border-border/70 px-4 py-4">
-        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/80 px-3 py-3 shadow-[var(--shadow-card)]">
+        <div className={cn("flex items-center gap-3 rounded-2xl border border-border/60 bg-card/80 px-3 py-3 shadow-[var(--shadow-card)]", sidebarCollapsed && "justify-center px-2")}>
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-sm">
             契
           </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Sumi Ledger</p>
-            <p className="truncate text-sm font-semibold text-foreground">個別契約書管理</p>
-            <p className="truncate text-[11px] text-muted-foreground">ユニバーサル企画株式会社</p>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="min-w-0 animate-in">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Sumi Ledger</p>
+              <p className="truncate text-sm font-semibold text-foreground">個別契約書管理</p>
+              <p className="truncate text-[11px] text-muted-foreground">ユニバーサル企画株式会社</p>
+            </div>
+          )}
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
-          <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
-            <p className="text-muted-foreground">API</p>
-            <p className="mt-0.5 font-semibold text-foreground">Online</p>
+        {!sidebarCollapsed && (
+          <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] animate-in">
+            <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+              <p className="text-muted-foreground">API</p>
+              <p className="mt-0.5 font-semibold text-foreground">Online</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+              <p className="text-muted-foreground">DB</p>
+              <p className="mt-0.5 font-semibold text-foreground">SQLite</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
-            <p className="text-muted-foreground">DB</p>
-            <p className="mt-0.5 font-semibold text-foreground">SQLite</p>
-          </div>
-        </div>
+        )}
 
         {onClose && (
           <button
@@ -151,13 +166,13 @@ export function Sidebar({ onClose }: SidebarProps) {
         )}
       </div>
 
-      <nav aria-label="メインナビゲーション" className="flex-1 overflow-y-auto px-3 py-4">
+      <nav aria-label="メインナビゲーション" className="flex-1 overflow-y-auto px-3 py-4 scrollbar-none">
         {navigationSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className={cn(sectionIndex > 0 && "mt-4")}>
-            {section.label && (
+            {section.label && !sidebarCollapsed && (
               <>
                 <div className="mx-3 mb-3 h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
-                <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground/55">
+                <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground/55 animate-in">
                   {section.label}
                 </p>
               </>
@@ -169,8 +184,6 @@ export function Sidebar({ onClose }: SidebarProps) {
                   const exactMatch = currentPath === item.href || currentPath === item.href + "/";
                   if (exactMatch) return true;
                   if (!currentPath.startsWith(item.href + "/")) return false;
-                  // Search ALL sections for a more-specific match to avoid
-                  // cross-section false positives (e.g. /companies vs /companies/table)
                   const allItems = navigationSections.flatMap((s) => s.items);
                   const hasBetterMatch = allItems.some(
                     (other) =>
@@ -191,6 +204,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                     label={item.name}
                     active={isActive}
                     onClick={onClose}
+                    collapsed={sidebarCollapsed}
                   />
                 );
               })}
@@ -201,23 +215,38 @@ export function Sidebar({ onClose }: SidebarProps) {
 
       <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
 
-      <div className="px-4 py-4">
-        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 px-3 py-2.5 shadow-[var(--shadow-card)]">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
-            <span className="text-[10px] font-bold text-primary">管</span>
+      <div className="flex flex-col gap-2 p-4">
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 px-3 py-2.5 shadow-[var(--shadow-card)] animate-in">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+              <span className="text-[10px] font-bold text-primary">管</span>
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold text-foreground">
+                UNS 管理
+              </p>
+              <p className="truncate text-[10px] font-medium text-muted-foreground">
+                v26.3.31
+              </p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-semibold text-foreground">
-              UNS 管理
-            </p>
-            <p className="truncate text-[10px] font-medium text-muted-foreground">
-              契約管理システム
-            </p>
-          </div>
-          <div className="ml-auto flex h-2 w-2 shrink-0 items-center justify-center">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-          </div>
-        </div>
+        )}
+        
+        <button
+          onClick={toggleSidebar}
+          className={cn(
+            "btn-press flex items-center justify-center rounded-xl border border-border/60 bg-card/70 py-2.5 text-muted-foreground shadow-xs hover:border-primary/25 hover:text-foreground",
+            sidebarCollapsed ? "px-0" : "px-3 gap-2"
+          )}
+          aria-label={sidebarCollapsed ? "サイドバーを広げる" : "サイドバーを閉じる"}
+        >
+          {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : (
+            <>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="text-xs font-medium">折りたたむ</span>
+            </>
+          )}
+        </button>
       </div>
     </aside>
   );

@@ -3,7 +3,7 @@
     "antigravity": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/mcp-server/server.py"
+        "mcp-server\\server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -12,7 +12,7 @@
     "antigravity-agents": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/agents-server.py"
+        ".agent\\mcp\\agents-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -21,7 +21,7 @@
     "antigravity-skills": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/skills-server.py"
+        ".agent\\mcp\\skills-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -30,7 +30,7 @@
     "antigravity-observations": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/observations-server.py"
+        ".agent\\mcp\\observations-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -39,7 +39,7 @@
     "antigravity-intelligence": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/intelligence-server.py"
+        ".agent\\mcp\\intelligence-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -48,7 +48,7 @@
     "antigravity-ui": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/ui-server.py"
+        ".agent\\mcp\\ui-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -57,7 +57,7 @@
     "antigravity-memory": {
       "command": "python",
       "args": [
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30/.agent/mcp/memory-server.py"
+        ".agent\\mcp\\memory-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -110,7 +110,7 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "C:/Users/kenji/Github/Jpkken1979/JP-v1.26.3.25-30"
+        "."
       ]
     }
   }

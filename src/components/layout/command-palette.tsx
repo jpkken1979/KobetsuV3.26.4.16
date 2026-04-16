@@ -16,6 +16,8 @@ import {
     Users,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useUIPrefs } from "@/stores/ui-prefs";
+import { AlignJustify, ListFilter, Maximize2, Minimize2 } from "lucide-react";
 
 interface CommandItem {
   id: string;
@@ -37,6 +39,7 @@ export function CommandPalette() {
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
   const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
+  const { setDensity, sidebarCollapsed, toggleSidebar } = useUIPrefs();
 
   const commands: CommandItem[] = [
     {
@@ -47,6 +50,33 @@ export function CommandPalette() {
       action: () => navigate({ to: "/contracts/new" }),
       keywords: ["新規", "契約", "作成", "new", "contract", "create"],
       group: "ACTION",
+    },
+    {
+      id: "toggle-sidebar",
+      label: sidebarCollapsed ? "サイドバーを展開" : "サイドバーを折りたたむ",
+      sublabel: "UI_LAYOUT",
+      icon: sidebarCollapsed ? Maximize2 : Minimize2,
+      action: toggleSidebar,
+      keywords: ["sidebar", "サイドバー", "layout", "toggle"],
+      group: "UI",
+    },
+    {
+      id: "density-compact",
+      label: "表示モード: コンパクト",
+      sublabel: "UI_DENSITY",
+      icon: ListFilter,
+      action: () => setDensity("compact"),
+      keywords: ["density", "compact", "密度", "コンパクト", "tiny"],
+      group: "UI",
+    },
+    {
+      id: "density-comfortable",
+      label: "表示モード: 標準",
+      sublabel: "UI_DENSITY",
+      icon: AlignJustify,
+      action: () => setDensity("comfortable"),
+      keywords: ["density", "comfortable", "密度", "標準", "normal"],
+      group: "UI",
     },
     {
       id: "dashboard",

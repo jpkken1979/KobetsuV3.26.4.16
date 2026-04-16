@@ -4,6 +4,8 @@ import { Header } from "./header";
 import { CommandPalette } from "./command-palette";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouterState } from "@tanstack/react-router";
+import { useUIPrefs } from "@/stores/ui-prefs";
+import { cn } from "@/lib/utils";
 
 export type LayoutMode = "wide" | "balanced" | "focus";
 
@@ -35,6 +37,7 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
     if (legacy === "right") return "focus";
     return "wide";
   });
+  const { sidebarCollapsed } = useUIPrefs();
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
   const shouldReduceMotion = useReducedMotion();
@@ -111,7 +114,13 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Sidebar — fixed on desktop, slide-in on mobile */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-[18rem] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          sidebarCollapsed ? "w-[4.8rem]" : "w-[18rem]",
+        )}
+      >
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
 

@@ -14,7 +14,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { differenceInDays } from "date-fns";
 import { AlertTriangle, ArrowDown, ArrowUp, Edit2, RotateCcw, Search, Upload, Users } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // Variants at module level — outside all components (required pattern)
@@ -375,6 +375,9 @@ function EmployeesList() {
   };
 
   const hasCustomWidths = !!localStorage.getItem(STORAGE_KEY);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [focusedCell, setFocusedCell] = useState<{ row: number; col: number } | null>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
   const [sort, setSort] = useState<SortState>(null);
 
   const handleSort = useCallback((key: string) => {
@@ -406,6 +409,69 @@ function EmployeesList() {
       return sort.direction === "asc" ? cmp : -cmp;
     });
   }, [employees, sort]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (!focusedCell) return;
+    
+    // Don't intercept if an input is active
+    if (document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA") {
+      if (e.key === "Escape") {
+        (document.activeElement as HTMLElement).blur();
+        tableRef.current?.focus();
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusedCell(p => p ? { ...p, row: Math.min(p.row + 1, filteredEmployees.length - 1) } : null);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusedCell(p => p ? { ...p, row: Math.max(p.row - 1, 0) } : null);
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        setFocusedCell(p => p ? { ...p, col: Math.min(p.col + 1, COLUMNS.length - 1) } : null);
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        setFocusedCell(p => p ? { ...p, col: Math.max(p.col - 1, 0) } : null);
+        break;
+      case "Enter":
+      {
+        e.preventDefault();
+        // Trigger click on the focused cell's action button
+        const cell = tableRef.current?.querySelector(`[data-row="${focusedCell.row}"][data-col="${focusedCell.col}"] button`);
+        (cell as HTMLElement | null)?.click();
+        break;
+      }
+      case " ":
+      {
+        e.preventDefault();
+        const emp = filteredEmployees[focusedCell.row];
+        if (emp) {
+          setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(emp.id)) next.delete(emp.id);
+            else next.add(emp.id);
+            return next;
+          });
+        }
+        break;
+      }
+      case "/":
+      {
+        const searchInput = document.querySelector('input[type="search"]');
+        if (searchInput) {
+          e.preventDefault();
+          (searchInput as HTMLInputElement).focus();
+        }
+        break;
+      }
+    }
+  }, [focusedCell, filteredEmployees.length]);
 
   // Virtual scrolling
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -529,7 +595,13 @@ function EmployeesList() {
               className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]"
             >
               <div ref={scrollContainerRef} className="overflow-auto max-h-[calc(100vh-240px)]">
-                <table className="w-full border-collapse" style={{ tableLayout: "fixed" }}>
+                  <table 
+                    ref={tableRef}
+                    tabIndex={0}
+                    onKeyDown={handleKeyDown}
+                    className="w-full border-collapse outline-none focus:ring-1 focus:ring-primary/20" 
+                    style={{ tableLayout: "fixed" }}
+                  >
                   {widths.length > 0 && (
                     <colgroup>
                       {widths.map((w, i) => (
@@ -583,70 +655,83 @@ function EmployeesList() {
                           variants={tableRowVariants}
                           initial={shouldReduceMotion ? false : "hidden"}
                           animate="visible"
+                          onClick={() => setFocusedCell(p => (p?.row === virtualRow.index ? p : { row: virtualRow.index, col: p?.col ?? 1 }))}
                           className={cn(
                             "group border-b border-border/50 last:border-0 transition-colors duration-150",
                             "hover:bg-primary/5",
-                            virtualRow.index % 2 === 1 ? "bg-muted/[0.03] dark:bg-muted/[0.02]" : ""
+                            focusedCell?.row === virtualRow.index ? "bg-primary/10" : virtualRow.index % 2 === 1 ? "bg-muted/[0.03] dark:bg-muted/[0.02]" : ""
                           )}
-                          style={{ height: ROW_HEIGHT }}
+                          style={{ height: "var(--row-height, 44px)" }}
                         >
-                          <td className="overflow-hidden px-3 py-2.5 text-xs font-mono text-muted-foreground/60 truncate">
-                            {emp.employeeNumber}
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <EmployeeAvatar name={emp.fullName ?? "?"} />
-                              <div className="flex flex-col gap-0.5 min-w-0">
-                                <span className="font-medium text-foreground truncate">{emp.fullName}</span>
-                                <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-tighter truncate">{emp.katakanaName}</span>
-                                {emp.visaExpiry && (
-                                  <VisaBadge expiryDate={emp.visaExpiry} />
+                          {COLUMNS.map((col, colIndex) => {
+                            const isFocused = focusedCell?.row === virtualRow.index && focusedCell?.col === colIndex;
+                            return (
+                              <td 
+                                key={col.key}
+                                data-row={virtualRow.index}
+                                data-col={colIndex}
+                                className={cn(
+                                  "overflow-hidden px-3 py-[var(--table-cell-py, 0.65rem)] transition-all",
+                                  isFocused && "ring-2 ring-inset ring-primary/40 bg-primary/15",
+                                  col.align === "right" ? "text-right" : "text-left",
+                                  col.key === "billingRate" && "bg-primary/[0.02] border-x border-primary/[0.06]"
                                 )}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5 text-xs font-semibold text-muted-foreground/80 truncate">
-                            {emp.nationality ?? "--"}
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5">
-                            <EditableText
-                              value={emp.hireDate}
-                              type="date"
-                              onSave={(val) => handleUpdateText(emp.id, "hireDate", val)}
-                              placeholder="未設定"
-                            />
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5 text-right">
-                            <EditableRate
-                              value={emp.hourlyRate}
-                              onSave={(val) => handleUpdateRate(emp.id, "hourlyRate", val)}
-                            />
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5 text-right bg-primary/[0.02] border-x border-primary/[0.06]">
-                            <EditableRate
-                              value={emp.billingRate}
-                              onSave={(val) => handleUpdateRate(emp.id, "billingRate", val)}
-                            />
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5">
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm text-muted-foreground truncate font-medium">{emp.company?.shortName || emp.company?.name || "--"}</span>
-                              <span className="text-[10px] text-muted-foreground/45 truncate">{emp.factory?.factoryName || "--"}</span>
-                              <span className="text-[10px] text-muted-foreground/35 truncate">
-                                配属先: {emp.factory?.department || "--"} / ライン: {emp.factory?.lineName || "--"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5">
-                            <EditableText
-                              value={emp.clientEmployeeId}
-                              onSave={(val) => handleUpdateText(emp.id, "clientEmployeeId", val)}
-                              placeholder="未設定"
-                            />
-                          </td>
-                          <td className="overflow-hidden px-3 py-2.5">
-                            <EmployeeStatusBadge status={emp.status} />
-                          </td>
+                              >
+                                {col.key === "employeeNumber" && (
+                                  <span className="text-xs font-mono text-muted-foreground/60">{emp.employeeNumber}</span>
+                                )}
+                                {col.key === "fullName" && (
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <EmployeeAvatar name={emp.fullName ?? "?"} />
+                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                      <span className="font-medium text-foreground truncate">{emp.fullName}</span>
+                                      <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-tighter truncate">{emp.katakanaName}</span>
+                                      {emp.visaExpiry && <VisaBadge expiryDate={emp.visaExpiry} />}
+                                    </div>
+                                  </div>
+                                )}
+                                {col.key === "nationality" && (
+                                  <span className="text-xs font-semibold text-muted-foreground/80">{emp.nationality ?? "--"}</span>
+                                )}
+                                {col.key === "hireDate" && (
+                                  <EditableText
+                                    value={emp.hireDate}
+                                    type="date"
+                                    onSave={(val) => handleUpdateText(emp.id, "hireDate", val)}
+                                    placeholder="未設定"
+                                  />
+                                )}
+                                {col.key === "hourlyRate" && (
+                                  <EditableRate
+                                    value={emp.hourlyRate}
+                                    onSave={(val) => handleUpdateRate(emp.id, "hourlyRate", val)}
+                                  />
+                                )}
+                                {col.key === "billingRate" && (
+                                  <EditableRate
+                                    value={emp.billingRate}
+                                    onSave={(val) => handleUpdateRate(emp.id, "billingRate", val)}
+                                  />
+                                )}
+                                {col.key === "factory" && (
+                                  <div className="flex flex-col min-w-0">
+                                    <span className="text-sm text-muted-foreground truncate font-medium">{emp.company?.shortName || emp.company?.name || "--"}</span>
+                                    <span className="text-[10px] text-muted-foreground/45 truncate">{emp.factory?.factoryName || "--"}</span>
+                                  </div>
+                                )}
+                                {col.key === "clientEmployeeId" && (
+                                  <EditableText
+                                    value={emp.clientEmployeeId}
+                                    onSave={(val) => handleUpdateText(emp.id, "clientEmployeeId", val)}
+                                    placeholder="未設定"
+                                  />
+                                )}
+                                {col.key === "status" && (
+                                  <EmployeeStatusBadge status={emp.status} />
+                                )}
+                              </td>
+                            );
+                          })}
                         </motion.tr>
                       );
                     })}
@@ -700,6 +785,45 @@ function EmployeesList() {
           <EmployeeImportDialogLazy open={importOpen} onClose={() => setImportOpen(false)} />
         </Suspense>
       )}
+
+      {/* Floating Action HUD */}
+      <AnimatePresence>
+        {selectedIds.size > 0 && (
+          <motion.div
+            initial={{ y: 80, x: "-50%", opacity: 0 }}
+            animate={{ y: 0, x: "-50%", opacity: 1 }}
+            exit={{ y: 80, x: "-50%", opacity: 0 }}
+            className="fixed bottom-8 left-1/2 z-50 flex items-center justify-between gap-6 rounded-2xl border border-primary/20 bg-card/90 px-6 py-3 shadow-2xl backdrop-blur-xl transition-all"
+          >
+            <div className="flex items-center gap-3 border-r border-border pr-6">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm shadow-primary/20">
+                {selectedIds.size}
+              </span>
+              <span className="text-sm font-semibold tracking-tight text-foreground">
+                選択中
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" className="h-9 rounded-xl">
+                CSVエクスポート
+              </Button>
+              <Button size="sm" variant="outline" className="h-9 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10">
+                一括削除...
+              </Button>
+              <div className="h-4 w-px bg-border mx-2" />
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => setSelectedIds(new Set())}
+                className="h-9 rounded-xl text-muted-foreground hover:text-foreground"
+              >
+                解除
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatedPage>
   );
 }

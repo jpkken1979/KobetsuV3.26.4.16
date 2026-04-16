@@ -36,6 +36,7 @@
 - Se creó `.github/copilot-instructions.md` con comandos reales, arquitectura y convenciones operativas del repo para futuras sesiones.
 - Se ejecutó una auditoría amplia y se guardó `.claude/audit_report_20260416_035744.md`.
 - Hallazgos relevantes de auditoría: `hono < 4.12.14` en `npm audit`, `.mcp.json` con rutas absolutas no portables y baseline de `test:run` inicialmente bloqueado por drift de snapshot PDF.
+- Se actualizó `hono` a `4.12.14`, desapareció ese advisory de `npm audit` y `.mcp.json` quedó portable con rutas relativas al checkout actual.
 
 **Git / publicación:**
 - Se preparó la publicación completa del estado local y se creó el commit `2b43254` (`feat(app): agregar config anual y sincronizar cambios`).
@@ -52,7 +53,12 @@
 
 **Tests / snapshots:**
 - Se regeneró `server/__tests__/__snapshots__/pdf-hashes.json` porque el golden de `kobetsu` estaba desfasado respecto al output actual.
+- Se corrigió `server/__tests__/batch-contracts-service.test.ts` para validar la entrada correcta de `audit_log`, evitando un falso negativo por colisión de `entityId`.
 - Verificación final: `npm run typecheck` ✅, `npm run lint` ✅ (18 warnings preexistentes en tests), `npm run test:run` ✅ (**42 archivos, 762 tests**).
+
+**Cierre de layout/UI:**
+- Se estabilizaron los cambios locales de layout en `root-layout`, `sidebar`, `header`, `command-palette`, `employees`, `index.css` y `ui-prefs`.
+- La validación final del worktree quedó en verde: `typecheck`, `lint`, `build` y suite completa.
 
 ## Sesión 2026-04-15c — factory/company yearly config + table UX fixes
 
