@@ -316,7 +316,7 @@ function ContractDetail() {
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
               個別契約書
             </p>
-            <h1 className="font-mono text-2xl font-black tracking-tight text-primary dark:drop-shadow-[0_0_16px_rgba(0,255,136,0.4)]">
+<h1 className="font-mono text-2xl font-black tracking-tight text-primary dark:drop-shadow-[0_0_16px_rgba(155,167,255,0.24)]">
               {contract.contractNumber}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">

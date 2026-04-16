@@ -58,7 +58,7 @@ export function ContractForm() {
         </div>
       )}
 
-      {/* Step indicator — synthwave */}
+      {/* Step indicator — ledger */}
       <nav aria-label="契約作成ウィザード" className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
         <ol role="list" className="flex items-center mb-2">
           {STEPS.map((step, i) => {
@@ -84,7 +84,7 @@ export function ContractForm() {
                     isCompleted
                       ? "bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] text-foreground"
                       : isCurrent
-                      ? "bg-primary text-primary-foreground dark:shadow-[0_0_16px_rgba(139,92,246,0.5)]"
+                      ? "bg-primary text-primary-foreground dark:shadow-[0_0_16px_rgba(51,65,163,0.22)]"
                       : "border-2 border-border text-muted-foreground"
                   )}>
                     {isCompleted ? <Check className="h-3.5 w-3.5" /> : step.id}
@@ -146,3 +146,5 @@ export function ContractForm() {
     </div>
   );
 }
+
+

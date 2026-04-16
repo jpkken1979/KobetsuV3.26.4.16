@@ -291,7 +291,7 @@ function ContractsList() {
           className={cn(
             "rounded-full px-3 py-1.5 text-xs font-semibold transition-all inline-flex items-center gap-1.5",
             showCancelled
-              ? "bg-primary text-primary-foreground dark:shadow-[0_0_12px_rgba(139,92,246,0.4)]"
+              ? "bg-primary text-primary-foreground dark:shadow-[0_0_12px_rgba(155,167,255,0.22)]"
               : "border border-border text-muted-foreground hover:border-primary/40 hover:text-foreground"
           )}
         >
@@ -481,14 +481,14 @@ function ContractsList() {
                   </th>
                   <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-widest text-muted-foreground border-b border-border">
                     <button
-                      onClick={() => table.getColumn("endDate")?.toggleSorting()}
+                      onClick={() => table.getColumn("period")?.toggleSorting()}
                       className="inline-flex items-center gap-1 cursor-pointer hover:text-foreground transition-colors"
                       aria-label="契約期間でソート"
                     >
                       <Calendar className="h-3 w-3" aria-hidden="true" />契約期間
-                      {table.getColumn("endDate")?.getIsSorted() === "asc"
+                      {table.getColumn("period")?.getIsSorted() === "asc"
                         ? <ArrowUp className="h-3 w-3 text-primary" />
-                        : table.getColumn("endDate")?.getIsSorted() === "desc"
+                        : table.getColumn("period")?.getIsSorted() === "desc"
                         ? <ArrowDown className="h-3 w-3 text-primary" />
                         : <ArrowUpDown className="h-3 w-3 text-muted-foreground/30" />
                       }
@@ -782,5 +782,6 @@ function ContractsList() {
     </AnimatedPage>
   );
 }
+
 
 

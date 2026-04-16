@@ -12,10 +12,10 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           className={cn(
-            "flex min-h-[80px] w-full rounded-xl border border-input/80 bg-background px-3 py-2",
-            "text-sm shadow-xs transition-all duration-200",
-            "placeholder:text-muted-foreground/60",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-primary/50",
+            "flex min-h-[96px] w-full rounded-[1rem] border border-input/80 bg-card/80 px-3 py-2",
+            "text-sm shadow-xs transition-all duration-200 backdrop-blur-sm",
+            "placeholder:text-muted-foreground/55",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 focus-visible:border-primary/45",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "resize-y",
             error && "border-destructive/50 focus-visible:ring-destructive/40",

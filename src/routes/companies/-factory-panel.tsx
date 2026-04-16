@@ -157,7 +157,7 @@ export function FactoryPanel({
             </button>
             <button
               onClick={() => openDrawer(null)}
-              className="btn-press inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-[10px] font-black tracking-widest uppercase text-primary-foreground shadow-[0_0_20px_rgba(5,150,105,0.25)] dark:shadow-[0_0_20px_rgba(0,255,136,0.2)] transition-all hover:bg-primary/90 hover:scale-105 active:scale-95"
+              className="btn-press inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-[10px] font-black tracking-widest uppercase text-primary-foreground shadow-[0_10px_24px_rgba(51,65,163,0.16)] dark:shadow-[0_10px_24px_rgba(155,167,255,0.16)] transition-all hover:bg-primary/90 hover:scale-105 active:scale-95"
             >
               <Plus className="h-3.5 w-3.5" />
               DEPLOY LINE
@@ -221,7 +221,7 @@ export function FactoryPanel({
                   <button
                     onClick={() => updateCompanyMut.mutate(companyForm)}
                     disabled={updateCompanyMut.isPending}
-                    className="btn-press inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-[10px] font-black tracking-widest uppercase text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 shadow-[0_0_20px_rgba(5,150,105,0.2)] dark:shadow-[0_0_20px_rgba(0,255,136,0.15)]"
+                    className="btn-press inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-[10px] font-black tracking-widest uppercase text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-50 shadow-[0_10px_24px_rgba(51,65,163,0.14)] dark:shadow-[0_10px_24px_rgba(155,167,255,0.12)]"
                   >
                     <Save className="h-3.5 w-3.5" />
                     {updateCompanyMut.isPending ? "UPLOADING..." : "SYNC DATA"}
@@ -342,3 +342,5 @@ export function FactoryPanel({
     </>
   );
 }
+
+

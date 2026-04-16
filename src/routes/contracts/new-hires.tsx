@@ -468,7 +468,7 @@ function NewHiresBatch() {
                                         : "hover:bg-muted/40"
                                     )}
                                   >
-                                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400 dark:shadow-[0_0_4px_rgba(0,245,212,0.8)]" />
+<span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary dark:shadow-[0_0_4px_rgba(155,167,255,0.7)]" />
                                     <span className={cn("flex-1 truncate text-sm text-muted-foreground", isExcluded && "line-through")}>
                                       {emp.fullName}
                                     </span>

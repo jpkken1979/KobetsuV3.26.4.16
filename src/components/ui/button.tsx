@@ -4,32 +4,32 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "btn-press inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
+  "btn-press inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-0.5 dark:shadow-[0_0_20px_rgba(0,255,136,0.2)] dark:hover:shadow-[0_0_28px_rgba(0,255,136,0.35)]",
+          "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(51,65,163,0.16)] hover:-translate-y-0.5 hover:bg-primary/90",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-[0_10px_24px_rgba(190,18,60,0.16)] hover:bg-destructive/90",
         outline:
-          "border border-border bg-card hover:bg-muted hover:border-primary/40 text-foreground",
+          "border border-border/70 bg-card/80 text-foreground hover:border-primary/25 hover:bg-muted/50",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
-          "hover:bg-muted text-muted-foreground hover:text-foreground",
+          "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
         link:
           "text-primary underline-offset-4 hover:underline",
         cyan:
-          "bg-cyan-800 text-white font-bold hover:-translate-y-0.5 dark:bg-gradient-to-r dark:from-cyan-400 dark:to-cyan-500 dark:text-foreground dark:shadow-[0_0_16px_rgba(0,245,212,0.3)]",
+          "bg-primary text-primary-foreground hover:-translate-y-0.5 hover:bg-primary/90",
         success:
           "bg-success text-success-foreground hover:bg-success/90",
       },
       size: {
         default: "h-10 px-4 py-2 text-sm",
-        sm:      "h-8 px-3 py-1.5 text-xs",
-        lg:      "h-11 px-6 py-3 text-sm",
-        icon:    "h-9 w-9 p-0",
+        sm: "h-8 px-3 py-1.5 text-xs",
+        lg: "h-11 px-6 py-3 text-sm",
+        icon: "h-9 w-9 p-0",
       },
     },
     defaultVariants: {

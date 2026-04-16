@@ -85,6 +85,11 @@ function Dashboard() {
 
   return (
     <AnimatedPage className="relative space-y-8 pb-12">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] overflow-hidden">
+        <div className="absolute left-[8%] top-6 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+        <div className="absolute right-[10%] top-24 h-56 w-56 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute left-1/3 top-56 h-44 w-44 rounded-full bg-emerald-500/8 blur-3xl" />
+      </div>
       <DashboardHeader />
 
       {/* Alerts FIRST — what needs attention right now */}

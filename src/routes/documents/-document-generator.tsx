@@ -168,7 +168,7 @@ export function DocumentGenerator({
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold">生成書類 — 5種類</h3>
           {generateMutation.isPending && (
-            <div className="flex items-center gap-2 text-primary dark:drop-shadow-[0_0_8px_rgba(0,255,136,0.4)]">
+            <div className="flex items-center gap-2 text-primary dark:drop-shadow-[0_0_8px_rgba(155,167,255,0.22)]">
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
               <span className="text-sm font-medium">生成中...</span>
             </div>
@@ -186,7 +186,7 @@ export function DocumentGenerator({
                 initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
                 animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                 transition={shouldReduceMotion ? undefined : { delay: i * 0.05 }}
-                className="hover-lift flex flex-col items-center gap-3 rounded-[var(--radius-xl)] border border-border bg-card p-4 text-center transition-all hover:border-primary/40 dark:hover:shadow-[0_0_30px_rgba(0,255,136,0.12)]"
+                className="hover-lift flex flex-col items-center gap-3 rounded-[var(--radius-xl)] border border-border bg-card p-4 text-center transition-all hover:border-primary/40 dark:hover:shadow-[0_16px_44px_rgba(18,19,22,0.16)]"
               >
                 <div className={cn("rounded-lg p-2.5", docType.bgColor)}>
                   <Icon className={cn("h-5 w-5", docType.color)} />
@@ -397,3 +397,5 @@ export function DocumentGeneratorEmpty() {
     </div>
   );
 }
+
+

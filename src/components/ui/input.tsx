@@ -10,13 +10,13 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, icon: Icon, suffix, error, ...props }, ref) => {
     const baseInputClass = cn(
-      "flex h-10 w-full rounded-xl border bg-card text-sm shadow-xs transition-all",
-      "placeholder:text-muted-foreground/40",
-      "focus:outline-none focus:ring-2 focus:shadow-md focus:shadow-primary/5",
+      "flex h-10 w-full rounded-full border bg-card/80 text-sm shadow-xs transition-all backdrop-blur-sm",
+      "placeholder:text-muted-foreground/45",
+      "focus:outline-none focus:ring-2 focus:shadow-md focus:shadow-primary/10",
       "disabled:cursor-not-allowed disabled:opacity-50",
       error
-        ? "border-destructive/70 focus:border-destructive focus:ring-destructive/30"
-        : "border-border/60 focus:border-primary/50 focus:ring-primary/30 dark:focus:ring-primary/50",
+        ? "border-destructive/70 focus:border-destructive focus:ring-destructive/25"
+        : "border-border/70 focus:border-primary/45 focus:ring-primary/25",
     );
 
     if (Icon || suffix) {

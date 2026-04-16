@@ -37,7 +37,7 @@ export function TabsList({ children, className }: TabsListProps) {
     <div
       role="tablist"
       className={cn(
-        "inline-flex h-10 items-center justify-center rounded-xl border border-border/60 bg-muted/30 p-1 text-muted-foreground",
+        "inline-flex h-11 items-center justify-center rounded-full border border-border/70 bg-card/70 p-1 text-muted-foreground shadow-xs backdrop-blur-sm",
         className,
       )}
     >
@@ -68,12 +68,12 @@ export function TabsTrigger({ value, children, className, disabled }: TabsTrigge
       disabled={disabled}
       onClick={() => ctx.onChange(value)}
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition-all",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+        "inline-flex items-center justify-center whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition-all",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35",
         "disabled:pointer-events-none disabled:opacity-50",
         isActive
-          ? "bg-card text-foreground shadow-sm"
-          : "hover:bg-muted/50 hover:text-foreground/80",
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "hover:bg-muted/70 hover:text-foreground/80",
         className,
       )}
     >

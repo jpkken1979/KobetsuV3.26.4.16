@@ -94,7 +94,7 @@ export function FactoryCard({
   };
 
   return (
-    <div className="group relative cursor-pointer rounded-xl border border-border/60 bg-card p-4 transition-all duration-300 hover:bg-white/[0.06] hover:border-primary/40 hover:shadow-[0_0_30px_rgba(0,255,136,0.15),inset_0_1px_0_rgba(0,255,136,0.1)] hover:scale-[1.01]">
+    <div className="group relative cursor-pointer rounded-xl border border-border/60 bg-card p-4 transition-all duration-300 hover:bg-white/[0.06] hover:border-primary/40 hover:shadow-[0_16px_44px_rgba(18,19,22,0.12),inset_0_1px_0_rgba(255,255,255,0.35)] hover:scale-[1.01]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-black uppercase tracking-wider text-muted-foreground/60">Module</p>
@@ -241,3 +241,4 @@ export function FactoryCard({
     </div>
   );
 }
+

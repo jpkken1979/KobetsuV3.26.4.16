@@ -5,7 +5,7 @@ import { CommandPalette } from "./command-palette";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useRouterState } from "@tanstack/react-router";
 
-export type LayoutAlign = "left" | "center" | "right";
+export type LayoutMode = "wide" | "balanced" | "focus";
 
 const pageVariants = {
   initial: { opacity: 0, y: 6 },
@@ -18,71 +18,73 @@ const pageTransition = {
   ease: [0.16, 1, 0.3, 1] as [number, number, number, number], // ease-out-expo
 };
 
-const ALIGN_CLASSES: Record<LayoutAlign, string> = {
-  left: "max-w-none p-4 md:p-6",
-  center: "max-w-[1400px] mx-auto p-4 md:p-8",
-  right: "max-w-[1400px] ml-auto p-4 md:p-8",
+const MODE_CLASSES: Record<LayoutMode, string> = {
+  wide: "max-w-none p-4 md:p-6",
+  balanced: "max-w-[1480px] mx-auto p-4 md:p-8",
+  focus: "max-w-[1220px] mx-auto p-4 md:p-8",
 };
 
 export function RootLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [layoutAlign, setLayoutAlign] = useState<LayoutAlign>(() => {
-    if (typeof window === "undefined") return "left";
-    return (localStorage.getItem("layout-align") as LayoutAlign) || "left";
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(() => {
+    if (typeof window === "undefined") return "wide";
+    const stored = localStorage.getItem("layout-mode") as LayoutMode | null;
+    if (stored === "wide" || stored === "balanced" || stored === "focus") return stored;
+    const legacy = localStorage.getItem("layout-align");
+    if (legacy === "center") return "balanced";
+    if (legacy === "right") return "focus";
+    return "wide";
   });
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
   const shouldReduceMotion = useReducedMotion();
 
-  const handleAlignChange = useCallback((align: LayoutAlign) => {
-    setLayoutAlign(align);
-    localStorage.setItem("layout-align", align);
+  const handleModeChange = useCallback((mode: LayoutMode) => {
+    setLayoutMode(mode);
+    localStorage.setItem("layout-mode", mode);
   }, []);
 
-  // Table page always uses full width with tight padding
-  const isTablePage = pathname.includes("/table");
-  const contentClasses = isTablePage
-    ? "max-w-none px-3 md:px-4"
-    : ALIGN_CLASSES[layoutAlign];
+  const isTablePage = pathname.includes("/table") || pathname === "/employees/" || pathname === "/data-check/" || pathname === "/contracts/";
+  const contentClasses = isTablePage ? "max-w-none px-3 md:px-4" : MODE_CLASSES[layoutMode];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Background effects — rendered via CSS classes, visible only in dark mode */}
+    <div className="relative flex h-screen overflow-hidden bg-background">
       <div aria-hidden="true" className="pointer-events-none">
         <div className="bg-grid" />
         <div
           className="bg-orb"
           style={{
-            width: 600,
-            height: 600,
-            background: "radial-gradient(circle, rgba(139,92,246,0.25), transparent)",
-            top: -200,
-            left: -100,
+            width: 680,
+            height: 680,
+            background: "radial-gradient(circle, rgba(214,31,42,0.18), transparent 70%)",
+            top: -220,
+            left: -120,
             animationDelay: "0s",
           }}
         />
         <div
           className="bg-orb"
           style={{
-            width: 500,
-            height: 500,
-            background: "radial-gradient(circle, rgba(0,245,212,0.18), transparent)",
-            top: "30vh",
-            right: -150,
+            width: 520,
+            height: 520,
+            background: "radial-gradient(circle, rgba(255,122,24,0.16), transparent 68%)",
+            top: "32vh",
+            right: -160,
             animationDelay: "-3s",
           }}
         />
         <div
           className="bg-orb"
           style={{
-            width: 400,
-            height: 400,
-            background: "radial-gradient(circle, rgba(251,191,36,0.12), transparent)",
-            bottom: -100,
+            width: 420,
+            height: 420,
+            background: "radial-gradient(circle, rgba(245,165,36,0.10), transparent 72%)",
+            bottom: -110,
             left: "35%",
             animationDelay: "-5s",
           }}
         />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_35%)] dark:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.03),_transparent_35%)]" />
       </div>
       <a
         href="#main-content"
@@ -109,19 +111,15 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Sidebar — fixed on desktop, slide-in on mobile */}
-      <div
-        className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+      <div className={`fixed inset-y-0 left-0 z-40 w-[18rem] transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
         <Header
           onMenuClick={() => setSidebarOpen(true)}
-          layoutAlign={layoutAlign}
-          onAlignChange={handleAlignChange}
+          layoutMode={layoutMode}
+          onModeChange={handleModeChange}
         />
         <main id="main-content" className="flex-1 overflow-y-auto">
           <div className={contentClasses}>

@@ -9,23 +9,23 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 
 const variantStyles: Record<string, string> = {
   default:
-    "bg-primary/10 text-primary ring-primary/20 dark:bg-primary/20",
+    "bg-primary/10 text-primary ring-primary/20",
   secondary:
-    "bg-muted text-muted-foreground ring-border",
+    "bg-muted/80 text-muted-foreground ring-border/70",
   success:
-    "bg-success-muted text-success-foreground border border-success/30",
+    "bg-success-muted text-success-foreground border border-success/20",
   warning:
-    "bg-warning-muted text-warning-foreground border border-warning/30",
+    "bg-warning-muted text-warning-foreground border border-warning/20",
   destructive:
     "bg-destructive/10 text-destructive ring-destructive/20",
   outline:
-    "border border-border/60 text-muted-foreground bg-transparent ring-0",
+    "border border-border/70 text-muted-foreground bg-transparent ring-0",
   active:
-    "bg-success-muted text-success-foreground border border-success/30",
+    "bg-success-muted text-success-foreground border border-success/20",
   alert:
-    "bg-alert-muted text-alert-foreground border border-alert/30",
+    "bg-alert-muted text-alert-foreground border border-alert/20",
   info:
-    "bg-info-muted text-info-foreground border border-info/30",
+    "bg-info-muted text-info-foreground border border-info/20",
 };
 
 const dotColors: Record<string, string> = {
@@ -53,7 +53,7 @@ export function Badge({
     <span
       role={pulse ? "status" : undefined}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset",
         variantStyles[variant],
         className,
       )}

@@ -301,7 +301,7 @@ function KoritsuImportPage() {
                   className={cn(
                     "flex flex-col items-center justify-center rounded-[var(--radius-xl)] border-2 border-dashed p-12 text-center transition-all cursor-pointer",
                     dragOver
-                      ? "border-cyan-400 bg-cyan-500/5 dark:shadow-[0_0_30px_rgba(0,245,212,0.08)]"
+                      ? "border-primary/30 bg-primary/5 dark:shadow-[0_0_30px_rgba(155,167,255,0.08)]"
                       : file
                         ? "border-green-300/60 bg-green-50/30 dark:border-green-800/40 dark:bg-green-950/20"
                         : "border-border hover:border-primary/40 hover:bg-primary/5"
@@ -766,3 +766,4 @@ function ResultView({
     </motion.div>
   );
 }
+

@@ -190,7 +190,7 @@ function SettingsPage() {
     const next = !adminMode;
     updateAppSettings({ adminMode: next });
     setAdminMode(next);
-    toast.success(next ? "Modo Developer activado" : "Modo Developer desactivado");
+    toast.success(next ? "デベロッパーモードを有効化しました" : "デベロッパーモードを無効化しました");
   };
 
   const shortcuts = [
@@ -232,7 +232,7 @@ function SettingsPage() {
           <div>
             <p className="font-semibold text-foreground">テーマ</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {isDark ? "ダークモード（Synthwave）" : "ライトモード"}
+              {isDark ? "ダークモード（Ledger）" : "ライトモード"}
             </p>
           </div>
           <button
@@ -608,7 +608,7 @@ function SettingsPage() {
           </div>
         )}
       </section>
-      {/* Sección Modo Developer */}
+      {/* Sección デベロッパーモード */}
       <motion.section
         initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -620,7 +620,7 @@ function SettingsPage() {
             <Terminal className="h-4 w-4 text-amber-500" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">Modo Developer</h2>
+            <h2 className="text-sm font-semibold text-foreground">デベロッパーモード</h2>
             <p className="text-xs text-muted-foreground">
               Habilita el panel de administración con acceso directo a la base de datos
             </p>
@@ -629,7 +629,7 @@ function SettingsPage() {
           <button
             onClick={handleAdminModeToggle}
             aria-pressed={adminMode}
-            aria-label={adminMode ? "Desactivar modo developer" : "Activar modo developer"}
+            aria-label={adminMode ? "デベロッパーモードを無効化" : "デベロッパーモードを有効化"}
             className={cn(
               "ml-auto relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
               adminMode ? "bg-amber-500" : "bg-muted"
@@ -751,3 +751,9 @@ function SettingsPage() {
     </AnimatedPage>
   );
 }
+
+
+
+
+
+

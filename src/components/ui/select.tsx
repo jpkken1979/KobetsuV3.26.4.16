@@ -6,8 +6,8 @@ const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSelectElem
     <select
       ref={ref}
       className={cn(
-        "flex h-10 cursor-pointer rounded-xl border border-border/60 bg-card px-3 py-2.5 text-sm shadow-xs transition-all",
-        "focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/30 dark:focus:ring-primary/50",
+        "flex h-10 cursor-pointer rounded-full border border-border/70 bg-card/80 px-3 py-2.5 text-sm shadow-xs transition-all backdrop-blur-sm",
+        "focus:border-primary/45 focus:outline-none focus:ring-2 focus:ring-primary/25",
         "disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}

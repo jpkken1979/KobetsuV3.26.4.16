@@ -43,8 +43,8 @@ type ContractGroup = {
 };
 
 const ACTION_COLORS: Record<string, string> = {
-  active: "bg-cyan-400 dark:shadow-[0_0_6px_rgba(0,245,212,0.8)]",
-  draft: "bg-primary dark:shadow-[0_0_6px_rgba(0,255,136,0.6)]",
+  active: "bg-primary dark:shadow-[0_0_6px_rgba(155,167,255,0.7)]",
+  draft: "bg-primary dark:shadow-[0_0_6px_rgba(155,167,255,0.7)]",
   expired: "bg-red-400 dark:shadow-[0_0_6px_rgba(248,113,113,0.8)]",
   cancelled: "bg-red-400 dark:shadow-[0_0_6px_rgba(248,113,113,0.8)]",
   renewed: "bg-amber-400 dark:shadow-[0_0_6px_rgba(251,191,36,0.8)]",
@@ -536,3 +536,5 @@ function HistoryPage() {
     </AnimatedPage>
   );
 }
+
+

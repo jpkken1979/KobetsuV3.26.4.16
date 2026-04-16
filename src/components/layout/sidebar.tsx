@@ -44,13 +44,12 @@ function NavItem({
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 cursor-pointer overflow-hidden",
+        "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 cursor-pointer overflow-hidden",
         active
-          ? "bg-primary/10 text-primary font-semibold dark:bg-primary/[0.12]"
-          : "text-muted-foreground hover:bg-muted/50 hover:text-foreground hover:translate-x-0.5"
+          ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/15 dark:bg-primary/[0.14]"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground hover:translate-x-0.5"
       )}
     >
-      {/* Left border indicator for active state */}
       {active && (
         <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary" />
       )}
@@ -114,28 +113,37 @@ export function Sidebar({ onClose }: SidebarProps) {
   ], [adminMode]);
 
   return (
-    <aside className="relative z-20 flex h-screen w-64 flex-col bg-sidebar border-r border-border backdrop-blur-xl text-sidebar-foreground">
+    <aside className="relative z-20 flex h-screen w-[18rem] flex-col overflow-hidden border-r border-border/70 bg-sidebar/90 text-sidebar-foreground backdrop-blur-xl shadow-[12px_0_40px_rgba(18,19,22,0.04)] dark:shadow-[12px_0_40px_rgba(0,0,0,0.28)]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.35),transparent_22%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent_18%)]" />
+      <div aria-hidden="true" className="pointer-events-none absolute left-4 top-4 h-36 w-36 rounded-full bg-primary/10 blur-3xl" />
 
-      {/* Ambient glow superior */}
-      <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-48 w-full bg-gradient-to-b from-violet-500/5 to-transparent" />
-
-      {/* Logo / branding */}
-      <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] font-black text-base text-foreground dark:shadow-[0_0_24px_rgba(139,92,246,0.45)]">
-          契
+      <div className="relative border-b border-border/70 px-4 py-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/80 px-3 py-3 shadow-[var(--shadow-card)]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-sm font-black text-primary-foreground shadow-sm">
+            契
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Sumi Ledger</p>
+            <p className="truncate text-sm font-semibold text-foreground">個別契約書管理</p>
+            <p className="truncate text-[11px] text-muted-foreground">ユニバーサル企画株式会社</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-bold text-foreground leading-tight">JP個別契約書</p>
-          <p className="text-[11px] font-semibold text-muted-foreground">
-            ユニバーサル企画
-          </p>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+          <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+            <p className="text-muted-foreground">API</p>
+            <p className="mt-0.5 font-semibold text-foreground">Online</p>
+          </div>
+          <div className="rounded-xl border border-border/60 bg-card/70 px-3 py-2">
+            <p className="text-muted-foreground">DB</p>
+            <p className="mt-0.5 font-semibold text-foreground">SQLite</p>
+          </div>
         </div>
 
-        {/* Cierre en móvil */}
         {onClose && (
           <button
             onClick={onClose}
-            className="ml-auto rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground lg:hidden cursor-pointer"
+            className="absolute right-4 top-4 rounded-xl border border-border/60 bg-card/80 p-2 text-muted-foreground/70 transition-colors hover:border-primary/20 hover:text-foreground lg:hidden"
             aria-label="閉じる"
           >
             <X className="h-4 w-4" />
@@ -143,14 +151,13 @@ export function Sidebar({ onClose }: SidebarProps) {
         )}
       </div>
 
-      {/* Navegación */}
-      <nav aria-label="メインナビゲーション" className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-border/30">
+      <nav aria-label="メインナビゲーション" className="flex-1 overflow-y-auto px-3 py-4">
         {navigationSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className={cn(sectionIndex > 0 && "mt-4")}>
             {section.label && (
               <>
-                <div className="mx-3 mb-3 h-px bg-border/40" />
-                <p className="px-3 mb-2 text-[10px] uppercase tracking-widest text-muted-foreground/50">
+                <div className="mx-3 mb-3 h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
+                <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground/55">
                   {section.label}
                 </p>
               </>
@@ -192,20 +199,18 @@ export function Sidebar({ onClose }: SidebarProps) {
         ))}
       </nav>
 
-      {/* Divisor */}
-      <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
+      <div className="mx-5 h-px bg-gradient-to-r from-transparent via-border/70 to-transparent" />
 
-      {/* Footer — info empresa */}
       <div className="px-4 py-4">
-        <div className="flex items-center gap-3 rounded-xl bg-muted/30 px-3 py-2.5 ring-1 ring-border/20">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--gradient-accent-from)]/20 to-[var(--gradient-accent-to)]/10 ring-1 ring-[var(--gradient-accent-from)]/20">
-            <span className="text-[10px] font-bold text-primary/80">管</span>
+        <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/70 px-3 py-2.5 shadow-[var(--shadow-card)]">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+            <span className="text-[10px] font-bold text-primary">管</span>
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-semibold text-foreground/90">
+            <p className="truncate text-[11px] font-semibold text-foreground">
               UNS 管理
             </p>
-            <p className="truncate text-[10px] font-medium text-muted-foreground/60">
+            <p className="truncate text-[10px] font-medium text-muted-foreground">
               契約管理システム
             </p>
           </div>

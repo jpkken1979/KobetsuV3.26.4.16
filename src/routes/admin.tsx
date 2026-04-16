@@ -110,9 +110,9 @@ function AdminPage() {
               <ShieldAlert className="h-8 w-8 text-amber-500" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">Modo Developer desactivado</p>
+              <p className="font-semibold text-foreground">デベロッパーモードが無効です</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Activá el Modo Developer en{" "}
+                「デベロッパーモード」を有効にしてください: {" "}
                 <a href="/settings" className="text-primary underline underline-offset-2">
                   Settings
                 </a>{" "}
@@ -201,3 +201,5 @@ function AdminPage() {
     </AnimatedPage>
   );
 }
+
+

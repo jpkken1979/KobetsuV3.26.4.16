@@ -11,6 +11,8 @@ import "@fontsource-variable/space-grotesk";
 import "@fontsource-variable/jetbrains-mono";
 // @ts-expect-error fontsource side-effect imports have no type declarations
 import "@fontsource-variable/noto-sans-jp";
+// @ts-expect-error fontsource side-effect imports have no type declarations
+import "@fontsource-variable/noto-serif-jp";
 import "./index.css";
 
 const queryClient = new QueryClient({
