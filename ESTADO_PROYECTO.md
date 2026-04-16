@@ -8,7 +8,7 @@
 
 | Componente | Estado | Versión | Nota |
 |---|---|---|---|
-| Core | ✅ Estable | 26.3.31 | 643 tests, WCAG completo, audit trail completo |
+| Core | ✅ Estable | 26.3.31 | 762 tests, WCAG completo, audit trail completo |
 | Admin Panel | ✅ Activo | — | 6 routers admin-* con token-gate vía `ADMIN_TOKEN` |
 | Tests aislados | ✅ Nuevo | — | `data/kobetsu.test.db` separada — `npm test` ya no destruye la DB real |
 | Versionado PDFs | ✅ Nuevo | — | Tabla `pdf_versions` con SHA256 + audit; integrado en `documents-generate-single.ts` |
@@ -17,8 +17,8 @@
 
 ## Estado Canónico Actual
 
-- El estado vigente del repo es el de la **sesión 2026-04-07b** (pendientes resueltos) y sus verificaciones asociadas.
-- El sistema está estable y verificado en `typecheck` y `test:run` (35 archivos, 643 tests).
+- El estado vigente del repo incluye la **sesión 2026-04-16** como cierre más reciente y sus verificaciones asociadas.
+- El sistema está estable y verificado en `typecheck` y `test:run` (42 archivos, 762 tests).
 - **Audit confirmó paridad byte-exacta entre v1 y v3** en los 7 dominios críticos. v3 NO tiene regresiones funcionales vs v1; ver `.claude/memory/discovery_v1_v3_parity.md`.
 - Pendientes vigentes no bloqueantes:
 	- ~~refactorizar logica de import routes a services~~ → resuelto: `import-employees.ts` e `import-factories-service.ts` creados (28 servicios total)
@@ -30,7 +30,7 @@
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
 
-## Sesión 2026-04-16 — audit, push preparado y dashboard experimental
+## Sesión 2026-04-16 — audit, push confirmado y dashboard experimental
 
 **Gobernanza / tooling:**
 - Se creó `.github/copilot-instructions.md` con comandos reales, arquitectura y convenciones operativas del repo para futuras sesiones.
@@ -39,8 +39,8 @@
 
 **Git / publicación:**
 - Se preparó la publicación completa del estado local y se creó el commit `2b43254` (`feat(app): agregar config anual y sincronizar cambios`).
-- Se agregó `target -> https://github.com/jokken79/KobetsuV3.26.4.16.git`.
-- El push al repo `target` quedó bloqueado por permisos (HTTPS `Repository not found`, SSH `Permission denied (publickey)`).
+- Se agregó `target`; inicialmente apuntó a `jokken79/KobetsuV3.26.4.16` y rechazó el push por permisos.
+- El remote operativo final quedó en `https://github.com/jpkken1979/KobetsuV3.26.4.16.git` y el push se confirmó correctamente.
 - Se generó bundle portable de respaldo en `~/.copilot/session-state/.../KobetsuV3_26.4.16_push_ready.bundle`.
 
 **Dashboard / UI:**
