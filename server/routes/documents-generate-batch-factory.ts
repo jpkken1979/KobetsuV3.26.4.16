@@ -19,7 +19,7 @@ import {
   createDoc,
   writeToFile,
   createZipArchive,
-  buildCommonData,
+  buildCommonDataForPDF,
   KOBETSU_OUTPUT_DIR,
   KORITSU_OUTPUT_DIR,
 } from "../services/document-generation.js";
@@ -97,7 +97,7 @@ export async function handleGenerateFactory(c: Context) {
     let totalEmployees = 0;
 
     for (const contract of filteredContracts) {
-      const common = buildCommonData(contract);
+      const common = await buildCommonDataForPDF(contract);
       const empList = mapContractEmployeesToPDF(contract.employees);
       totalEmployees += empList.length;
       const prefix = sanitizeFilename(`${contract.contractNumber}_${common.lineName || common.department || common.factoryName}`);

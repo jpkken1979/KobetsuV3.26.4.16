@@ -8,9 +8,15 @@ import { type Doc, UNS, yen, getTakaoJigyosho, formatDateJP, compactTimeFormat, 
 import type { CellOpts } from "./types.js";
 import path from "node:path";
 import fs from "node:fs";
+import sharp from "sharp";
 
-// Company seal (印鑑) — UNS 実印 PNG with true transparency (processed)
+// Company seal (印鑑) — UNS 実印 PNG tinted to 朱肉 vermilion red at module load
 const INKAN_PATH = path.join("server", "pdf", "fonts", "InkanUNS-transparent.png");
+const inkanAbsPathInit = path.resolve(INKAN_PATH);
+// Top-level await (ESM) — processed once, reused across all PDF generations
+const tintedInkanBuffer: Buffer | null = fs.existsSync(inkanAbsPathInit)
+  ? await sharp(inkanAbsPathInit).tint({ r: 185, g: 30, b: 40 }).png().toBuffer()
+  : null;
 
 // ─── DATA INTERFACE ──────────────────────────────────────────────────
 
@@ -565,8 +571,7 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
 
   // ═══ 印鑑 (Company seal) — positioned per reference scan ═══
   // Reference: center over 許可番号 area, shifted up with (乙) block
-  const inkanAbsPath = path.resolve(INKAN_PATH);
-  if (fs.existsSync(inkanAbsPath)) {
+  if (tintedInkanBuffer) {
     const sealSize = 66.1; // ~23.3mm
     const centerX = cx(20) + 14;
     const centerY = ry(63) - 3;
@@ -580,7 +585,7 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
     doc.opacity(opacityJitter);
     doc.translate(centerX + offsetX, centerY + offsetY);
     doc.rotate(rotation, { origin: [0, 0] });
-    doc.image(inkanAbsPath, -sealSize / 2, -sealSize / 2, { width: sealSize, height: sealSize });
+    doc.image(tintedInkanBuffer, -sealSize / 2, -sealSize / 2, { width: sealSize, height: sealSize });
     doc.restore();
   }
 }

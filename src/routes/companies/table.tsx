@@ -1,13 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useFactories } from "@/lib/hooks/use-factories";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AnimatedPage } from "@/components/ui/animated";
 import { api } from "@/lib/api";
+import type { Factory } from "@/lib/api";
+import { queryKeys } from "@/lib/query-keys";
 import { ImportModal } from "./-import-modal";
 import { CompanyTableControls } from "./-table-controls";
 import { CompanyTableGrid } from "./-table-grid";
+import { FactoryYearlyConfigDialog } from "./-factory-yearly-config";
 import { COLUMNS, COLUMN_GROUPS, COMPANY_PALETTE } from "./-table-config";
 
 export const Route = createFileRoute("/companies/table")({
@@ -22,6 +26,7 @@ function CompanyTablePage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [yearlyConfigFactory, setYearlyConfigFactory] = useState<Factory | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Escape key exits fullscreen
@@ -34,6 +39,16 @@ function CompanyTablePage() {
   }, [isFullscreen]);
 
   const { data: factories, isLoading } = useFactories();
+
+  const { data: configuredFactoryIds } = useQuery({
+    queryKey: queryKeys.factoryYearlyConfig.summary(),
+    queryFn: () => api.getFactoryYearlyConfigSummary(),
+    staleTime: 30_000,
+  });
+  const configuredSet = useMemo(
+    () => new Set(configuredFactoryIds ?? []),
+    [configuredFactoryIds]
+  );
 
   // Filter
   const filtered = useMemo(
@@ -106,7 +121,9 @@ function CompanyTablePage() {
 
     try {
       const result = await api.exportFactoriesExcel();
-      toast.success(`Excelを保存しました`, { description: `${result.path}（${result.factoryCount}ライン, ${result.companyCount}社）` });
+      toast.success("Excelを保存しました", {
+        description: `${result.path}（${result.factoryCount}ライン, ${result.companyCount}社, 年度設定: 工場${result.factoryYearlyConfigCount}件 / 企業${result.companyYearlyConfigCount}件）`,
+      });
     } catch {
       toast.error("Excel出力に失敗しました");
     } finally {
@@ -162,6 +179,8 @@ function CompanyTablePage() {
         isFullscreen={isFullscreen}
         rowData={rowData}
         scrollRef={scrollRef}
+        onYearlyConfig={setYearlyConfigFactory}
+        factoryConfigIds={configuredSet}
       />
 
       {/* Navigation buttons — click to jump to column group */}
@@ -196,6 +215,15 @@ function CompanyTablePage() {
         </AnimatedPage>
       )}
       {showImport && <ImportModal onClose={() => setShowImport(false)} />}
+      {yearlyConfigFactory && (
+        <FactoryYearlyConfigDialog
+          factoryId={yearlyConfigFactory.id}
+          companyId={yearlyConfigFactory.companyId}
+          factoryLabel={`${yearlyConfigFactory.factoryName ?? ""} / ${yearlyConfigFactory.department ?? ""} / ${yearlyConfigFactory.lineName ?? ""}`}
+          open={true}
+          onClose={() => setYearlyConfigFactory(null)}
+        />
+      )}
     </>
   );
 }

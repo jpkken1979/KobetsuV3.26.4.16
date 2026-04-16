@@ -1,4 +1,4 @@
-import { Table2 } from "lucide-react";
+import { Table2, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Factory } from "@/lib/api";
 import type { RefObject } from "react";
@@ -23,6 +23,8 @@ interface CompanyTableGridProps {
   isFullscreen: boolean;
   rowData: CompanyTableRowData[];
   scrollRef: RefObject<HTMLDivElement | null>;
+  onYearlyConfig?: (factory: Factory) => void;
+  factoryConfigIds?: Set<number>;
 }
 
 function GroupHeaderRow() {
@@ -86,6 +88,8 @@ export function CompanyTableGrid({
   isFullscreen,
   rowData,
   scrollRef,
+  onYearlyConfig,
+  factoryConfigIds,
 }: CompanyTableGridProps) {
   if (isLoading) {
     return (
@@ -130,7 +134,7 @@ export function CompanyTableGrid({
                 role="columnheader"
                 aria-sort="none"
                 style={{ width: 200, minWidth: 200 }}
-                className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 border-b border-border"
+                className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border"
               >
                 会社名
               </div>
@@ -138,7 +142,7 @@ export function CompanyTableGrid({
                 role="columnheader"
                 aria-sort="none"
                 style={{ width: 160, minWidth: 160 }}
-                className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 border-b border-border"
+                className="px-3 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border-b border-border"
               >
                 工場名
               </div>
@@ -186,7 +190,7 @@ export function CompanyTableGrid({
                 )}
                 style={{
                   ...(row.isNewCompany ? { borderTopColor: `${row.color}40` } : {}),
-                  backgroundColor: row.isEvenWithin ? `${row.color}06` : `${row.color}0c`,
+                  backgroundColor: row.isEvenWithin ? `${row.color}18` : `${row.color}2c`,
                 }}
               >
                 <div
@@ -194,7 +198,7 @@ export function CompanyTableGrid({
                   style={{
                     width: STICKY_WIDTH,
                     borderLeft: `3px solid ${row.color}90`,
-                    backgroundColor: row.isEvenWithin ? `${row.color}0a` : `${row.color}12`,
+                    backgroundColor: row.isEvenWithin ? `${row.color}22` : `${row.color}38`,
                   }}
                 >
                   <EditableCell
@@ -225,6 +229,22 @@ export function CompanyTableGrid({
                     />
                   ))}
                 </div>
+
+                {onYearlyConfig && (
+                  <div className="sticky right-0 z-20 flex shrink-0 items-center border-l border-border/30 bg-card/80 backdrop-blur-md px-2">
+                    <button
+                      onClick={() => onYearlyConfig(row.factory)}
+                      title="年度別設定"
+                      className="flex items-center gap-1 rounded-md border border-border/40 bg-muted/40 px-2 py-1 text-[10px] font-bold text-muted-foreground transition-all hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
+                    >
+                      <CalendarDays className="h-3 w-3" />
+                      年度
+                      {factoryConfigIds?.has(row.factory.id) && (
+                        <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

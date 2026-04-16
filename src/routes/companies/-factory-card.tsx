@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useDeleteFactory, useUpdateFactory } from "@/lib/hooks/use-factories";
 import type { Factory as FactoryType } from "@/lib/api";
 import { getConflictDateStatus } from "./-shared";
+import { FactoryYearlyConfigDialog } from "./-factory-yearly-config";
 
 export function QuickEditField({
   value,
@@ -74,6 +75,7 @@ export function FactoryCard({
   const [confirming, setConfirming] = useState(false);
   const [editingRate, setEditingRate] = useState(false);
   const [editingConflictDate, setEditingConflictDate] = useState(false);
+  const [yearlyConfigOpen, setYearlyConfigOpen] = useState(false);
   const conflictStatus = getConflictDateStatus(factory.conflictDate, conflictWarningDays);
 
   const handleQuickSaveRate = (val: string) => {
@@ -200,6 +202,14 @@ export function FactoryCard({
           variant="ghost"
           size="sm"
           className="h-7 rounded-md bg-muted/30 text-[10px] font-black hover:bg-white/10"
+          onClick={(e) => { e.stopPropagation(); setYearlyConfigOpen(true); }}
+        >
+          年度
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 rounded-md bg-muted/30 text-[10px] font-black hover:bg-white/10"
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
         >
           EDIT
@@ -220,6 +230,14 @@ export function FactoryCard({
           {confirming ? "CONFIRM" : "DELETE"}
         </button>
       </div>
+
+      <FactoryYearlyConfigDialog
+        factoryId={factory.id}
+        companyId={factory.companyId}
+        factoryLabel={`${factory.factoryName} / ${factory.department ?? ""} / ${factory.lineName ?? ""}`}
+        open={yearlyConfigOpen}
+        onClose={() => setYearlyConfigOpen(false)}
+      />
     </div>
   );
 }

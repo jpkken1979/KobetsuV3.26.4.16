@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CompanyCard } from "./-company-card";
 import { FactoryDrawer } from "./-factory-drawer";
 import { CompanyEditDialog } from "./-company-edit-dialog";
+import { CompanyYearlyConfigDialog } from "./-company-yearly-config";
 import { useCompanies, useCreateCompany } from "@/lib/hooks/use-companies";
 import type { Company } from "@/lib/api-types";
 
@@ -34,6 +35,7 @@ function CompaniesPage() {
   const [factoryId, setFactoryId] = useState<number | null>(null);
   const [tab, setTab] = useState("list");
   const [editCompanyOpen, setEditCompanyOpen] = useState(false);
+  const [yearlyConfigCompany, setYearlyConfigCompany] = useState<Company | null>(null);
 
   const handleEditFactory = (id: number) => {
     setFactoryId(id);
@@ -90,6 +92,7 @@ function CompaniesPage() {
                   }}
                   onAddFactory={handleAddFactory}
                   onEditFactory={handleEditFactory}
+                  onYearlyConfig={(company) => setYearlyConfigCompany(company)}
                 />
               ))
             )}
@@ -124,6 +127,15 @@ function CompaniesPage() {
         open={editCompanyOpen}
         onOpenChange={setEditCompanyOpen}
       />
+
+      {yearlyConfigCompany && (
+        <CompanyYearlyConfigDialog
+          companyId={yearlyConfigCompany.id}
+          companyLabel={yearlyConfigCompany.shortName ?? yearlyConfigCompany.name}
+          open={yearlyConfigCompany !== null}
+          onClose={() => setYearlyConfigCompany(null)}
+        />
+      )}
     </div>
   );
 }

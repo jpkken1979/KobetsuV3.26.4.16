@@ -124,7 +124,7 @@ export function CompanyTableControls({
           <select
             value={filterCompany}
             onChange={(event) => onFilterCompanyChange(event.target.value)}
-            className="rounded-lg border border-border/50 bg-muted/30 px-2 py-2 text-xs text-foreground/70 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 dark:border-white/10 dark:bg-white/5 dark:text-white/70"
+            className="rounded-lg border border-border/50 bg-muted/30 px-2 py-2 text-xs text-foreground/70 focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/10 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:[color-scheme:dark]"
           >
             <option value="all">全企業</option>
             {companyNames.map((name) => (

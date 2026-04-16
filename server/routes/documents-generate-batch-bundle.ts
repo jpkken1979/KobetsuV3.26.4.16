@@ -19,7 +19,7 @@ import {
   createDoc,
   writeToFile,
   createZipArchive,
-  buildCommonData,
+  buildCommonDataForPDF,
   appendContractDocIndex,
   KOBETSU_OUTPUT_DIR,
   KORITSU_OUTPUT_DIR,
@@ -67,7 +67,7 @@ export async function handleGenerateBatch(c: Context) {
   let totalEmployees = 0;
 
   for (const contract of contractsData) {
-    const common = buildCommonData(contract);
+    const common = await buildCommonDataForPDF(contract);
     const empList = mapContractEmployeesToPDF(contract.employees);
     totalEmployees += empList.length;
     const batchIsKoritsu = common.companyName.includes("コーリツ");

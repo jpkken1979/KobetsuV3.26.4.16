@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { Factory } from "@/lib/api";
 import { CompanyTableGrid, type CompanyTableRowData } from "./-table-grid";
 
@@ -110,5 +110,29 @@ describe("CompanyTableGrid", () => {
         node.className.includes("max-h-[calc(100vh-270px)]"),
     );
     expect(fullscreenHeightContainer).toBeTruthy();
+  });
+
+  it("renders yearly config action and highlights configured factories", () => {
+    const onYearlyConfig = vi.fn();
+    render(
+      <CompanyTableGrid
+        isLoading={false}
+        isFullscreen={false}
+        rowData={makeRowData()}
+        scrollRef={createRef<HTMLDivElement>()}
+        onYearlyConfig={onYearlyConfig}
+        factoryConfigIds={new Set([1])}
+      />,
+    );
+
+    const yearlyButtons = screen.getAllByTitle("年度別設定");
+    expect(yearlyButtons).toHaveLength(2);
+
+    const firstYearlyButton = yearlyButtons[0];
+    expect(firstYearlyButton.textContent).toContain("年度");
+    expect(firstYearlyButton.querySelector(".bg-emerald-400")).toBeTruthy();
+
+    fireEvent.click(firstYearlyButton);
+    expect(onYearlyConfig).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }));
   });
 });

@@ -48,6 +48,13 @@ export const queryKeys = {
   shiftTemplates: {
     all: ["shift-templates"] as const,
   },
+  factoryYearlyConfig: {
+    byFactory: (factoryId: number) => ["factory-yearly-config", factoryId] as const,
+    summary: () => ["factory-yearly-config", "summary"] as const,
+  },
+  companyYearlyConfig: {
+    byCompany: (companyId: number) => ["company-yearly-config", companyId] as const,
+  },
   dataCheck: {
     all: ["dataCheck"] as const,
     byCompany: (companyId?: number) => ["dataCheck", companyId] as const,

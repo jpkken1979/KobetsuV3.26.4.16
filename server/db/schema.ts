@@ -354,12 +354,89 @@ export const pdfVersions = sqliteTable(
   ]
 );
 
+// ─── 10. factory_yearly_config (configuración anual por fábrica) ──────
+// Almacena campos que cambian por año fiscal (Oct～Sep).
+// fiscalYear 2024 = período 2024/10/01 ～ 2025/09/30
+
+export const factoryYearlyConfig = sqliteTable(
+  "factory_yearly_config",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    factoryId: integer("factory_id")
+      .notNull()
+      .references(() => factories.id, { onDelete: "cascade" }),
+    fiscalYear: integer("fiscal_year").notNull(), // e.g. 2024
+
+    // 就業日テキスト — reemplaza factory.calendar para este año
+    sagyobiText: text("sagyobi_text"),
+    // 休日テキスト
+    kyujitsuText: text("kyujitsu_text"),
+    // 休暇処理テキスト
+    kyuukashori: text("kyuukashori"),
+
+    // 指揮命令者 (cambia por año)
+    supervisorName: text("supervisor_name"),
+    supervisorDept: text("supervisor_dept"),
+    supervisorRole: text("supervisor_role"),
+    supervisorPhone: text("supervisor_phone"),
+
+    // 派遣先責任者 (cambia por año)
+    hakensakiManagerName: text("hakensaki_manager_name"),
+    hakensakiManagerDept: text("hakensaki_manager_dept"),
+    hakensakiManagerRole: text("hakensaki_manager_role"),
+    hakensakiManagerPhone: text("hakensaki_manager_phone"),
+
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex("factory_yearly_config_unique").on(table.factoryId, table.fiscalYear),
+    index("idx_fyc_factory").on(table.factoryId),
+    index("idx_fyc_fiscal_year").on(table.fiscalYear),
+  ]
+);
+
+// ─── 11. company_yearly_config (configuración anual por empresa) ─────
+// Almacena campos compartidos por todas las líneas de una empresa para un año fiscal.
+// Los campos de factory_yearly_config tienen prioridad sobre los de company_yearly_config.
+
+export const companyYearlyConfig = sqliteTable(
+  "company_yearly_config",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    companyId: integer("company_id")
+      .notNull()
+      .references(() => clientCompanies.id, { onDelete: "cascade" }),
+    fiscalYear: integer("fiscal_year").notNull(),
+
+    // 休日テキスト — default para todas las líneas de la empresa
+    kyujitsuText: text("kyujitsu_text"),
+    // 休暇処理テキスト
+    kyuukashori: text("kyuukashori"),
+
+    // 派遣先責任者 (nivel empresa — default para todas las líneas)
+    hakensakiManagerName: text("hakensaki_manager_name"),
+    hakensakiManagerDept: text("hakensaki_manager_dept"),
+    hakensakiManagerRole: text("hakensaki_manager_role"),
+    hakensakiManagerPhone: text("hakensaki_manager_phone"),
+
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+    updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex("company_yearly_config_unique").on(table.companyId, table.fiscalYear),
+    index("idx_cyc_company").on(table.companyId),
+    index("idx_cyc_fiscal_year").on(table.fiscalYear),
+  ]
+);
+
 // ─── Relations ───────────────────────────────────────────────────────
 
 export const clientCompaniesRelations = relations(clientCompanies, ({ many }) => ({
   factories: many(factories),
   employees: many(employees),
   contracts: many(contracts),
+  yearlyConfigs: many(companyYearlyConfig),
 }));
 
 export const factoriesRelations = relations(factories, ({ one, many }) => ({
@@ -370,6 +447,21 @@ export const factoriesRelations = relations(factories, ({ one, many }) => ({
   employees: many(employees),
   contracts: many(contracts),
   calendars: many(factoryCalendars),
+  yearlyConfigs: many(factoryYearlyConfig),
+}));
+
+export const factoryYearlyConfigRelations = relations(factoryYearlyConfig, ({ one }) => ({
+  factory: one(factories, {
+    fields: [factoryYearlyConfig.factoryId],
+    references: [factories.id],
+  }),
+}));
+
+export const companyYearlyConfigRelations = relations(companyYearlyConfig, ({ one }) => ({
+  company: one(clientCompanies, {
+    fields: [companyYearlyConfig.companyId],
+    references: [clientCompanies.id],
+  }),
 }));
 
 export const factoryCalendarsRelations = relations(factoryCalendars, ({ one }) => ({
@@ -438,3 +530,7 @@ export type ShiftTemplate = typeof shiftTemplates.$inferSelect;
 export type NewShiftTemplate = typeof shiftTemplates.$inferInsert;
 export type PdfVersion = typeof pdfVersions.$inferSelect;
 export type NewPdfVersion = typeof pdfVersions.$inferInsert;
+export type FactoryYearlyConfig = typeof factoryYearlyConfig.$inferSelect;
+export type NewFactoryYearlyConfig = typeof factoryYearlyConfig.$inferInsert;
+export type CompanyYearlyConfig = typeof companyYearlyConfig.$inferSelect;
+export type CompanyYearlyConfigInsert = typeof companyYearlyConfig.$inferInsert;

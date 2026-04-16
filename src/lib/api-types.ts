@@ -176,6 +176,70 @@ export interface FactoryCalendar {
   updatedAt: string;
 }
 
+export interface FactoryYearlyConfig {
+  id: number;
+  factoryId: number;
+  fiscalYear: number;
+  sagyobiText: string | null;
+  kyujitsuText: string | null;
+  kyuukashori: string | null;
+  supervisorName: string | null;
+  supervisorDept: string | null;
+  supervisorRole: string | null;
+  supervisorPhone: string | null;
+  hakensakiManagerName: string | null;
+  hakensakiManagerDept: string | null;
+  hakensakiManagerRole: string | null;
+  hakensakiManagerPhone: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FactoryYearlyConfigCreate {
+  factoryId: number;
+  fiscalYear: number;
+  sagyobiText?: string | null;
+  kyujitsuText?: string | null;
+  kyuukashori?: string | null;
+  supervisorName?: string | null;
+  supervisorDept?: string | null;
+  supervisorRole?: string | null;
+  supervisorPhone?: string | null;
+  hakensakiManagerName?: string | null;
+  hakensakiManagerDept?: string | null;
+  hakensakiManagerRole?: string | null;
+  hakensakiManagerPhone?: string | null;
+}
+
+export type FactoryYearlyConfigUpdate = Omit<Partial<FactoryYearlyConfigCreate>, "factoryId" | "fiscalYear">;
+
+export interface CompanyYearlyConfig {
+  id: number;
+  companyId: number;
+  fiscalYear: number;
+  kyujitsuText: string | null;
+  kyuukashori: string | null;
+  hakensakiManagerName: string | null;
+  hakensakiManagerDept: string | null;
+  hakensakiManagerRole: string | null;
+  hakensakiManagerPhone: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CompanyYearlyConfigCreate {
+  companyId: number;
+  fiscalYear: number;
+  kyujitsuText?: string | null;
+  kyuukashori?: string | null;
+  hakensakiManagerName?: string | null;
+  hakensakiManagerDept?: string | null;
+  hakensakiManagerRole?: string | null;
+  hakensakiManagerPhone?: string | null;
+}
+
+export type CompanyYearlyConfigUpdate = Omit<Partial<CompanyYearlyConfigCreate>, "companyId" | "fiscalYear">;
+
 export interface AuditLogEntry {
   id: number;
   timestamp: string;

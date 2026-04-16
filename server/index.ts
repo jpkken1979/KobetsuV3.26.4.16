@@ -24,6 +24,8 @@ import { adminBackupRouter } from "./routes/admin-backup.js";
 import { adminStatsRouter } from "./routes/admin-stats.js";
 import { adminResetRouter } from "./routes/admin-reset.js";
 import { pdfVersionsRouter } from "./routes/pdf-versions.js";
+import { factoryYearlyConfigRouter } from "./routes/factory-yearly-config.js";
+import { companyYearlyConfigRouter } from "./routes/company-yearly-config.js";
 import { bodyLimit } from "hono/body-limit";
 import { adminGuardMiddleware, securityHeadersMiddleware } from "./middleware/security.js";
 import { createAutoBackup } from "./services/backup.js";
@@ -114,6 +116,8 @@ api.route("/admin/stats", adminStatsRouter);
 api.route("/admin/backup", adminBackupRouter);
 api.route("/admin/reset-all", adminResetRouter);
 api.route("/pdf-versions", pdfVersionsRouter);
+api.route("/factory-yearly-config", factoryYearlyConfigRouter);
+api.route("/company-yearly-config", companyYearlyConfigRouter);
 
 app.route("/", api);
 

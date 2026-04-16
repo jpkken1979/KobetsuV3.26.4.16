@@ -21,7 +21,7 @@ import {
   writeToFile,
   createZipArchive,
   getContractData,
-  buildCommonData,
+  buildCommonDataForPDF,
   appendContractDocIndex,
   KOBETSU_OUTPUT_DIR,
   KORITSU_OUTPUT_DIR,
@@ -60,7 +60,7 @@ export async function handleGenerateSingle(c: Context) {
     return c.json({ error: "Contract not found" }, 404);
   }
 
-  const common = buildCommonData(contract);
+  const common = await buildCommonDataForPDF(contract);
   const timestamp = toLocalDateStr(new Date());
   const prefix = sanitizeFilename(`${common.companyName}_${common.lineName || common.department}_${timestamp}`);
   const isKoritsu = common.companyName.includes("コーリツ");

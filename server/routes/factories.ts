@@ -355,11 +355,83 @@ factoriesRouter.post("/export-excel", async (c) => {
       orderBy: (t, { asc }) => [asc(t.factoryName), asc(t.department), asc(t.lineName)],
     });
     const allCompanies = await db.query.clientCompanies.findMany();
+    const allFactoryYearlyConfigs = await db.query.factoryYearlyConfig.findMany({
+      with: {
+        factory: {
+          with: {
+            company: true,
+          },
+        },
+      },
+      orderBy: (t, { asc, desc }) => [asc(t.factoryId), desc(t.fiscalYear), asc(t.id)],
+    });
+    const allCompanyYearlyConfigs = await db.query.companyYearlyConfig.findMany({
+      with: {
+        company: true,
+      },
+      orderBy: (t, { asc, desc }) => [asc(t.companyId), desc(t.fiscalYear), asc(t.id)],
+    });
 
     const ExcelJS = (await import("exceljs")).default;
     const workbook = new ExcelJS.Workbook();
     workbook.creator = "JP個別契約書 v26.3.31";
     workbook.created = new Date();
+
+    // Sheet 0: README — quick instructions for manual editing
+    const readmeSheet = workbook.addWorksheet("README", {
+      views: [{ state: "frozen" as const, xSplit: 0, ySplit: 1 }],
+    });
+    readmeSheet.columns = [
+      { width: 22 },
+      { width: 88 },
+    ];
+    readmeSheet.mergeCells("A1:B1");
+    const readmeTitle = readmeSheet.getCell("A1");
+    readmeTitle.value = "Excel export guide";
+    readmeTitle.font = { name: "Meiryo UI", size: 12, bold: true, color: { argb: "FF1A73E8" } };
+    readmeTitle.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD6E4FD" } };
+    readmeTitle.alignment = { horizontal: "center", vertical: "middle" };
+    readmeTitle.border = {
+      top: { style: "thin", color: { argb: "FFD1D5DB" } },
+      bottom: { style: "thin", color: { argb: "FFD1D5DB" } },
+      left: { style: "thin", color: { argb: "FFD1D5DB" } },
+      right: { style: "thin", color: { argb: "FFD1D5DB" } },
+    };
+
+    const readmeRows = [
+      ["用途", "このブックは企業・工場の基本情報と年度設定を、手で編集しやすい形で出力します。"],
+      ["編集の順番", "まず README を確認し、次に 年度設定_工場 / 年度設定_企業 を直してください。最後に 企業データ一覧 を確認すると安心です。"],
+      ["年度の意味", "年度は 10/01 〜 翌年 09/30 の区切りです。例えば 2024 は 2024/10/01 〜 2025/09/30 を表します。"],
+      ["工場年度設定", "各工場ごとの就業日テキスト、休日テキスト、休暇処理、指揮命令者、派遣先責任者を1行ずつ管理します。"],
+      ["企業年度設定", "企業共通で使う休日テキスト、休暇処理、派遣先責任者の既定値をまとめます。"],
+      ["優先順位", "PDF生成時は 工場年度設定 > 企業年度設定 > 工場の固定値 の順で反映されます。"],
+      ["注意", "列を削除せず、値だけ編集してください。年度列は数値のまま残してください。"],
+    ];
+    readmeRows.forEach((row, index) => {
+      const excelRow = readmeSheet.addRow(row);
+      excelRow.height = index === 0 ? 22 : 30;
+      excelRow.eachCell((cell, colNumber) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: index % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA" } };
+        cell.font = {
+          name: "Meiryo UI",
+          size: colNumber === 1 ? 10 : 9,
+          bold: colNumber === 1,
+          color: { argb: "FF333333" },
+        };
+        cell.alignment = {
+          vertical: "middle",
+          wrapText: true,
+        };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFE0E0E0" } },
+          bottom: { style: "thin", color: { argb: "FFE0E0E0" } },
+          left: { style: "thin", color: { argb: "FFE0E0E0" } },
+          right: { style: "thin", color: { argb: "FFE0E0E0" } },
+        };
+      });
+    });
+    readmeSheet.getColumn(1).alignment = { horizontal: "left", vertical: "middle", wrapText: true };
+    readmeSheet.getColumn(2).alignment = { horizontal: "left", vertical: "middle", wrapText: true };
 
     // ── Column definitions with group colors ──
     const cols: { header: string; key: string; group: string; width: number }[] = [
@@ -620,6 +692,146 @@ factoriesRouter.post("/export-excel", async (c) => {
       });
     });
 
+    // Sheet 3: Factory yearly config — easy to edit by fiscal year
+    const ws3 = workbook.addWorksheet("年度設定_工場", {
+      views: [{ state: "frozen" as const, xSplit: 0, ySplit: 1 }],
+    });
+    const factoryYearlyHeaders = [
+      "会社名",
+      "工場名",
+      "部署",
+      "ライン名",
+      "年度",
+      "対象期間",
+      "就業日テキスト",
+      "休日テキスト",
+      "休暇処理",
+      "指揮命令者部署",
+      "指揮命令者氏名",
+      "指揮命令者役職",
+      "指揮命令者TEL",
+      "派遣先責任者部署",
+      "派遣先責任者氏名",
+      "派遣先責任者役職",
+      "派遣先責任者TEL",
+      "更新日",
+    ];
+    const factoryYearlyWidths = [24, 20, 14, 16, 10, 18, 28, 28, 18, 18, 18, 14, 16, 18, 18, 14, 16, 20];
+    ws3.columns = factoryYearlyWidths.map((width) => ({ width }));
+    const ws3Header = ws3.addRow(factoryYearlyHeaders);
+    ws3Header.height = 24;
+    factoryYearlyHeaders.forEach((_header, i) => {
+      const cell = ws3Header.getCell(i + 1);
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD6E4FD" } };
+      cell.font = { name: "Meiryo UI", size: 9, bold: true, color: { argb: "FF1A73E8" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFD1D5DB" } },
+        bottom: { style: "medium", color: { argb: "FF1A73E8" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } },
+      };
+    });
+    ws3.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: factoryYearlyHeaders.length } };
+    allFactoryYearlyConfigs.forEach((config, index) => {
+      const row = ws3.addRow([
+        config.factory?.company?.name ?? "",
+        config.factory?.factoryName ?? "",
+        config.factory?.department ?? "",
+        config.factory?.lineName ?? "",
+        config.fiscalYear,
+        `${config.fiscalYear}/10/01 〜 ${config.fiscalYear + 1}/09/30`,
+        config.sagyobiText ?? "",
+        config.kyujitsuText ?? "",
+        config.kyuukashori ?? "",
+        config.supervisorDept ?? "",
+        config.supervisorName ?? "",
+        config.supervisorRole ?? "",
+        config.supervisorPhone ?? "",
+        config.hakensakiManagerDept ?? "",
+        config.hakensakiManagerName ?? "",
+        config.hakensakiManagerRole ?? "",
+        config.hakensakiManagerPhone ?? "",
+        config.updatedAt ?? "",
+      ]);
+      row.height = 20;
+      const bg = index % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA";
+      const thinBorder = { style: "thin" as const, color: { argb: "FFE0E0E0" } };
+      factoryYearlyHeaders.forEach((_header, i) => {
+        const cell = row.getCell(i + 1);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+        cell.font = { name: "Meiryo UI", size: 9, color: { argb: "FF333333" } };
+        cell.alignment = {
+          horizontal: i === 4 ? "center" : "left",
+          vertical: "middle",
+          wrapText: true,
+        };
+        cell.border = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+      });
+    });
+
+    // Sheet 4: Company yearly config — shared defaults by fiscal year
+    const ws4 = workbook.addWorksheet("年度設定_企業", {
+      views: [{ state: "frozen" as const, xSplit: 0, ySplit: 1 }],
+    });
+    const companyYearlyHeaders = [
+      "会社名",
+      "年度",
+      "対象期間",
+      "休日テキスト",
+      "休暇処理",
+      "派遣先責任者部署",
+      "派遣先責任者氏名",
+      "派遣先責任者役職",
+      "派遣先責任者TEL",
+      "更新日",
+    ];
+    const companyYearlyWidths = [24, 10, 18, 28, 18, 18, 18, 14, 16, 20];
+    ws4.columns = companyYearlyWidths.map((width) => ({ width }));
+    const ws4Header = ws4.addRow(companyYearlyHeaders);
+    ws4Header.height = 24;
+    companyYearlyHeaders.forEach((_header, i) => {
+      const cell = ws4Header.getCell(i + 1);
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD6E4FD" } };
+      cell.font = { name: "Meiryo UI", size: 9, bold: true, color: { argb: "FF1A73E8" } };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFD1D5DB" } },
+        bottom: { style: "medium", color: { argb: "FF1A73E8" } },
+        left: { style: "thin", color: { argb: "FFE5E7EB" } },
+        right: { style: "thin", color: { argb: "FFE5E7EB" } },
+      };
+    });
+    ws4.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: companyYearlyHeaders.length } };
+    allCompanyYearlyConfigs.forEach((config, index) => {
+      const row = ws4.addRow([
+        config.company?.name ?? "",
+        config.fiscalYear,
+        `${config.fiscalYear}/10/01 〜 ${config.fiscalYear + 1}/09/30`,
+        config.kyujitsuText ?? "",
+        config.kyuukashori ?? "",
+        config.hakensakiManagerDept ?? "",
+        config.hakensakiManagerName ?? "",
+        config.hakensakiManagerRole ?? "",
+        config.hakensakiManagerPhone ?? "",
+        config.updatedAt ?? "",
+      ]);
+      row.height = 20;
+      const bg = index % 2 === 0 ? "FFFFFFFF" : "FFF8F9FA";
+      const thinBorder = { style: "thin" as const, color: { argb: "FFE0E0E0" } };
+      companyYearlyHeaders.forEach((_header, i) => {
+        const cell = row.getCell(i + 1);
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: bg } };
+        cell.font = { name: "Meiryo UI", size: 9, color: { argb: "FF333333" } };
+        cell.alignment = {
+          horizontal: i === 1 ? "center" : "left",
+          vertical: "middle",
+          wrapText: true,
+        };
+        cell.border = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+      });
+    });
+
     // Save to disk
     if (!fs.existsSync(EXPORT_DIR)) fs.mkdirSync(EXPORT_DIR, { recursive: true });
     const now = new Date();
@@ -632,11 +844,19 @@ factoriesRouter.post("/export-excel", async (c) => {
       action: "export",
       entityType: "factory",
       entityId: null,
-      detail: `Excel出力: ${allFactories.length}工場 / ${allCompanies.length}企業 → ${filename}`,
+      detail: `Excel出力: ${allFactories.length}工場 / ${allCompanies.length}企業 / ${allFactoryYearlyConfigs.length}工場年度設定 / ${allCompanyYearlyConfigs.length}企業年度設定 → ${filename}`,
       userName: "system",
     }).run();
 
-    return c.json({ success: true, filename, path: filepath, factoryCount: allFactories.length, companyCount: allCompanies.length });
+    return c.json({
+      success: true,
+      filename,
+      path: filepath,
+      factoryCount: allFactories.length,
+      companyCount: allCompanies.length,
+      factoryYearlyConfigCount: allFactoryYearlyConfigs.length,
+      companyYearlyConfigCount: allCompanyYearlyConfigs.length,
+    });
   } catch (err: unknown) {
     return c.json({ error: err instanceof Error ? err.message : "Excel export failed" }, 500);
   }

@@ -22,7 +22,7 @@ import {
   createDoc,
   writeToFile,
   createZipArchive,
-  buildCommonData,
+  buildCommonDataForPDF,
   KOBETSU_OUTPUT_DIR,
   KORITSU_OUTPUT_DIR,
 } from "../services/document-generation.js";
@@ -176,7 +176,7 @@ export async function handleGenerateByIds(c: Context) {
     let totalEmployeeCount = 0;
 
     for (const contract of contractsData) {
-      const common = buildCommonData(contract);
+      const common = await buildCommonDataForPDF(contract);
       const empList = mapContractEmployeesToPDF(contract.employees);
       totalEmployeeCount += empList.length;
       const isKoritsu = common.companyName.includes("コーリツ");

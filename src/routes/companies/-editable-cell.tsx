@@ -87,7 +87,7 @@ export function EditableCell({
       <div
         role="gridcell"
         style={{ width, minWidth: width }}
-        className="truncate px-3 py-2.5 text-xs text-foreground/60 dark:text-white/60"
+        className="truncate px-3 py-2.5 text-xs text-foreground/90 dark:text-white/60"
         title={value}
       >
         {value || <span className="text-muted-foreground/30">--</span>}
@@ -145,7 +145,7 @@ export function EditableCell({
     <div
       role="gridcell"
       style={{ width, minWidth: width }}
-      className="cursor-pointer truncate px-3 py-2.5 text-xs text-foreground/60 transition-colors hover:bg-primary/[0.04] hover:text-foreground/80 dark:text-white/60 dark:hover:text-white/80"
+      className="cursor-pointer truncate px-3 py-2.5 text-xs text-foreground/90 transition-colors hover:bg-primary/[0.04] hover:text-foreground dark:text-white/60 dark:hover:text-white/80"
       onClick={() => setIsEditing(true)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

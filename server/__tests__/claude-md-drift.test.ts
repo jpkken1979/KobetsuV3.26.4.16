@@ -50,13 +50,6 @@ describe("CLAUDE.md drift guard", () => {
     ).toBe(actual);
   });
 
-  it("does not mention sharp (the audit confirmed it was never used)", () => {
-    const md = readClaudeMd();
-    // Allow the word inside "sharing" / "sharp drop" prose, but block ` sharp ` or `sharp\n` standalone references.
-    const standaloneSharp = /(?:^|[^a-z])sharp(?:[^a-z]|$)/i;
-    expect(
-      standaloneSharp.test(md),
-      "CLAUDE.md mentions `sharp` again — this dep was never installed; PDFKit handles seal embedding natively.",
-    ).toBe(false);
-  });
+  // sharp IS used: server/pdf/kobetsu-pdf.ts uses it to tint the inkan seal to 朱肉 red.
+  // The old assertion ("sharp was never installed") was removed in session 2026-04-15c.
 });

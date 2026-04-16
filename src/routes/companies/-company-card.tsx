@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Building2, Edit3, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, Building2, Edit3, Plus, CalendarDays } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,9 +12,10 @@ interface Props {
   onEdit: (company: Company) => void;
   onAddFactory: (company: Company) => void;
   onEditFactory: (factoryId: number) => void;
+  onYearlyConfig?: (company: Company) => void;
 }
 
-export function CompanyCard({ company, onEdit, onAddFactory, onEditFactory }: Props) {
+export function CompanyCard({ company, onEdit, onAddFactory, onEditFactory, onYearlyConfig }: Props) {
   const [expanded, setExpanded] = useState(false);
   const { data: badges } = useFactoryBadges(company.id);
   const badgeMap = new Map((badges ?? []).map((b: FactoryBadgeStatus) => [b.factoryId, b]));
@@ -61,6 +62,19 @@ export function CompanyCard({ company, onEdit, onAddFactory, onEditFactory }: Pr
         >
           <Plus className="h-3 w-3" />
         </Button>
+        {onYearlyConfig && (
+          <Button
+            size="sm"
+            variant="ghost"
+            title="企業年度別設定"
+            onClick={(e) => {
+              e.stopPropagation();
+              onYearlyConfig(company);
+            }}
+          >
+            <CalendarDays className="h-3 w-3" />
+          </Button>
+        )}
       </div>
 
       {expanded && company.factories && (

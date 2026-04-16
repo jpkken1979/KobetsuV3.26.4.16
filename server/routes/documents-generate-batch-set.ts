@@ -19,7 +19,7 @@ import { sanitizeFilename } from "../services/document-files.js";
 import {
   createDoc,
   writeToFile,
-  buildCommonData,
+  buildCommonDataForPDF,
 } from "../services/document-generation.js";
 import {
   buildKoritsuKobetsuData,
@@ -70,7 +70,7 @@ export async function handleGenerateSet(c: Context) {
 
     // Build common data from the FIRST contract (all contracts share the same factory)
     const firstContract = contractsData[0];
-    const common = buildCommonData(firstContract);
+    const common = await buildCommonDataForPDF(firstContract);
     const isKoritsu = common.companyName.includes("コーリツ");
 
     // Build filename prefix: SET_個別契約書_会社名_工場名_部門_ライン
@@ -95,7 +95,7 @@ export async function handleGenerateSet(c: Context) {
         const docKobetsu = createDoc();
         let pageIndex = 0;
         for (const { contract, empList } of allEmpLists) {
-          const contractCommon = buildCommonData(contract);
+          const contractCommon = await buildCommonDataForPDF(contract);
           const koritsuKobetsuData = buildKoritsuKobetsuData(contractCommon, contract, empList);
           const koritsuTsuchishoData = buildKoritsuTsuchishoData(contractCommon, contract, empList);
           // 2 copies per contract: 甲(client) + 乙(UNS) for duplex printing
@@ -152,7 +152,7 @@ export async function handleGenerateSet(c: Context) {
         const docKobetsu = createDoc();
         let pageIndex = 0;
         for (const { contract, empList } of allEmpLists) {
-          const contractCommon = buildCommonData(contract);
+          const contractCommon = await buildCommonDataForPDF(contract);
           const kobetsuData = buildStandardKobetsuData(contractCommon, contract, empList);
           const tsuchishoData = buildStandardTsuchishoData(contractCommon, empList);
           // 2 copies per contract: 甲(client) + 乙(UNS) for duplex printing
@@ -220,7 +220,7 @@ export async function handleGenerateSet(c: Context) {
 
       // Part 1: 個別契約書 (甲+乙 duplex copies)
       for (const { contract, empList } of allEmpLists) {
-        const contractCommon = buildCommonData(contract);
+        const contractCommon = await buildCommonDataForPDF(contract);
 
         if (isKoritsu) {
           const kData = buildKoritsuKobetsuData(contractCommon, contract, empList);

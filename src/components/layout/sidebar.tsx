@@ -95,6 +95,7 @@ export function Sidebar({ onClose }: SidebarProps) {
     {
       label: "業務ツール",
       items: [
+        { name: "招聘者", href: "/shouheisha", icon: Users },
         { name: "書類生成", href: "/documents", icon: FileDown },
         { name: "インポート", href: "/import", icon: Upload },
         { name: "企業テーブル", href: "/companies/table", icon: Table2 },

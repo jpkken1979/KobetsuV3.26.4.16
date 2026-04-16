@@ -1,7 +1,8 @@
 // Shared utilities for PDF document generation — extracted from documents-generate.ts
 import { db } from "../db/index.js";
-import { contracts } from "../db/schema.js";
+import { contracts, type FactoryYearlyConfig, type CompanyYearlyConfig } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { getConfigForYear, getCompanyConfigForYear, getFiscalYear } from "./factory-yearly-config.js";
 import PDFDocument from "pdfkit";
 import fs from "node:fs";
 import path from "node:path";
@@ -10,7 +11,7 @@ import { ZipFile } from "yazl";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-export const FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "NotoSansJP-Regular.ttf");
+export const FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "MSGothic.ttf");
 export const MINCHO_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "BIZUDMincho-0.ttf");
 const GOTHIC_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "MSGothic.ttf");
 const CENTURY_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "CenturySchoolbook.ttf");
@@ -144,7 +145,24 @@ export async function getContractData(contractId: number) {
 
 // ─── Build common data from contract ────────────────────────────────
 
-export function buildCommonData(contract: NonNullable<Awaited<ReturnType<typeof getContractData>>>) {
+/**
+ * Wrapper async: obtiene yearly config según startDate del contrato y llama buildCommonData.
+ * Usar este en todos los route handlers para aplicar overrides anuales automáticamente.
+ */
+export async function buildCommonDataForPDF(
+  contract: NonNullable<Awaited<ReturnType<typeof getContractData>>>
+) {
+  const yearlyConfig = await getConfigForYear(contract.factoryId, contract.startDate);
+  const fiscalYear = getFiscalYear(contract.startDate);
+  const companyConfig = await getCompanyConfigForYear(contract.companyId, fiscalYear);
+  return buildCommonData(contract, yearlyConfig, companyConfig);
+}
+
+export function buildCommonData(
+  contract: NonNullable<Awaited<ReturnType<typeof getContractData>>>,
+  yearlyConfig?: FactoryYearlyConfig | null,
+  companyConfig?: CompanyYearlyConfig | null
+) {
   const c = contract;
   const company = c.company;
   const factory = c.factory;
@@ -215,7 +233,7 @@ export function buildCommonData(contract: NonNullable<Awaited<ReturnType<typeof 
     startDate: c.startDate,
     endDate: c.endDate,
     jobDescription: factory.jobDescription || c.jobDescription || "",
-    calendar: factory.calendar || c.workDays || "",
+    calendar: yearlyConfig?.sagyobiText || factory.calendar || c.workDays || "",
     workHours,
     breakTime,
     overtimeHours: factory.overtimeHours || c.overtimeMax || "",
@@ -226,17 +244,23 @@ export function buildCommonData(contract: NonNullable<Awaited<ReturnType<typeof 
     bankAccount: factory.bankAccount || "",
     timeUnit: factory.timeUnit || "15",
 
-    // 指揮命令者 (supervisor) — factory-first so updates propagate to existing contracts
-    supervisorDept: factory.supervisorDept || c.supervisorDept || "",
-    supervisorName: factory.supervisorName || c.supervisorName || "",
-    supervisorPhone: factory.supervisorPhone || c.supervisorPhone || "",
-    supervisorRole: factory.supervisorRole || "",
+    // 指揮命令者 (supervisor) — yearly config overrides factory data when available
+    supervisorDept: yearlyConfig?.supervisorDept || factory.supervisorDept || c.supervisorDept || "",
+    supervisorName: yearlyConfig?.supervisorName || factory.supervisorName || c.supervisorName || "",
+    supervisorPhone: yearlyConfig?.supervisorPhone || factory.supervisorPhone || c.supervisorPhone || "",
+    supervisorRole: yearlyConfig?.supervisorRole || factory.supervisorRole || "",
 
-    // Fix #3: 派遣先責任者 (separate from 指揮命令者)
-    hakensakiManagerDept: factory.hakensakiManagerDept || factory.supervisorDept || "",
-    hakensakiManagerName: factory.hakensakiManagerName || factory.supervisorName || "",
-    hakensakiManagerPhone: factory.hakensakiManagerPhone || factory.supervisorPhone || "",
-    hakensakiManagerRole: factory.hakensakiManagerRole || "",
+    // 派遣先責任者 — factory yearly config → company yearly config → factory static data
+    hakensakiManagerDept: yearlyConfig?.hakensakiManagerDept || companyConfig?.hakensakiManagerDept || factory.hakensakiManagerDept || factory.supervisorDept || "",
+    hakensakiManagerName: yearlyConfig?.hakensakiManagerName || companyConfig?.hakensakiManagerName || factory.hakensakiManagerName || factory.supervisorName || "",
+    hakensakiManagerPhone: yearlyConfig?.hakensakiManagerPhone || companyConfig?.hakensakiManagerPhone || factory.hakensakiManagerPhone || factory.supervisorPhone || "",
+    hakensakiManagerRole: yearlyConfig?.hakensakiManagerRole || companyConfig?.hakensakiManagerRole || factory.hakensakiManagerRole || "",
+
+    // 休日テキスト — factory yearly config → company yearly config → empty
+    kyujitsuText: yearlyConfig?.kyujitsuText || companyConfig?.kyujitsuText || "",
+
+    // 休暇処理 — factory yearly config → company yearly config → empty
+    kyuukashori: yearlyConfig?.kyuukashori || companyConfig?.kyuukashori || "",
 
     complaintClientDept: factory.complaintClientDept || "",
     complaintClientName: factory.complaintClientName || "",

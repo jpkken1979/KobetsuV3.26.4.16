@@ -90,16 +90,16 @@ The proxy is configured in `vite.config.ts`. In production, `npm run build` outp
 server/
 ├── index.ts               # Hono entry, health check, backup (port 8026)
 ├── db/
-│   ├── schema.ts           # 9 tables + relations + indexes
+│   ├── schema.ts           # 11 tables + relations + indexes
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
-├── routes/                 # 30 route files (CRUD, docs, batch, imports, admin)
-├── services/               # Business logic (29 modules)
+├── routes/                 # 32 route files (CRUD, docs, batch, imports, admin)
+├── services/               # Business logic (31 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
 ```
 
-**Route files (30 files, grouped by purpose):**
-- **Domain CRUD (11):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`
+**Route files (32 files, grouped by purpose):**
+- **Domain CRUD (13):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`, `factory-yearly-config.ts`, `company-yearly-config.ts`
 - **Document generation (9):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
 - **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
 - **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically)
@@ -119,7 +119,7 @@ server/
 | `helpers.ts` | Grid functions, font registration, `getTakaoJigyosho()` |
 | `types.ts` | Shared type definitions for PDF data |
 
-**Service modules (29):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `pdf-data-builders`, `pdf-versioning`, `takao-detection`, `validation` (verified: 29 modules)
+**Service modules (30):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `pdf-data-builders`, `pdf-versioning`, `takao-detection`, `validation` (verified: 30 modules)
 
 **Conventions:**
 - Routes use `try/catch (err: unknown)` with JSON error responses `{ error: string }`
@@ -213,7 +213,7 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 4. Connect in `server/routes/documents-generate.ts`
 5. For details on PDF rules: see `.claude/rules/pdf-rules.md` (auto-injected)
 
-## Database (9 Tables)
+## Database (11 Tables)
 
 | Table | Purpose | Key relationships |
 |-------|---------|-------------------|
@@ -223,6 +223,8 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 | `contracts` | Dispatch contracts | FK → companies, factories. KOB-YYYYMM-XXXX format |
 | `contract_employees` | N:M junction | FK → contracts, employees. Has individual `hourlyRate` per contract |
 | `factory_calendars` | Work calendars | FK → factories. Unique (factoryId, year) |
+| `factory_yearly_config` | Per-line annual config (就業日/休日/指揮命令者/派遣先責任者) | FK → factories. Unique (factoryId, fiscalYear). Cascades to PDF |
+| `company_yearly_config` | Per-company annual config for shared fields (休日/休暇処理/派遣先責任者) | FK → client_companies. Unique (companyId, fiscalYear). Fallback in cascade |
 | `shift_templates` | Reusable shift/break patterns | Standalone |
 | `audit_log` | Audit trail | Records all mutations |
 | `pdf_versions` | PDF generation log | SHA256 + metadata per generated document |

@@ -6,7 +6,7 @@ import { generateTsuchishoPDF } from "./server/pdf/tsuchisho-pdf.js";
 import { generateHakensakiKanriDaichoPDF } from "./server/pdf/hakensakikanridaicho-pdf.js";
 import { generateHakenmotoKanriDaichoPDF } from "./server/pdf/hakenmotokanridaicho-pdf.js";
 
-const fontPath = path.join("server", "pdf", "fonts", "NotoSansJP-Regular.ttf");
+const fontPath = path.join("server", "pdf", "fonts", "MSGothic.ttf");
 const minchoPath = path.join("server", "pdf", "fonts", "BIZUDMincho-0.ttf");
 const outDir = "output";
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });

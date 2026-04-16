@@ -30,6 +30,33 @@
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
 
+## Sesión 2026-04-15c — factory/company yearly config + table UX fixes
+
+**Nuevas tablas DB (9→11):**
+- `factory_yearly_config`: config anual por línea (就業日, 休日, 休暇処理, 指揮命令者, 派遣先責任者) — uniqueIndex(factoryId, fiscalYear)
+- `company_yearly_config`: config anual por empresa para campos compartidos (休日, 休暇処理, 派遣先責任者) — uniqueIndex(companyId, fiscalYear)
+
+**Cascade en PDFs:** factory_yearly_config → company_yearly_config → factories fields (prioridad descendiente)
+
+**Nuevas rutas server (30→32):**
+- `server/routes/factory-yearly-config.ts`: GET/POST/PUT/DELETE + /summary + /copy-to
+- `server/routes/company-yearly-config.ts`: GET/POST/PUT/DELETE
+
+**Frontend:**
+- Hooks: `use-factory-yearly-config.ts`, `use-company-yearly-config.ts`
+- Dialogs: `-factory-yearly-config.tsx` (con copy a otras líneas), `-company-yearly-config.tsx`
+- Botón 年度 en tarjetas de fábrica y en tabla `/companies/table` (sticky derecha)
+- Indicador verde en botón 年度 cuando la línea ya tiene yearly config
+- Copy feature: copiar config de un año a N líneas de la misma empresa con checkboxes
+
+**Fixes tabla `/companies/table`:**
+- Light mode: opacidad de filas `06/0c` → `18/2c`; texto `/60` → `/90`
+- Dark mode: `dark:[color-scheme:dark]` en select dropdown
+
+**PDF:** inkan tintado a 朱肉 rojo (RGB 185,30,40) via `sharp`; texto más oscuro con MSGothic.
+
+**Estado:** TypeScript 0 errores, ambas tablas SQLite creadas.
+
 ## Sesión 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes
 
 **Admin token bypass:**

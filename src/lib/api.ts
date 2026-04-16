@@ -137,7 +137,15 @@ export const api = {
     value: RoleValue; excludeLineIds?: number[];
   }) => request<{ updated: number; excluded: number }>("/factories/bulk-roles", { method: "PUT", body: JSON.stringify(data) }),
   exportFactoriesExcel: () =>
-    request<{ success: boolean; filename: string; path: string; factoryCount: number; companyCount: number }>("/factories/export-excel", { method: "POST" }),
+    request<{
+      success: boolean;
+      filename: string;
+      path: string;
+      factoryCount: number;
+      companyCount: number;
+      factoryYearlyConfigCount: number;
+      companyYearlyConfigCount: number;
+    }>("/factories/export-excel", { method: "POST" }),
 
   // Employees
   getEmployees: (params?: { companyId?: number; factoryId?: number; search?: string; status?: string }) => {
@@ -268,6 +276,30 @@ export const api = {
     const qs = query.toString();
     return request<{ logs: AuditLogEntry[]; total: number }>(`/dashboard/audit${qs ? `?${qs}` : ""}`);
   },
+
+  // Factory Yearly Config
+  getFactoryYearlyConfigs: (factoryId: number) =>
+    request<import("@/lib/api-types").FactoryYearlyConfig[]>(`/factory-yearly-config/${factoryId}`),
+  createFactoryYearlyConfig: (data: import("@/lib/api-types").FactoryYearlyConfigCreate) =>
+    request<import("@/lib/api-types").FactoryYearlyConfig>("/factory-yearly-config", { method: "POST", body: JSON.stringify(data) }),
+  updateFactoryYearlyConfig: (id: number, data: import("@/lib/api-types").FactoryYearlyConfigUpdate) =>
+    request<import("@/lib/api-types").FactoryYearlyConfig>(`/factory-yearly-config/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteFactoryYearlyConfig: (id: number) =>
+    request<{ ok: boolean }>(`/factory-yearly-config/${id}`, { method: "DELETE" }),
+  getFactoryYearlyConfigSummary: () =>
+    request<number[]>("/factory-yearly-config/summary"),
+  copyFactoryYearlyConfig: (data: { sourceFactoryId: number; fiscalYear: number; targetFactoryIds: number[] }) =>
+    request<{ copied: number; skipped: number }>("/factory-yearly-config/copy-to", { method: "POST", body: JSON.stringify(data) }),
+
+  // Company Yearly Config
+  getCompanyYearlyConfigs: (companyId: number) =>
+    request<import("@/lib/api-types").CompanyYearlyConfig[]>(`/company-yearly-config/${companyId}`),
+  createCompanyYearlyConfig: (data: import("@/lib/api-types").CompanyYearlyConfigCreate) =>
+    request<import("@/lib/api-types").CompanyYearlyConfig>("/company-yearly-config", { method: "POST", body: JSON.stringify(data) }),
+  updateCompanyYearlyConfig: (id: number, data: import("@/lib/api-types").CompanyYearlyConfigUpdate) =>
+    request<import("@/lib/api-types").CompanyYearlyConfig>(`/company-yearly-config/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  deleteCompanyYearlyConfig: (id: number) =>
+    request<{ ok: boolean }>(`/company-yearly-config/${id}`, { method: "DELETE" }),
 
   // Shift Templates
   getShiftTemplates: () => request<ShiftTemplate[]>("/shift-templates"),
