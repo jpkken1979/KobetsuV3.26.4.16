@@ -4,8 +4,8 @@
 @source "../index.html";
 
 @theme {
-  --color-paper: #f8f3ec;
-  --color-paper-2: #efe6da;
+  --color-paper: #fff9f1;
+  --color-paper-2: #f3e7d8;
   --color-ink: #111114;
   --color-ink-soft: #3a3d48;
   --color-indigo: #d61f2a;
@@ -16,17 +16,17 @@
   --color-gold: #f5a524;
   --color-red: #be123c;
 
-  --color-background: #f6f0e8;
+  --color-background: #fff9f2;
   --color-foreground: #111114;
-  --color-card: #fffaf3;
+  --color-card: #ffffff;
   --color-card-foreground: #111114;
-  --color-popover: #fffaf3;
+  --color-popover: #ffffff;
   --color-popover-foreground: #111114;
   --color-primary: #d61f2a;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #e9ddd1;
+  --color-secondary: #f5e5d3;
   --color-secondary-foreground: #2f2f36;
-  --color-muted: #efe6db;
+  --color-muted: #f1e3d2;
   --color-muted-foreground: #656c79;
   --color-accent: #ff7a18;
   --color-accent-foreground: #ffffff;
@@ -36,7 +36,7 @@
   --color-input: #dbd0c0;
   --color-ring: #d61f2a;
 
-  --color-sidebar: rgba(255, 250, 243, 0.92);
+  --color-sidebar: rgba(255, 253, 248, 0.96);
   --color-sidebar-foreground: #111114;
   --color-sidebar-accent: rgba(214, 31, 42, 0.08);
   --color-sidebar-muted: #6b7280;
@@ -48,10 +48,10 @@
   --radius-2xl: 1.5rem;
 
   --shadow-xs: 0 1px 2px rgba(18, 19, 22, 0.05);
-  --shadow-card: 0 1px 3px rgba(18, 19, 22, 0.08), 0 10px 30px rgba(18, 19, 22, 0.04);
+  --shadow-card: 0 1px 3px rgba(18, 19, 22, 0.08), 0 16px 34px rgba(18, 19, 22, 0.05);
   --shadow-md: 0 8px 20px rgba(18, 19, 22, 0.09), 0 2px 6px rgba(18, 19, 22, 0.05);
   --shadow-lg: 0 18px 42px rgba(18, 19, 22, 0.12), 0 6px 16px rgba(18, 19, 22, 0.06);
-  --shadow-glass: 0 12px 40px rgba(18, 19, 22, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  --shadow-glass: 0 12px 40px rgba(18, 19, 22, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.58);
 
   --color-warning: #f59e0b;
   --color-warning-foreground: #7c2d12;
@@ -83,17 +83,17 @@
 }
 
 .dark {
-  --color-background: #0d0f12;
+  --color-background: #090b10;
   --color-foreground: #f7f7f8;
-  --color-card: #151820;
+  --color-card: #11151b;
   --color-card-foreground: #f7f7f8;
-  --color-popover: #151820;
+  --color-popover: #11151b;
   --color-popover-foreground: #f7f7f8;
   --color-primary: #ff4d4f;
   --color-primary-foreground: #111114;
-  --color-secondary: #1f2430;
+  --color-secondary: #171b24;
   --color-secondary-foreground: #d3d7df;
-  --color-muted: #1a1f29;
+  --color-muted: #131821;
   --color-muted-foreground: #9ca3b2;
   --color-accent: #ffb000;
   --color-accent-foreground: #111114;
@@ -103,13 +103,13 @@
   --color-input: #2a3240;
   --color-ring: #ff4d4f;
 
-  --color-sidebar: rgba(17, 19, 26, 0.94);
+  --color-sidebar: rgba(12, 14, 20, 0.96);
   --color-sidebar-foreground: #f7f7f8;
   --color-sidebar-accent: rgba(255, 77, 79, 0.12);
   --color-sidebar-muted: #9ca3b2;
 
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.26), 0 16px 42px rgba(0, 0, 0, 0.18);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.26), 0 18px 46px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.28), 0 4px 12px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 24px 50px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.2);
   --shadow-glass: 0 14px 42px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -135,18 +135,18 @@
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: var(--font-sans);
     background-image:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 28%),
-      radial-gradient(900px 520px at 12% -10%, rgba(214, 31, 42, 0.14), transparent 56%),
-      radial-gradient(780px 520px at 100% 0%, rgba(245, 165, 36, 0.12), transparent 54%),
-      radial-gradient(680px 460px at 50% 120%, rgba(255, 122, 24, 0.08), transparent 56%);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.56), transparent 28%),
+      radial-gradient(960px 540px at 10% -12%, rgba(214, 31, 42, 0.16), transparent 54%),
+      radial-gradient(840px 540px at 100% 0%, rgba(245, 165, 36, 0.16), transparent 52%),
+      radial-gradient(760px 500px at 50% 120%, rgba(255, 122, 24, 0.1), transparent 56%);
     background-attachment: fixed;
   }
 
   .dark body {
     background-image:
       linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 30%),
-      radial-gradient(940px 560px at 8% -8%, rgba(255, 77, 79, 0.15), transparent 58%),
-      radial-gradient(820px 500px at 102% 0%, rgba(255, 176, 0, 0.12), transparent 54%),
+      radial-gradient(980px 580px at 8% -8%, rgba(255, 77, 79, 0.16), transparent 58%),
+      radial-gradient(860px 520px at 102% 0%, rgba(255, 176, 0, 0.14), transparent 54%),
       radial-gradient(680px 460px at 48% 120%, rgba(255, 122, 24, 0.07), transparent 58%);
   }
 

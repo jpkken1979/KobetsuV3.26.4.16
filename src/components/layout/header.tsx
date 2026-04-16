@@ -19,6 +19,8 @@ const MODE_ITEMS: Array<{ key: LayoutMode; icon: typeof View; label: string; hin
 export function Header({ onMenuClick, layoutMode, onModeChange }: HeaderProps) {
   const { isDark, toggleTheme } = useTheme();
   const [now, setNow] = useState(new Date());
+  const themeLabel = isDark ? "Bugatti" : "Ferrari / Lambo";
+  const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold";
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -82,10 +84,19 @@ export function Header({ onMenuClick, layoutMode, onModeChange }: HeaderProps) {
         <button
           type="button"
           onClick={toggleTheme}
-          className="btn-press flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground shadow-xs hover:border-primary/25 hover:text-primary"
+          className="btn-press flex items-center gap-2 rounded-full border border-border/70 bg-card/70 px-3 py-2 text-muted-foreground shadow-xs hover:border-primary/25 hover:text-foreground"
           aria-label={isDark ? "ライトモードに切り替え" : "ダークモードに切り替え"}
         >
-          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          {isDark ? <Moon className="h-4 w-4 text-accent" /> : <Sun className="h-4 w-4 text-primary" />}
+          <span className="hidden min-w-0 flex-col text-left leading-tight sm:flex">
+            <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Theme
+            </span>
+            <span className="text-[11px] font-semibold text-foreground">{themeLabel}</span>
+          </span>
+          <span className="hidden rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[10px] font-medium text-muted-foreground md:inline">
+            {themeDetail}
+          </span>
         </button>
       </div>
     </header>

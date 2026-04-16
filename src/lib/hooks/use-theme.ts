@@ -16,6 +16,7 @@ function getInitialTheme(): Theme {
 function applyTheme(theme: Theme) {
   document.documentElement.classList.add("transitioning");
   document.documentElement.classList.toggle("dark", theme === "dark");
+  document.documentElement.dataset.theme = theme;
   localStorage.setItem(STORAGE_KEY, theme);
   setTimeout(() => {
     document.documentElement.classList.remove("transitioning");

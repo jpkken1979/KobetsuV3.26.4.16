@@ -90,6 +90,8 @@ function SettingsPage() {
   });
 
   const { isDark, toggleTheme } = useTheme();
+  const themeLabel = isDark ? "Bugatti" : "Ferrari / Lambo";
+  const themeDetail = isDark ? "carbon / red / gold" : "white / red / gold";
   const [backingUp, setBackingUp] = useState(false);
   const [clearingEmployees, setClearingEmployees] = useState(false);
   const [clearEmployeesOpen, setClearEmployeesOpen] = useState(false);
@@ -232,20 +234,22 @@ function SettingsPage() {
           <div>
             <p className="font-semibold text-foreground">テーマ</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {isDark ? "ダークモード（Ledger）" : "ライトモード"}
+              {themeLabel} · {themeDetail}
             </p>
           </div>
           <button
             onClick={toggleTheme}
             className={cn(
-              "relative h-7 w-12 rounded-full transition-all duration-300",
-              isDark ? "bg-primary" : "bg-muted"
+              "relative h-7 w-[5.75rem] rounded-full border transition-all duration-300",
+              isDark
+                ? "border-primary/20 bg-[linear-gradient(90deg,rgba(17,21,27,0.9),rgba(255,77,79,0.82))]"
+                : "border-amber-500/20 bg-[linear-gradient(90deg,rgba(214,31,42,0.92),rgba(245,165,36,0.92))]"
             )}
             aria-label="テーマ切り替え"
           >
             <span className={cn(
               "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-sm transition-all duration-300",
-              isDark ? "left-6" : "left-0.5"
+              isDark ? "left-[3.25rem]" : "left-0.5"
             )} />
           </button>
         </div>
