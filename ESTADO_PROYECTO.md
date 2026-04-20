@@ -40,6 +40,16 @@
 - Default `autoFillEnabled = true` (backward compat)
 - Nuevo componente: `src/components/ui/switch.tsx` (shadcn)
 
+**Fix cascading-select.tsx:**
+- Reemplazado regex-parsing de `workHours` por `workHoursDay.split("～")` para extraer horarios de inicio/fin correctamente
+- Strip de sufijo `(8.5h)` al auto-fill: `.replace(/\s*\([^)]*8\.5[^)]*\)/g, "").trim()`
+
+**Nuevo EditContractDialog en `/contracts/:id`:**
+- Nuevo componente `src/routes/contracts/-edit-contract-dialog.tsx`: Dialog con tabs 社員/派遣先 para editar datos desde el detalle de contrato
+- Botón "編集" (Pencil icon) junto a PDF生成 en el header de `$contractId.tsx`
+- Usa `api.updateEmployee()` y `api.updateFactory()` directamente (patrón consistente con el resto del codebase)
+- Commit: `813a4e1`
+
 **Pendiente:** fix ZIP download en `contracts/$contractId.tsx` — "PDF生成" genera PDFs pero no crea ZIP como shouheisha
 
 **Verificación:** typecheck ✅, lint ✅ (warnings preexistentes), test:run ✅ (42 archivos, 762 tests)
