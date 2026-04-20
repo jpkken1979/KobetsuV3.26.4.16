@@ -6,3 +6,5 @@
 - [Sesion 2026-04-15c — factory/company yearly config + table UX](session_2026-04-15c.md) — inkan 朱肉; MSGothic font; factory_yearly_config + company_yearly_config cascade; 年度 button tabla; light mode fix
 - [Sesion 2026-04-20 — Toggle auto-fill horarios shouheisha](session_2026-04-20.md) — split applyFactoryDefaults; Switch componente; cascading-select fix workHoursDay
 - [Sesion 2026-04-20b — EditContractDialog + cascading-select + shouheisha](session_2026-04-20b.md) — modal edición 社員/派遣先 en /contracts/:id; strip (8.5) workHours; 762 tests; commit 813a4e1
+- [GitHub repo KobetsuV3](reference_github.md) — https://github.com/jpkken1979/KobetsuV3.26.4.16
+- [DataTotal siempre commitear](feedback_datatotal.md) — carpeta de exports importantes, repo privado, nunca ignorar
