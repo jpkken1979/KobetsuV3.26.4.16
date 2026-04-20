@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.3.25
 
-> Última actualización: 2026-04-16
+> Última actualización: 2026-04-20
 
 ---
 
@@ -29,6 +29,22 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-20 — toggle auto-fill horarios en shouheisha
+
+**Toggle "自動反映" en shouheisha.tsx:**
+- `applyFactoryDefaults` dividida en dos funciones:
+  - `applyFactoryDefaults` —单价、業務内容、シフトパターン、勤務日数、Supervisor全部 → siempre se ejecuta al seleccionar工場
+  - `applyScheduleDefaults` — 開始時刻、終了時刻、休憩 → solo cuando toggle ON
+- Toggle `Switch` junto al botón "工場情報を反映" con label "自動反映"
+- Default `autoFillEnabled = true` (backward compat)
+- Nuevo componente: `src/components/ui/switch.tsx` (shadcn)
+
+**Pendiente:** fix ZIP download en `contracts/$contractId.tsx` — "PDF生成" genera PDFs pero no crea ZIP como shouheisha
+
+**Verificación:** typecheck ✅, lint ✅ (warnings preexistentes), test:run ✅ (42 archivos, 762 tests)
+
+---
 
 ## Sesión 2026-04-16 — audit, push confirmado y dashboard experimental
 

@@ -10,7 +10,9 @@ import {
   FileDown,
   FileText,
   Loader2,
+  Plus,
   ShieldCheck,
+  Trash2,
   Users,
 } from "lucide-react";
 
@@ -21,6 +23,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { api, downloadZip, type Contract, type Employee, type EmployeeCreate, type Factory } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
@@ -45,13 +48,51 @@ type GeneratedArtifact = {
 };
 
 type GenerationResult = {
-  employee: Employee;
+  employees: Employee[];
   contract: Contract | null;
   mode: "bundle" | "laborOnly";
   artifacts: GeneratedArtifact[];
   zipFilename: string | null;
   warnings: string[];
 };
+
+type RecruitForm = {
+  id: string;
+  employeeNumber: string;
+  fullName: string;
+  katakanaName: string;
+  nationality: string;
+  gender: string;
+  birthDate: string;
+  hireDate: string;
+  actualHireDate: string;
+  postalCode: string;
+  address: string;
+  visaExpiry: string;
+  visaType: string;
+};
+
+function emptyRecruit(): RecruitForm {
+  const id =
+    typeof globalThis.crypto?.randomUUID === "function"
+      ? globalThis.crypto.randomUUID()
+      : `r-${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`;
+  return {
+    id,
+    employeeNumber: "",
+    fullName: "",
+    katakanaName: "",
+    nationality: "",
+    gender: "",
+    birthDate: "",
+    hireDate: "",
+    actualHireDate: "",
+    postalCode: "",
+    address: "",
+    visaExpiry: "",
+    visaType: "",
+  };
+}
 
 function fieldClassName() {
   return "mt-1.5";
@@ -94,14 +135,7 @@ function ShouheishaPage() {
   const [factoryName, setFactoryName] = useState("");
   const [departmentName, setDepartmentName] = useState("");
   const [lineId, setLineId] = useState<number | null>(null);
-  const [employeeNumber, setEmployeeNumber] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [katakanaName, setKatakanaName] = useState("");
-  const [nationality, setNationality] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [hireDate, setHireDate] = useState("");
-  const [actualHireDate, setActualHireDate] = useState("");
+  const [recruits, setRecruits] = useState<RecruitForm[]>(() => [emptyRecruit()]);
   const [hourlyRate, setHourlyRate] = useState("");
   const [billingRate, setBillingRate] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -122,13 +156,11 @@ function ShouheishaPage() {
   const [responsibilityLevel, setResponsibilityLevel] = useState("");
   const [overtimeMax, setOvertimeMax] = useState("");
   const [welfare, setWelfare] = useState("");
-  const [visaExpiry, setVisaExpiry] = useState("");
-  const [visaType, setVisaType] = useState("");
-  const [postalCode, setPostalCode] = useState("");
-  const [address, setAddress] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [contractDateOverride, setContractDateOverride] = useState("");
   const [includeShugyojoken, setIncludeShugyojoken] = useState(true);
+  const [autoFillEnabled, setAutoFillEnabled] = useState(true);
   const [notes, setNotes] = useState("");
   const [result, setResult] = useState<GenerationResult | null>(null);
 
@@ -163,6 +195,19 @@ function ShouheishaPage() {
     }
   }, [selectedFactory?.id]);
 
+  useEffect(() => {
+    if (selectedFactory && autoFillEnabled) {
+      applyScheduleDefaults(selectedFactory);
+    }
+  }, [selectedFactory?.id, autoFillEnabled]);
+
+  const updateRecruit = (index: number, patch: Partial<RecruitForm>) => {
+    setRecruits((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
+  };
+  const addRecruit = () => setRecruits((prev) => [...prev, emptyRecruit()]);
+  const removeRecruit = (index: number) =>
+    setRecruits((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+
   const applyFactoryDefaults = (factory: Factory) => {
     if (typeof factory.hourlyRate === "number" && !hourlyRate) {
       setHourlyRate(String(factory.hourlyRate));
@@ -174,9 +219,6 @@ function ShouheishaPage() {
     setShiftPattern(factory.shiftPattern || "");
     setWorkHours(factory.workHours || "");
     setWorkDays(factory.workDays || "");
-    setWorkStartTime(factory.workHoursDay || "");
-    setWorkEndTime(factory.workHoursNight || "");
-    setBreakMinutes(factory.breakTime !== null && factory.breakTime !== undefined ? String(factory.breakTime) : "");
     setSupervisorDept(factory.supervisorDept || "");
     setSupervisorName(factory.supervisorName || "");
     setSupervisorPhone(factory.supervisorPhone || "");
@@ -202,52 +244,101 @@ function ShouheishaPage() {
     setWelfare(factory.workerCalendar || "");
   };
 
-  const upsertEmployee = async () => {
+  const applyScheduleDefaults = (factory: Factory) => {
+    setWorkStartTime(factory.workHoursDay || "");
+    setWorkEndTime(factory.workHoursNight || "");
+    setBreakMinutes(factory.breakTime !== null && factory.breakTime !== undefined ? String(factory.breakTime) : "");
+  };
+
+  const upsertEmployees = async (): Promise<Employee[]> => {
     if (!companyId || !lineId) {
       throw new Error("会社と配属先を選んでください");
     }
-    if (!employeeNumber.trim() || !fullName.trim()) {
-      throw new Error("社員番号と氏名は必須です");
+
+    const baseFallback = `SHO${(startDate || new Date().toISOString().slice(0, 10)).replaceAll("-", "").slice(2)}`;
+    const output: Employee[] = [];
+    const usedInBatch = new Set<string>();
+
+    for (let i = 0; i < recruits.length; i++) {
+      const recruit = recruits[i];
+      const trimmedFullName = recruit.fullName.trim();
+      const trimmedKatakana = recruit.katakanaName.trim();
+      const effectiveFullName = trimmedFullName || trimmedKatakana;
+      if (!effectiveFullName) {
+        throw new Error(`招聘者 #${i + 1}: 氏名またはカタカナのどちらかを入力してください`);
+      }
+
+      const trimmedEmployeeNumber = recruit.employeeNumber.trim();
+      let effectiveEmployeeNumber = trimmedEmployeeNumber || baseFallback;
+
+      if (!trimmedEmployeeNumber) {
+        const candidates = await api.getEmployees({ search: baseFallback });
+        const sameDayMatches = candidates.filter(
+          (c) => c.employeeNumber === baseFallback || c.employeeNumber.startsWith(`${baseFallback}-`)
+        );
+        const samePerson = sameDayMatches.find((c) => {
+          if (trimmedKatakana && c.katakanaName === trimmedKatakana) return true;
+          if (trimmedFullName && c.fullName === trimmedFullName) return true;
+          return false;
+        });
+        if (samePerson) {
+          effectiveEmployeeNumber = samePerson.employeeNumber;
+        } else {
+          const used = new Set([
+            ...sameDayMatches.map((m) => m.employeeNumber),
+            ...usedInBatch,
+          ]);
+          let index = 1;
+          let candidate = baseFallback;
+          while (used.has(candidate)) {
+            index++;
+            candidate = `${baseFallback}-${String(index).padStart(2, "0")}`;
+          }
+          effectiveEmployeeNumber = candidate;
+        }
+      }
+      usedInBatch.add(effectiveEmployeeNumber);
+
+      const matchedEmployees = await api.getEmployees({ search: effectiveEmployeeNumber });
+      const existingEmployee = matchedEmployees.find(
+        (employee) => employee.employeeNumber === effectiveEmployeeNumber
+      ) ?? null;
+
+      const effectiveHireDate = recruit.hireDate || startDate || undefined;
+      const effectiveActualHireDate = recruit.actualHireDate || effectiveHireDate;
+      const effectiveHourlyRate = normalizeNumber(hourlyRate);
+      const effectiveBillingRate = normalizeNumber(billingRate) ?? effectiveHourlyRate;
+
+      const employeePayload: EmployeeCreate = {
+        employeeNumber: effectiveEmployeeNumber,
+        fullName: effectiveFullName,
+        status: "active",
+        katakanaName: textOrNull(recruit.katakanaName),
+        nationality: textOrNull(recruit.nationality),
+        gender: recruit.gender || null,
+        birthDate: recruit.birthDate || null,
+        hireDate: effectiveHireDate ?? null,
+        actualHireDate: effectiveActualHireDate ?? null,
+        hourlyRate: effectiveHourlyRate,
+        billingRate: effectiveBillingRate,
+        visaExpiry: recruit.visaExpiry || null,
+        visaType: textOrNull(recruit.visaType),
+        postalCode: textOrNull(recruit.postalCode),
+        address: textOrNull(recruit.address),
+        companyId,
+        factoryId: lineId,
+      };
+
+      const employee = existingEmployee
+        ? await api.put<Employee>(`/employees/${existingEmployee.id}`, employeePayload)
+        : await api.post<Employee>("/employees", employeePayload);
+      output.push(employee);
     }
 
-    const matchedEmployees = await api.getEmployees({ search: employeeNumber.trim() });
-    const existingEmployee = matchedEmployees.find(
-      (employee) => employee.employeeNumber === employeeNumber.trim()
-    ) ?? null;
-
-    const effectiveHireDate = hireDate || startDate || undefined;
-    const effectiveActualHireDate = actualHireDate || effectiveHireDate;
-    const effectiveHourlyRate = normalizeNumber(hourlyRate);
-    const effectiveBillingRate = normalizeNumber(billingRate) ?? effectiveHourlyRate;
-
-    const employeePayload: EmployeeCreate = {
-      employeeNumber: employeeNumber.trim(),
-      fullName: fullName.trim(),
-      status: "active",
-      katakanaName: textOrNull(katakanaName),
-      nationality: textOrNull(nationality),
-      gender: gender || null,
-      birthDate: birthDate || null,
-      hireDate: effectiveHireDate ?? null,
-      actualHireDate: effectiveActualHireDate ?? null,
-      hourlyRate: effectiveHourlyRate,
-      billingRate: effectiveBillingRate,
-      visaExpiry: visaExpiry || null,
-      visaType: textOrNull(visaType),
-      postalCode: textOrNull(postalCode),
-      address: textOrNull(address),
-      companyId,
-      factoryId: lineId,
-    };
-
-    const employee = existingEmployee
-      ? await api.put<Employee>(`/employees/${existingEmployee.id}`, employeePayload)
-      : await api.post<Employee>("/employees", employeePayload);
-
-    return { employee, effectiveHourlyRate, effectiveBillingRate };
+    return output;
   };
 
-  const createContractForEmployee = async (employee: Employee, mode: "bundle" | "laborOnly") => {
+  const createContractForEmployees = async (employees: Employee[], mode: "bundle" | "laborOnly") => {
     if (!companyId || !lineId) {
       throw new Error("会社と配属先を選んでください");
     }
@@ -256,6 +347,8 @@ function ShouheishaPage() {
     }
 
     const contractDates = calculateContractDates(startDate);
+    const effectiveContractDate = contractDateOverride || contractDates.contractDate;
+    const effectiveNotificationDate = contractDateOverride || contractDates.notificationDate;
     const effectiveHourlyRate = normalizeNumber(hourlyRate);
     const effectiveBillingRate = normalizeNumber(billingRate) ?? effectiveHourlyRate;
 
@@ -265,8 +358,8 @@ function ShouheishaPage() {
           factoryId: lineId,
           startDate,
           endDate,
-          contractDate: contractDates.contractDate,
-          notificationDate: contractDates.notificationDate,
+          contractDate: effectiveContractDate,
+          notificationDate: effectiveNotificationDate,
           status: "active",
           hourlyRate: effectiveHourlyRate,
           overtimeRate: null,
@@ -290,25 +383,30 @@ function ShouheishaPage() {
           welfare: textOrNull(welfare),
           previousContractId: null,
           notes: notes.trim() || null,
-          employeeAssignments: [
-            {
-              employeeId: employee.id,
-              hourlyRate: effectiveHourlyRate ?? undefined,
-              individualStartDate: startDate,
-              individualEndDate: endDate,
-              isIndefinite: false,
-            },
-          ],
+          employeeAssignments: employees.map((emp) => ({
+            employeeId: emp.id,
+            hourlyRate: effectiveHourlyRate ?? undefined,
+            individualStartDate: startDate,
+            individualEndDate: endDate,
+            isIndefinite: false,
+          })),
         })
       : null;
 
     return { contract, effectiveHourlyRate, effectiveBillingRate };
   };
 
+  const buildZipPrefix = (employees: Employee[]) => {
+    if (employees.length === 1) {
+      return `招聘者_${employees[0].employeeNumber}`;
+    }
+    return `招聘者_${employees.length}名_${employees[0].employeeNumber}他`;
+  };
+
   const bundleMutation = useMutation({
     mutationFn: async (): Promise<GenerationResult> => {
-      const { employee } = await upsertEmployee();
-      const { contract } = await createContractForEmployee(employee, "bundle");
+      const employees = await upsertEmployees();
+      const { contract } = await createContractForEmployees(employees, "bundle");
       if (!contract) {
         throw new Error("契約の作成に失敗しました");
       }
@@ -328,17 +426,24 @@ function ShouheishaPage() {
         });
       }
 
-      const keiyakusho = await api.generateKeiyakusho(employee.employeeNumber, { startDate, endDate });
-      artifacts.push({
-        label: "労働契約書",
-        filename: keiyakusho.filename,
-        path: keiyakusho.path,
-      });
+      for (const employee of employees) {
+        try {
+          const keiyakusho = await api.generateKeiyakusho(employee.employeeNumber, { startDate, endDate });
+          artifacts.push({
+            label: employees.length === 1 ? "労働契約書" : `労働契約書 (${employee.fullName})`,
+            filename: keiyakusho.filename,
+            path: keiyakusho.path,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Unknown error";
+          warnings.push(`${employee.fullName}: 労働契約書の生成に失敗しました — ${msg}`);
+        }
+      }
 
-      const zipFilename = `招聘者_${employee.employeeNumber}_${startDate.replaceAll("-", "")}.zip`;
+      const zipFilename = `${buildZipPrefix(employees)}_${startDate.replaceAll("-", "")}.zip`;
       await downloadZip(artifacts.map((artifact) => artifact.filename), zipFilename);
 
-      return { employee, contract, mode: "bundle", artifacts, zipFilename, warnings };
+      return { employees, contract, mode: "bundle", artifacts, zipFilename, warnings };
     },
     onSuccess: async (data) => {
       await Promise.all([
@@ -347,8 +452,12 @@ function ShouheishaPage() {
         queryClient.invalidateQueries({ queryKey: queryKeys.documents.all }),
       ]);
       setResult(data);
+      const namesDesc =
+        data.employees.length === 1
+          ? data.employees[0].fullName
+          : `${data.employees.length}名: ${data.employees.map((e) => e.fullName).join(", ")}`;
       toast.success("招聘者の書類一式を作成しました", {
-        description: `${data.employee.fullName} / 契約番号 ${data.contract?.contractNumber ?? "未発行"}`,
+        description: `${namesDesc} / 契約番号 ${data.contract?.contractNumber ?? "未発行"}`,
       });
       if (data.warnings.length > 0) {
         toast.warning("一部の書類は補助生成に失敗しました", { description: data.warnings[0] });
@@ -361,17 +470,29 @@ function ShouheishaPage() {
 
   const laborOnlyMutation = useMutation({
     mutationFn: async (): Promise<GenerationResult> => {
-      const { employee } = await upsertEmployee();
-      await createContractForEmployee(employee, "laborOnly");
-      const keiyakusho = await api.generateKeiyakusho(employee.employeeNumber, { startDate, endDate });
-      const artifacts = [{
-        label: "労働契約書",
-        filename: keiyakusho.filename,
-        path: keiyakusho.path,
-      }];
-      const zipFilename = `招聘者_${employee.employeeNumber}_${startDate.replaceAll("-", "")}.zip`;
+      const employees = await upsertEmployees();
+      await createContractForEmployees(employees, "laborOnly");
+
+      const artifacts: GeneratedArtifact[] = [];
+      const warnings: string[] = [];
+
+      for (const employee of employees) {
+        try {
+          const keiyakusho = await api.generateKeiyakusho(employee.employeeNumber, { startDate, endDate });
+          artifacts.push({
+            label: employees.length === 1 ? "労働契約書" : `労働契約書 (${employee.fullName})`,
+            filename: keiyakusho.filename,
+            path: keiyakusho.path,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Unknown error";
+          warnings.push(`${employee.fullName}: 労働契約書の生成に失敗しました — ${msg}`);
+        }
+      }
+
+      const zipFilename = `${buildZipPrefix(employees)}_${startDate.replaceAll("-", "")}.zip`;
       await downloadZip(artifacts.map((artifact) => artifact.filename), zipFilename);
-      return { employee, contract: null, mode: "laborOnly", artifacts, zipFilename, warnings: [] };
+      return { employees, contract: null, mode: "laborOnly", artifacts, zipFilename, warnings };
     },
     onSuccess: async (data) => {
       await Promise.all([
@@ -379,7 +500,11 @@ function ShouheishaPage() {
         queryClient.invalidateQueries({ queryKey: queryKeys.documents.all }),
       ]);
       setResult(data);
-      toast.success("労働契約書を作成しました", { description: data.employee.fullName });
+      const namesDesc =
+        data.employees.length === 1
+          ? data.employees[0].fullName
+          : `${data.employees.length}名`;
+      toast.success("労働契約書を作成しました", { description: namesDesc });
     },
     onError: (error: Error) => {
       toast.error("労働契約書の作成に失敗しました", { description: error.message });
@@ -421,7 +546,12 @@ function ShouheishaPage() {
   };
 
   const contractDates = startDate ? calculateContractDates(startDate) : null;
-  const canGenerate = !!companyId && !!lineId && !!employeeNumber.trim() && !!fullName.trim() && !!startDate && !!endDate;
+  const canGenerate =
+    !!companyId &&
+    !!lineId &&
+    recruits.every((r) => r.fullName.trim() || r.katakanaName.trim()) &&
+    !!startDate &&
+    !!endDate;
 
   return (
     <AnimatedPage className="space-y-6">
@@ -609,68 +739,172 @@ function ShouheishaPage() {
           </Card>
 
           <Card className="p-5">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold">招聘者の情報</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                ここに入れるデータを、そのまま個別契約書・台帳・労働契約書に流します。
-              </p>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">招聘者の情報</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  ここに入れるデータを、そのまま個別契約書・台帳・労働契約書に流します。複数人を同じ工場・ラインに一括で登録できます。
+                </p>
+              </div>
+              <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                {recruits.length}名
+              </span>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-medium">社員番号</label>
-                <Input className={fieldClassName()} value={employeeNumber} onChange={(e) => setEmployeeNumber(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">氏名</label>
-                <Input className={fieldClassName()} value={fullName} onChange={(e) => setFullName(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">カタカナ</label>
-                <Input className={fieldClassName()} value={katakanaName} onChange={(e) => setKatakanaName(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">国籍</label>
-                <Input className={fieldClassName()} value={nationality} onChange={(e) => setNationality(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">性別</label>
-                <Select className={fieldClassName()} value={gender} onChange={(e) => setGender(e.target.value)}>
-                  <option value="">未設定</option>
-                  <option value="male">男性</option>
-                  <option value="female">女性</option>
-                  <option value="other">その他</option>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium">生年月日</label>
-                <Input className={fieldClassName()} type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">入社日</label>
-                <Input className={fieldClassName()} type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">実入社日</label>
-                <Input className={fieldClassName()} type="date" value={actualHireDate} onChange={(e) => setActualHireDate(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">郵便番号</label>
-                <Input className={fieldClassName()} value={postalCode} onChange={(e) => setPostalCode(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">住所</label>
-                <Input className={fieldClassName()} value={address} onChange={(e) => setAddress(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">在留期限</label>
-                <Input className={fieldClassName()} type="date" value={visaExpiry} onChange={(e) => setVisaExpiry(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">在留資格</label>
-                <Input className={fieldClassName()} value={visaType} onChange={(e) => setVisaType(e.target.value)} />
-              </div>
+            <div className="space-y-4">
+              {recruits.map((recruit, index) => (
+                <div
+                  key={recruit.id}
+                  className="rounded-xl border border-border/60 bg-background/40 p-4"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-md bg-primary/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
+                        招聘者 #{index + 1}
+                      </span>
+                      {recruit.fullName.trim() || recruit.katakanaName.trim() ? (
+                        <span className="text-sm text-muted-foreground">
+                          {recruit.fullName.trim() || recruit.katakanaName.trim()}
+                        </span>
+                      ) : (
+                        <span className="text-xs italic text-muted-foreground/60">未入力</span>
+                      )}
+                    </div>
+                    {recruits.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeRecruit(index)}
+                        className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />
+                        削除
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="text-sm font-medium">社員番号</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.employeeNumber}
+                        onChange={(e) => updateRecruit(index, { employeeNumber: e.target.value })}
+                        placeholder="空欄なら SHO<YYMMDD> を自動付番"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">氏名</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.fullName}
+                        onChange={(e) => updateRecruit(index, { fullName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">カタカナ</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.katakanaName}
+                        onChange={(e) => updateRecruit(index, { katakanaName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">国籍</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.nationality}
+                        onChange={(e) => updateRecruit(index, { nationality: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">性別</label>
+                      <Select
+                        className={fieldClassName()}
+                        value={recruit.gender}
+                        onChange={(e) => updateRecruit(index, { gender: e.target.value })}
+                      >
+                        <option value="">未設定</option>
+                        <option value="male">男性</option>
+                        <option value="female">女性</option>
+                        <option value="other">その他</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">生年月日</label>
+                      <Input
+                        className={fieldClassName()}
+                        type="date"
+                        value={recruit.birthDate}
+                        onChange={(e) => updateRecruit(index, { birthDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">入社日</label>
+                      <Input
+                        className={fieldClassName()}
+                        type="date"
+                        value={recruit.hireDate}
+                        onChange={(e) => updateRecruit(index, { hireDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">実入社日</label>
+                      <Input
+                        className={fieldClassName()}
+                        type="date"
+                        value={recruit.actualHireDate}
+                        onChange={(e) => updateRecruit(index, { actualHireDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">郵便番号</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.postalCode}
+                        onChange={(e) => updateRecruit(index, { postalCode: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">住所</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.address}
+                        onChange={(e) => updateRecruit(index, { address: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">在留期限</label>
+                      <Input
+                        className={fieldClassName()}
+                        type="date"
+                        value={recruit.visaExpiry}
+                        onChange={(e) => updateRecruit(index, { visaExpiry: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">在留資格</label>
+                      <Input
+                        className={fieldClassName()}
+                        value={recruit.visaType}
+                        onChange={(e) => updateRecruit(index, { visaType: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addRecruit}
+              className="mt-4 w-full border-dashed"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              招聘者を追加
+            </Button>
           </Card>
 
           <Card className="p-5">
@@ -681,9 +915,15 @@ function ShouheishaPage() {
                   選択中の工場マスタから、台帳にまだいない担当者情報も含めて契約欄へ反映します。ここは必要なら手で上書きできます。
                 </p>
               </div>
-              <Button type="button" variant="outline" onClick={() => selectedFactory && applyFactoryDefaults(selectedFactory)}>
-                工場情報を反映
-              </Button>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 text-sm">
+                  <Switch checked={autoFillEnabled} onCheckedChange={setAutoFillEnabled} />
+                  <span className="text-muted-foreground">自動反映</span>
+                </label>
+                <Button type="button" variant="outline" onClick={() => selectedFactory && applyFactoryDefaults(selectedFactory)}>
+                  工場情報を反映
+                </Button>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -768,7 +1008,7 @@ function ShouheishaPage() {
             <div className="mb-4">
               <h2 className="text-lg font-semibold">価格と期間</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                開始日から契約日と通知日を自動計算します。
+                開始日から契約日と通知日を自動計算します。すべての招聘者に同じ価格・期間が適用されます。
               </p>
             </div>
 
@@ -789,17 +1029,35 @@ function ShouheishaPage() {
                 <label className="text-sm font-medium">契約終了日</label>
                 <Input className={fieldClassName()} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
               </div>
+              <div className="md:col-span-2 xl:col-span-1">
+                <label className="text-sm font-medium">契約日（作成日・任意）</label>
+                <Input
+                  className={fieldClassName()}
+                  type="date"
+                  value={contractDateOverride}
+                  onChange={(e) => setContractDateOverride(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  空欄なら「契約開始日の2営業日前」で自動計算します。入力した場合、通知日も同じ日付になります。
+                </p>
+              </div>
             </div>
 
             {contractDates && (
               <div className="mt-4 rounded-xl bg-muted/30 px-4 py-3 text-sm">
                 <div className="flex items-center gap-2 font-medium">
                   <ShieldCheck className="h-4 w-4 text-primary" />
-                  自動計算
+                  {contractDateOverride ? "反映される日付" : "自動計算"}
                 </div>
                 <div className="mt-2 grid gap-2 text-muted-foreground md:grid-cols-2">
-                  <div>契約日: {contractDates.contractDate}</div>
-                  <div>通知日: {contractDates.notificationDate}</div>
+                  <div>
+                    契約日: {contractDateOverride || contractDates.contractDate}
+                    {contractDateOverride && <span className="ml-2 text-[10px] uppercase tracking-wider text-primary">手動</span>}
+                  </div>
+                  <div>
+                    通知日: {contractDateOverride || contractDates.notificationDate}
+                    {contractDateOverride && <span className="ml-2 text-[10px] uppercase tracking-wider text-primary">手動</span>}
+                  </div>
                 </div>
               </div>
             )}
@@ -846,7 +1104,9 @@ function ShouheishaPage() {
                 ) : (
                   <>
                     <FileDown className="mr-2 h-4 w-4" />
-                    2個の個別契約書 + 台帳 + 労働契約書を作成
+                    {recruits.length > 1
+                      ? `${recruits.length}名分: 個別契約書 + 台帳 + 労働契約書を作成`
+                      : "2個の個別契約書 + 台帳 + 労働契約書を作成"}
                   </>
                 )}
               </Button>
@@ -864,7 +1124,7 @@ function ShouheishaPage() {
                 ) : (
                   <>
                     <FileText className="mr-2 h-4 w-4" />
-                    労働契約書だけ作成
+                    {recruits.length > 1 ? `${recruits.length}名分: 労働契約書だけ作成` : "労働契約書だけ作成"}
                   </>
                 )}
               </Button>
@@ -886,7 +1146,11 @@ function ShouheishaPage() {
             ) : (
               <div className="space-y-4">
                 <div className="rounded-xl bg-muted/30 px-4 py-3 text-sm">
-                  <div className="font-medium text-foreground">{result.employee.fullName}</div>
+                  <div className="font-medium text-foreground">
+                    {result.employees.length === 1
+                      ? result.employees[0].fullName
+                      : `${result.employees.length}名: ${result.employees.map((e) => e.fullName).join(", ")}`}
+                  </div>
                   <div className="mt-1 text-muted-foreground">
                     {result.mode === "bundle" && result.contract
                       ? `契約番号: ${result.contract.contractNumber}`

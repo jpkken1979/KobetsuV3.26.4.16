@@ -43,17 +43,19 @@ Read these first when you need repo-specific context:
 
 ```bash
 npm install
-npm run dev            # Starts both API (8026) and web (3026) via concurrently
-npm run dev:server     # API only (tsx watch server/index.ts)
-npm run dev:client     # Vite only
-npm run build          # Production build
-npm run test           # Vitest watch mode (uses data/kobetsu.test.db, never wipes data/kobetsu.db)
-npm run test:run       # Single pass against the test DB
-npm run test:coverage  # Coverage (global 50/50/50/50; raised per-file in critical services)
-npm run lint           # ESLint on src/ and server/
-npm run typecheck      # tsc --noEmit
-npm run db:push        # Push schema to SQLite (dev shortcut)
-npm run db:studio      # Drizzle Studio GUI
+npm run dev                      # API (8026) + web (3026) via concurrently (tsx loads .env via --env-file)
+npm run dev:server               # API only (tsx watch --env-file .env server/index.ts)
+npm run dev:client               # Vite only
+npm run build                    # Production build
+npm run test                     # Runs test:prepare first (drops/recreates data/kobetsu.test.db), then Vitest watch
+npm run test:prepare             # Force-seed data/kobetsu.test.db (never touches data/kobetsu.db)
+npm run test:run                 # Seed + single pass against test DB (serial — --no-file-parallelism)
+npm run test:coverage            # Seed + coverage (globals 50/50/50/50; per-file: contract-dates 95, batch-helpers 85, koritsu-pdf-parser 80)
+npm run test:pdf-snapshots:update # Regenerate PDF snapshot fixtures (UPDATE_PDF_SNAPSHOTS=1) after changing generators
+npm run lint                     # ESLint on src/ and server/
+npm run typecheck                # tsc --noEmit
+npm run db:push                  # Push schema to SQLite (dev shortcut)
+npm run db:studio                # Drizzle Studio GUI
 ```
 
 ### Running Individual Tests
@@ -79,8 +81,8 @@ node scripts/excel-to-grid-spec.cjs <file> <sheet> [start] [end]  # Parse Excel 
 ### How the Dev Server Works
 
 `npm run dev` runs two processes via `concurrently`:
-1. **API server** (port 8026): `tsx watch server/index.ts` — Hono app with all `/api` routes
-2. **Vite dev server** (port 3026): Serves React frontend, proxies `/api/*` → `localhost:8026`
+1. **API server** (port 8026): `tsx watch --env-file .env server/index.ts` — Hono app with all `/api` routes. The `--env-file .env` flag is **required** — without it, `ADMIN_TOKEN` and other env vars are not loaded (see `session_2026-04-15b` memory: this caused admin middleware to reject localhost requests).
+2. **Vite dev server** (port 3026): Serves React frontend, proxies `/api/*` → `localhost:8026`.
 
 The proxy is configured in `vite.config.ts`. In production, `npm run build` outputs static files to `dist/`.
 
@@ -157,6 +159,7 @@ src/
 | `use-contracts.ts` | Contracts CRUD + batch operations |
 | `use-data-check.ts` | Completeness matrix queries |
 | `use-shift-templates.ts` | Shift pattern CRUD |
+| `use-factory-cascade.ts` | Company → Factory → Dept → Line cascade for shouheisha/contracts |
 | `use-theme.ts` | Light/dark theme state |
 | `use-debounce.ts` | Debounced value utility |
 | `use-unsaved-warning.ts` | Unsaved changes guard |
@@ -175,6 +178,7 @@ src/
 | `/contracts/batch` | Batch contract generation |
 | `/contracts/new-hires` | Batch creation for new hires (preview → confirm) |
 | `/contracts/mid-hires` | Batch creation for mid-hires (preview → confirm) |
+| `/shouheisha` | Recruitment bulk for 外国人材 — creates employees + contract + PDFs in one flow |
 | `/documents` | PDF generation/download (tabs: 契約別/工場一括/ID指定) |
 | `/import` | Excel employee import |
 | `/data-check` | Completeness matrix |
@@ -194,6 +198,7 @@ src/
 
 ### Large Files Warning
 - Several route/component files exceed 500 lines. Consider splitting when adding features:
+  - `shouheisha.tsx` (1177L) — recruitment bulk for 外国人材, largest route file
   - `companies/-koritsu-components.tsx` (805L), `companies/koritsu.tsx` (768L), `contracts/index.tsx` (786L), `import/-import-page.tsx` (761L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `employees/index.tsx` (705L), `settings/index.tsx` (617L), `contracts/mid-hires.tsx` (586L), `contracts/new-hires.tsx` (552L), `history/index.tsx` (538L)
   - Server: `services/koritsu-pdf-parser.ts` (759L), `routes/factories.ts` (644L), `services/import-factories-service.ts` (643L)
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
@@ -348,11 +353,13 @@ Different format from all other companies — 3 separate generators in `server/p
 ## Testing
 
 - **Framework:** Vitest (uses `vite.config.ts` implicitly — no separate config)
-- **Coverage thresholds:** lines 60%, functions 65%, statements 60%, branches 85%
+- **Serial execution:** all test scripts pass `--no-file-parallelism` to avoid SQLite race conditions
+- **Test DB isolation:** `DATABASE_PATH=data/kobetsu.test.db` via `cross-env`. `test:prepare` drops/recreates it before every run — `data/kobetsu.db` (production) is never touched by tests
+- **Coverage thresholds:** globals 50/50/50/50 (lines/functions/statements/branches), per-file raised: `contract-dates.ts` 95, `batch-helpers.ts` 85, `koritsu-pdf-parser.ts` 80. Coverage include list is scoped to `server/services/**` + `src/routes/companies/-table-*.tsx`
 - **Server tests:** `server/__tests__/` (unit + integration with real SQLite)
 - **Frontend tests:** colocated with components
-- **CI Pipeline:** not yet configured (no `.github/workflows/` present) — run `npm run lint && npm run typecheck && npm run build && npm run test:run` locally
-- **PDF smoke tests:** standalone scripts in project root (see PDF Test Scripts above)
+- **CI Pipeline:** `.github/workflows/ci.yml` — verify locally with `npm run lint && npm run typecheck && npm run build && npm run test:run`
+- **PDF smoke tests:** standalone scripts in project root (see PDF Test Scripts above). Regenerate golden snapshots with `npm run test:pdf-snapshots:update` after changing any generator
 - Mocks only for external dependencies — prefer real SQLite for integration tests
 
 ## Additional Context & Rules
