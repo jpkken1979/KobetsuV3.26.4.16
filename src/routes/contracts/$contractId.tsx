@@ -23,7 +23,9 @@ import {
   Trash2,
   AlertTriangle,
   Ban,
+  Pencil,
 } from "lucide-react";
+import { EditContractDialog } from "./-edit-contract-dialog";
 
 export const Route = createFileRoute("/contracts/$contractId")({
   component: ContractDetail,
@@ -115,6 +117,7 @@ function ContractDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
   const { data: contract, isLoading, error } = useQuery({
@@ -235,6 +238,13 @@ function ContractDetail() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            onClick={() => setShowEditDialog(true)}
+          >
+            <Pencil className="h-4 w-4" />
+            編集
+          </Button>
           <Button
             variant="cyan"
             onClick={() => generatePdf.mutate()}
@@ -521,6 +531,11 @@ function ContractDetail() {
           </div>
         </motion.div>
       </div>
+      <EditContractDialog
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        contract={contract}
+      />
     </AnimatedPage>
   );
 }
