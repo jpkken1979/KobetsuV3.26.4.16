@@ -125,14 +125,12 @@ export function CascadingSelect() {
         factoryContractPeriod: factory.contractPeriod || (factory.conflictDate ? "teishokubi" : ""),
       });
 
-      if (factory.workHours) {
-        const timeMatch = factory.workHours.match(
-          /(\d{1,2})[時:](\d{2})分?[～~ー](\d{1,2})[時:](\d{2})/
-        );
-        if (timeMatch) {
+      if (factory.workHoursDay) {
+        const [dayStart, dayEnd] = factory.workHoursDay.split("～");
+        if (dayStart && dayEnd) {
           updateFields({
-            workStartTime: `${timeMatch[1].padStart(2, "0")}:${timeMatch[2]}`,
-            workEndTime: `${timeMatch[3].padStart(2, "0")}:${timeMatch[4]}`,
+            workStartTime: dayStart.trim(),
+            workEndTime: dayEnd.trim(),
           });
         }
       }

@@ -217,7 +217,7 @@ function ShouheishaPage() {
     }
     setJobDescription(factory.jobDescription2 || factory.jobDescription || "");
     setShiftPattern(factory.shiftPattern || "");
-    setWorkHours(factory.workHours || "");
+    setWorkHours((factory.workHours || "").replace(/\s*\([^)]*8\.5[^)]*\)/g, "").trim());
     setWorkDays(factory.workDays || "");
     setSupervisorDept(factory.supervisorDept || "");
     setSupervisorName(factory.supervisorName || "");
