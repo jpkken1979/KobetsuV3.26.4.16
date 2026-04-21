@@ -49,7 +49,7 @@ api.use(
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
-api.use("*", bodyLimit({ maxSize: 10 * 1024 * 1024 })); // 10MB max
+api.use("*", bodyLimit({ maxSize: 5 * 1024 * 1024 })); // 5MB max (Excel imports actuales < 100KB)
 api.use("*", securityHeadersMiddleware);
 api.use("*", adminGuardMiddleware);
 
