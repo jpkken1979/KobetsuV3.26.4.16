@@ -7,7 +7,13 @@
  *
  * Cleanup: contracts created here use startDate "2099-*" so we can safely
  * DELETE them in afterEach without touching production data.
+ *
+ * Note: los fixtures de Employee y RateGroup usan `as any` deliberadamente —
+ * reconstruir un Employee completo en cada caso infla el archivo sin aportar
+ * cobertura real. El cast asume que `executeBatchCreate`/`executeNewHiresCreate`
+ * solo consultan los campos provistos (id, fullName, effectiveHireDate, etc.).
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, afterEach } from "vitest";
 import { db } from "../db/index.js";
 import { contracts, contractEmployees, auditLog } from "../db/schema.js";
