@@ -1,6 +1,33 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-21 (sesión nocturna — hardening deps + refactor CLAUDE.md)
+> Última actualización: 2026-04-21b (sesión pulido visual PDFs — balance tipográfico kobetsu + relleno tsuchisho)
+
+## Sesión 2026-04-21b — Balance tipográfico kobetsu + relleno tsuchisho
+
+**3 iteraciones sobre `server/pdf/kobetsu-pdf.ts` y `server/pdf/tsuchisho-pdf.ts`:**
+
+### Ronda 1 — Fonts +1pt across the board (kobetsu)
+- Intro 7→8.5pt · Values 7→8pt · Row labels 6.5→7pt · Inner labels 7→7.5pt
+- Legal labels 6.5→7.5pt · Legal text 6→7pt (苦情/契約解除 5.5→6.5pt)
+- Shifts cascade: techo 7.5pt / piso 4.5pt (antes 6.5 / 3.5)
+- Checkboxes labels 6→7pt / values 7→8pt
+
+### Ronda 2 — Tsuchisho: relleno hasta pie de página
+- `RH`: 16 → **17pt** · `emptyRows`: 20→**38** · Guard: `y<720` → `y<795`
+- Llega al 93% de A4 sin overflow
+
+### Ronda 3 — Pulidos (feedback visual)
+- **Row labels unificados a 7.5pt** (personRow, row labels, checkbox labels, legal labels) — balance visual total
+- **派遣内容**: `"派遣\n内容"` split forzado (2+2 chars balanceado vs 3+1 por wrap automático)
+- **Cols A+B ampliadas**: `COL_CW[0]` 3.625→**4.5**, `COL_CW[1]` 11.375→**13.5**, `COL_CW[2..25]` 11.375→**11.25** (CW_SUM mantenido en 292.625) → side label ~27.4pt → **~32.9pt** de ancho
+- **Checkboxes hardcoded**: siempre ☑ en primera opción (ignora `data.isKyoteiTaisho` / `data.responsibilityLevel`)
+
+### Verificación
+- typecheck: clean · lint: clean · 762/762 tests · 10/10 snapshots regenerados
+- Mediciones pdfjs-dist: 19/20 bloques con font size exacto (solo `就業日 calendar` largo activa auto-shrink a 6pt — edge case esperado)
+- `scripts/analyze-kobetsu-pdfs.mjs` creado como herramienta de diagnóstico reusable
+
+**Detalle técnico completo**: `.claude/memory/session_2026-04-21b.md`
 
 ---
 

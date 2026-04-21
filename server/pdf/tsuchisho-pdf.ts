@@ -66,7 +66,7 @@ export function generateTsuchishoPDF(doc: Doc, data: TsuchishoData): void {
     { x: LM + 445, w: W - 445, label: "待遇決定方式" },
   ];
 
-  const RH = 16;
+  const RH = 17;
   doc.lineWidth(0.5);
 
   // ── Header row ──
@@ -162,10 +162,10 @@ export function generateTsuchishoPDF(doc: Doc, data: TsuchishoData): void {
     });
   }
 
-  // ── Empty rows to fill page ──
+  // ── Empty rows to fill page (balance visual: fills almost to footer) ──
   const filledRows = data.employees ? data.employees.length : 0;
-  const emptyRows = Math.max(0, 20 - filledRows);
-  for (let r = 0; r < emptyRows && y < 720; r++) {
+  const emptyRows = Math.max(0, 38 - filledRows);
+  for (let r = 0; r < emptyRows && y < 795; r++) {
     for (const col of cols) {
       doc.rect(col.x, y, col.w, RH).stroke();
     }

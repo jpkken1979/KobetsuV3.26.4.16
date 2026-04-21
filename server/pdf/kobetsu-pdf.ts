@@ -83,11 +83,12 @@ const MT = 11;
 const MB = 15;   // bottom margin — prevents PDFKit auto-pagination
 const TW = 535;  // wider grid, right margin ≈ 30pt (balanced)
 
-// Column character widths: A=3.625, B-Z=11.375, AA=4.625 (total=292.625)
-const COL_CW = [3.625, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375,
-  11.375, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375,
-  11.375, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375, 11.375,
-  11.375, 4.625];
+// Column character widths: A=4.5 (wider for side label), B=13.5 (wider for 派遣先/派遣元/派遣内容),
+// C-Z=11.25 each (compensates total), AA=4.625. Total kept at 292.625.
+const COL_CW = [4.5, 13.5, 11.25, 11.25, 11.25, 11.25, 11.25,
+  11.25, 11.25, 11.25, 11.25, 11.25, 11.25, 11.25, 11.25, 11.25,
+  11.25, 11.25, 11.25, 11.25, 11.25, 11.25, 11.25, 11.25, 11.25,
+  11.25, 4.625];
 const CW_SUM = 292.625;
 
 // Pre-compute column x-positions (index 0=A ... 26=AA, 27=right edge)
@@ -209,23 +210,23 @@ function personRow(
   doc: Doc, row: number,
   label: string, dept: string, name: string, phone: string
 ) {
-  cell(doc, row, 2, row, 6, label, 6.5, { align: "center" });
+  cell(doc, row, 2, row, 6, label, 7.5, { align: "center" });
   // Single outer border for content area
   doc.lineWidth(0.4).rect(cx(7), ry(row), cw(7, 26), rh(row, row)).stroke();
   // Distributed text — no internal borders
-  cell(doc, row, 7, row, 8, "部署", 7, { align: "center", noBorder: true });
-  cell(doc, row, 9, row, 13, dept, 7, { noBorder: true });
-  cell(doc, row, 14, row, 15, "役職", 7, { align: "center", noBorder: true });
-  cell(doc, row, 16, row, 22, name, 7, { noBorder: true });
-  cell(doc, row, 23, row, 23, "TEL", 7, { noBorder: true });
-  cell(doc, row, 24, row, 26, phone, 7, { noBorder: true });
+  cell(doc, row, 7, row, 8, "部署", 7.5, { align: "center", noBorder: true });
+  cell(doc, row, 9, row, 13, dept, 8, { noBorder: true });
+  cell(doc, row, 14, row, 15, "役職", 7.5, { align: "center", noBorder: true });
+  cell(doc, row, 16, row, 22, name, 8, { noBorder: true });
+  cell(doc, row, 23, row, 23, "TEL", 7.5, { noBorder: true });
+  cell(doc, row, 24, row, 26, phone, 8, { noBorder: true });
 }
 
 /** Legal text row: label(C-G) merged across multiple rows | value(H-AA) merged */
 function legalBlock(
   doc: Doc,
   r1: number, r2l: number, r2v: number, c2v: number,
-  label: string, text: string, labelFs: number = 6.5, textFs: number = 6
+  label: string, text: string, labelFs: number = 7.5, textFs: number = 7
 ) {
   cell(doc, r1, 2, r2l, 6, label, labelFs, { align: "center", wrap: true });
   cell(doc, r1, 7, r2v, c2v, text, textFs, { valign: "top", wrap: true });
@@ -269,13 +270,13 @@ function stripPostalCode(addr: string): string {
 function renderMultiShift(doc: Doc, text: string, r1: number, r2: number) {
   const lines = text.split("\n").filter(Boolean);
   if (lines.length === 0) {
-    cell(doc, r1, 7, r2, 26, "", 7);
+    cell(doc, r1, 7, r2, 26, "", 8);
     return;
   }
 
   // ≤2 shifts: single cell — always fits
   if (lines.length <= 2) {
-    cell(doc, r1, 7, r2, 26, text, 7, { valign: "center", wrap: true });
+    cell(doc, r1, 7, r2, 26, text, 8, { valign: "center", wrap: true });
     return;
   }
 
@@ -290,31 +291,31 @@ function renderMultiShift(doc: Doc, text: string, r1: number, r2: number) {
   // For 7+ shifts, skip 2-col (looks unbalanced) — go straight to 3-col
   const use3col = lines.length >= 7;
   const attempts: { lines: string[]; cols: number; fs: number }[] = use3col ? [
+    { lines: trimmedLines, cols: 3, fs: 6.5 },
     { lines: trimmedLines, cols: 3, fs: 6 },
     { lines: trimmedLines, cols: 3, fs: 5.5 },
     { lines: trimmedLines, cols: 3, fs: 5 },
     { lines: trimmedLines, cols: 3, fs: 4.5 },
     { lines: trimmedLines, cols: 3, fs: 4 },
-    { lines: trimmedLines, cols: 3, fs: 3.5 },
   ] : [
-    { lines, cols: 2, fs: 6.5 },
-    { lines: compactLines, cols: 2, fs: 6.5 },
+    { lines, cols: 2, fs: 7.5 },
+    { lines: compactLines, cols: 2, fs: 7.5 },
+    { lines: trimmedLines, cols: 2, fs: 7.5 },
+    { lines: trimmedLines, cols: 3, fs: 7 },
     { lines: trimmedLines, cols: 2, fs: 6.5 },
+    { lines: trimmedLines, cols: 3, fs: 6.5 },
     { lines: trimmedLines, cols: 3, fs: 6 },
-    { lines: trimmedLines, cols: 2, fs: 5.5 },
     { lines: trimmedLines, cols: 3, fs: 5.5 },
     { lines: trimmedLines, cols: 3, fs: 5 },
     { lines: trimmedLines, cols: 3, fs: 4.5 },
-    { lines: trimmedLines, cols: 3, fs: 4 },
-    { lines: trimmedLines, cols: 3, fs: 3.5 },
   ];
 
   for (const attempt of attempts) {
     if (tryColumnLayout(doc, attempt.lines, x, y, w, h, attempt.cols, attempt.fs)) return;
   }
 
-  // Final fallback: 3-col forced at 3.5pt
-  tryColumnLayout(doc, trimmedLines, x, y, w, h, 3, 3.5, true);
+  // Final fallback: 3-col forced at 4pt
+  tryColumnLayout(doc, trimmedLines, x, y, w, h, 3, 4, true);
 }
 
 /** Try rendering lines in N columns. Returns true if text fits without overflow.
@@ -399,43 +400,43 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
 
   // ═══ ROWS 2-3: Intro text — no border ═══
   const intro = `${data.companyName}（以下、「甲」という）とユニバーサル企画株式会社（以下、「乙」という）間で締結された労働者派遣基本契約書に従い、次の派遣要件に基づき労働者派遣契約書を締結する。`;
-  cell(doc, 2, 0, 3, 26, intro, 7, { wrap: true, noBorder: true });
+  cell(doc, 2, 0, 3, 26, intro, 8.5, { wrap: true, noBorder: true });
 
   // ═══ ROWS 4-9: 派遣先 ═══
-  cell(doc, 4, 0, 9, 1, "派遣先", 7, { align: "center", wrap: true });
+  cell(doc, 4, 0, 9, 1, "派遣先", 8, { align: "center", wrap: true });
 
   // Row 4: 派遣先事業所 — outer border only, text distributed
-  cell(doc, 4, 2, 4, 6, "派遣先事業所", 6.5, { align: "center" });
+  cell(doc, 4, 2, 4, 6, "派遣先事業所", 7.5, { align: "center" });
   doc.lineWidth(0.4).rect(cx(7), ry(4), cw(7, 26), rh(4, 4)).stroke();
-  cell(doc, 4, 7, 4, 7, "名称", 7, { align: "center", noBorder: true });
-  cell(doc, 4, 8, 4, 13, data.companyName, 7, { noBorder: true });
-  cell(doc, 4, 14, 4, 15, "所在地", 7, { align: "center", noBorder: true });
-  cell(doc, 4, 16, 4, 22, stripPostalCode(data.companyAddress), 7, { noBorder: true });
-  cell(doc, 4, 23, 4, 23, "TEL", 7, { noBorder: true });
-  cell(doc, 4, 24, 4, 26, data.companyPhone, 7, { noBorder: true });
+  cell(doc, 4, 7, 4, 7, "名称", 7.5, { align: "center", noBorder: true });
+  cell(doc, 4, 8, 4, 13, data.companyName, 8, { noBorder: true });
+  cell(doc, 4, 14, 4, 15, "所在地", 7.5, { align: "center", noBorder: true });
+  cell(doc, 4, 16, 4, 22, stripPostalCode(data.companyAddress), 8, { noBorder: true });
+  cell(doc, 4, 23, 4, 23, "TEL", 7.5, { noBorder: true });
+  cell(doc, 4, 24, 4, 26, data.companyPhone, 8, { noBorder: true });
 
   // Row 5: 就業場所 — outer border only, text distributed
-  cell(doc, 5, 2, 5, 6, "就業場所", 6.5, { align: "center" });
+  cell(doc, 5, 2, 5, 6, "就業場所", 7.5, { align: "center" });
   doc.lineWidth(0.4).rect(cx(7), ry(5), cw(7, 26), rh(5, 5)).stroke();
-  cell(doc, 5, 7, 5, 7, "名称", 7, { align: "center", noBorder: true });
+  cell(doc, 5, 7, 5, 7, "名称", 7.5, { align: "center", noBorder: true });
   const jigyosho = getTakaoJigyosho(data.companyName, data.factoryAddress);
   const shugyoName = jigyosho
     ? [data.companyName, jigyosho].filter(Boolean).join("　")
     : [data.companyName, data.factoryName].filter(Boolean).join("　");
-  cell(doc, 5, 8, 5, 13, shugyoName, 7, { noBorder: true });
-  cell(doc, 5, 14, 5, 15, "所在地", 7, { align: "center", noBorder: true });
-  cell(doc, 5, 16, 5, 22, stripPostalCode(data.factoryAddress), 7, { noBorder: true });
-  cell(doc, 5, 23, 5, 23, "TEL", 7, { noBorder: true });
-  cell(doc, 5, 24, 5, 26, data.factoryPhone || data.companyPhone, 7, { noBorder: true });
+  cell(doc, 5, 8, 5, 13, shugyoName, 8, { noBorder: true });
+  cell(doc, 5, 14, 5, 15, "所在地", 7.5, { align: "center", noBorder: true });
+  cell(doc, 5, 16, 5, 22, stripPostalCode(data.factoryAddress), 8, { noBorder: true });
+  cell(doc, 5, 23, 5, 23, "TEL", 7.5, { noBorder: true });
+  cell(doc, 5, 24, 5, 26, data.factoryPhone || data.companyPhone, 8, { noBorder: true });
 
   // Row 6: 組織単位 + 抵触日 (only 抵触日 has its own border)
-  cell(doc, 6, 2, 6, 6, "組織単位", 6.5, { align: "center" });
+  cell(doc, 6, 2, 6, 6, "組織単位", 7.5, { align: "center" });
   const soshikiText = jigyosho
     ? [jigyosho, data.factoryName, data.department].filter(Boolean).join("　")
     : data.department || "";
-  cell(doc, 6, 7, 6, 13, soshikiText, 7, { align: "center" });
-  cell(doc, 6, 14, 6, 15, "抵触日", 7, { align: "center" });
-  cell(doc, 6, 16, 6, 26, formatDateJP(data.conflictDate), 7);
+  cell(doc, 6, 7, 6, 13, soshikiText, 8, { align: "center" });
+  cell(doc, 6, 14, 6, 15, "抵触日", 7.5, { align: "center" });
+  cell(doc, 6, 16, 6, 26, formatDateJP(data.conflictDate), 8);
 
   // Rows 7-9: Person rows (派遣先 side)
   personRow(doc, 7, "指揮命令者", data.supervisorDept, data.supervisorName, data.supervisorPhone);
@@ -443,109 +444,107 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
   personRow(doc, 9, "苦情処理担当者", data.complaintClientDept, data.complaintClientName, data.complaintClientPhone);
 
   // ═══ ROWS 10-11: 派遣元 ═══
-  cell(doc, 10, 0, 11, 1, "派遣元", 7, { align: "center", wrap: true });
+  cell(doc, 10, 0, 11, 1, "派遣元", 8, { align: "center", wrap: true });
 
   personRow(doc, 10, "製造業務専門派遣元責任者",
     data.managerUnsDept || mgr.dept, data.managerUnsName || `${mgr.role}　${mgr.name}`, data.managerUnsPhone || mgr.phone);
   personRow(doc, 11, "苦情処理担当者",
     data.complaintUnsDept || mgr.dept, data.complaintUnsName || `${mgr.role}　${mgr.name}`, data.complaintUnsPhone || mgr.phone);
 
-  // ═══ ROWS 12-57: 派遣内容 (massive side label) ═══
-  cell(doc, 12, 0, 57, 1, "派遣内容", 5, { align: "center" });
+  // ═══ ROWS 12-57: 派遣内容 (side label — forced 2-line split: 派遣 / 内容) ═══
+  cell(doc, 12, 0, 57, 1, "派遣\n内容", 8, { align: "center", wrap: true });
 
-  // --- Rows 12-13: 協定対象 (with checkboxes ☑/□) ---
-  cell(doc, 12, 2, 13, 6, "派遣労働者を協定対象労働者に限定するか否か", 6, { align: "center", wrap: true });
-  const kyotei = data.isKyoteiTaisho !== false;
+  // --- Rows 12-13: 協定対象 (checkboxes hardcoded: siempre primera opcion) ---
+  cell(doc, 12, 2, 13, 6, "派遣労働者を協定対象労働者に限定するか否か", 7.5, { align: "center", wrap: true });
   cell(doc, 12, 7, 13, 26,
-    `${kyotei ? "☑" : "□"} 協定対象派遣労働者に限定　　　${kyotei ? "□" : "☑"} 限定なし`, 7);
+    "☑ 協定対象派遣労働者に限定　　　□ 限定なし", 8);
 
-  // --- Row 14: 責任の程度 checkboxes ---
-  cell(doc, 14, 2, 14, 6, "派遣労働者の責任の程度", 6, { align: "center", wrap: true });
-  const hasAuthority = data.responsibilityLevel === "あり";
+  // --- Row 14: 責任の程度 checkboxes (hardcoded: siempre 権限なし marcado) ---
+  cell(doc, 14, 2, 14, 6, "派遣労働者の責任の程度", 7.5, { align: "center", wrap: true });
   cell(doc, 14, 7, 14, 26,
-    `${hasAuthority ? "□" : "☑"} 付与される権限なし　　　${hasAuthority ? "☑" : "□"} 付与される権限あり`, 7);
+    "☑ 付与される権限なし　　　□ 付与される権限あり", 8);
 
   // --- Row 15: 業務内容 ---
-  cell(doc, 15, 2, 15, 6, "業務内容", 6.5, { align: "center" });
-  cell(doc, 15, 7, 15, 26, data.jobDescription, 7);
+  cell(doc, 15, 2, 15, 6, "業務内容", 7.5, { align: "center" });
+  cell(doc, 15, 7, 15, 26, data.jobDescription, 8);
 
   // --- Row 16: 派遣期間 ---
-  cell(doc, 16, 2, 16, 6, "派遣期間", 6.5, { align: "center" });
-  cell(doc, 16, 7, 16, 20, `${formatDateJP(data.startDate)}　～　${formatDateJP(data.endDate)}`, 7, { align: "center" });
-  cell(doc, 16, 21, 16, 26, `人数　${data.employeeCount}名`, 7, { align: "center" });
+  cell(doc, 16, 2, 16, 6, "派遣期間", 7.5, { align: "center" });
+  cell(doc, 16, 7, 16, 20, `${formatDateJP(data.startDate)}　～　${formatDateJP(data.endDate)}`, 8, { align: "center" });
+  cell(doc, 16, 21, 16, 26, `人数　${data.employeeCount}名`, 8, { align: "center" });
 
   // --- Row 17: 就業日 ---
-  cell(doc, 17, 2, 17, 6, "就業日", 6.5, { align: "center" });
-  cell(doc, 17, 7, 17, 26, data.calendar, 7);
+  cell(doc, 17, 2, 17, 6, "就業日", 7.5, { align: "center" });
+  cell(doc, 17, 7, 17, 26, data.calendar, 8);
 
   // --- Rows 18-21: 就業時間 (smart layout: 2-column for 3+ shifts) ---
   // Append 定時 (net hours) to each shift: "A勤務：7:00～15:30 (7.75)"
-  cell(doc, 18, 2, 21, 6, "就業時間", 6.5, { align: "center", wrap: true });
+  cell(doc, 18, 2, 21, 6, "就業時間", 7.5, { align: "center", wrap: true });
   const workHoursWithTeiji = appendTeiji(data.workHours, data.breakTime);
   renderMultiShift(doc, workHoursWithTeiji, 18, 21);
 
   // --- Rows 22-25: 休憩時間 (smart layout: 2-column for 3+ shifts) ---
-  cell(doc, 22, 2, 25, 6, "休憩時間", 6.5, { align: "center", wrap: true });
+  cell(doc, 22, 2, 25, 6, "休憩時間", 7.5, { align: "center", wrap: true });
   renderMultiShift(doc, data.breakTime, 22, 25);
 
   // --- Row 26: 就業日外労働 ---
-  cell(doc, 26, 2, 26, 6, "就業日外労働", 6.5, { align: "center" });
-  cell(doc, 26, 7, 26, 26, data.overtimeOutsideDays, 7);
+  cell(doc, 26, 2, 26, 6, "就業日外労働", 7.5, { align: "center" });
+  cell(doc, 26, 7, 26, 26, data.overtimeOutsideDays, 8);
 
   // --- Rows 27-28: 時間外労働 ---
-  cell(doc, 27, 2, 28, 6, "時間外労働", 6.5, { align: "center", wrap: true });
-  cell(doc, 27, 7, 28, 26, data.overtimeHours, 7, { wrap: true });
+  cell(doc, 27, 2, 28, 6, "時間外労働", 7.5, { align: "center", wrap: true });
+  cell(doc, 27, 7, 28, 26, data.overtimeHours, 8, { wrap: true });
 
   // --- Rows 29-31: 派遣料金 ---
-  cell(doc, 29, 2, 31, 6, "派遣料金", 6.5, { align: "center", wrap: true });
+  cell(doc, 29, 2, 31, 6, "派遣料金", 7.5, { align: "center", wrap: true });
 
   // Row 29: all rates in one cell — no internal borders
   cell(doc, 29, 7, 29, 26,
-    `基本 ${yen(rate)}　　　残業(125%) ${yen(rate * 1.25)}　　　深夜(125%) ${yen(rate * 1.25)}`, 7);
+    `基本 ${yen(rate)}　　　残業(125%) ${yen(rate * 1.25)}　　　深夜(125%) ${yen(rate * 1.25)}`, 8);
 
   // Row 30: holiday + 60h surcharge in one cell
   cell(doc, 30, 7, 30, 26,
-    `休日(135%) ${yen(rate * 1.35)}　　＜60時間超＞ 割増料金（150%） ${yen(rate * 1.50)}`, 7);
+    `休日(135%) ${yen(rate * 1.35)}　　＜60時間超＞ 割増料金（150%） ${yen(rate * 1.50)}`, 8);
 
   // Row 31: time unit in one cell
   cell(doc, 31, 7, 31, 26,
-    `労働時間の計算は　${data.timeUnit || "15"}　分単位で計算する。`, 7);
+    `労働時間の計算は　${data.timeUnit || "15"}　分単位で計算する。`, 8);
 
   // --- Rows 32-33: 支払い条件 ---
-  cell(doc, 32, 2, 33, 6, "支払い条件", 6.5, { align: "center", wrap: true });
+  cell(doc, 32, 2, 33, 6, "支払い条件", 7.5, { align: "center", wrap: true });
 
   // Row 32: all payment terms in one cell — no internal borders
   cell(doc, 32, 7, 32, 26,
-    `締日　${data.closingDay}　　支払日　${data.paymentDay}　　支払方法　銀行振込`, 7);
+    `締日　${data.closingDay}　　支払日　${data.paymentDay}　　支払方法　銀行振込`, 8);
 
   // Row 33: 振込先 | account
-  cell(doc, 33, 7, 33, 8, "振込先", 7, { align: "center" });
-  cell(doc, 33, 9, 33, 26, data.bankAccount, 7);
+  cell(doc, 33, 7, 33, 8, "振込先", 7.5, { align: "center" });
+  cell(doc, 33, 9, 33, 26, data.bankAccount, 8);
 
   // --- Rows 34-35: 安全・衛生 ---
-  legalBlock(doc, 34, 35, 35, 26, "安全・衛生", ANZEN, 6.5, 6);
+  legalBlock(doc, 34, 35, 35, 26, "安全・衛生", ANZEN, 7.5, 7);
 
   // --- Row 36: 便宜供与 ---
-  legalBlock(doc, 36, 36, 36, 26, "便宜供与", BENGI, 6.5, 6);
+  legalBlock(doc, 36, 36, 36, 26, "便宜供与", BENGI, 7.5, 7);
 
   // --- Rows 37-40: 苦情処理方法 ---
-  legalBlock(doc, 37, 40, 40, 26, "苦情処理方法", KUJO, 6.5, 5.5);
+  legalBlock(doc, 37, 40, 40, 26, "苦情処理方法", KUJO, 7.5, 6.5);
 
   // --- Rows 41-53: 契約解除措置 ---
   cell(doc, 41, 2, 53, 6,
     "労働者派遣契約の契約の解除に当たって講ずる派遣労働者の雇用の安定を図るための措置",
-    6.5, { align: "center", wrap: true });
+    7.5, { align: "center", wrap: true });
 
   // (1)~(4) merged into single cell — no internal borders
   const kaijoAll = [KAIJO_1, KAIJO_2, KAIJO_3, KAIJO_4].join("\n");
-  cell(doc, 41, 7, 53, 26, kaijoAll, 5.5, { valign: "top", wrap: true });
+  cell(doc, 41, 7, 53, 26, kaijoAll, 6.5, { valign: "top", wrap: true });
 
   // --- Rows 54-55: 紛争防止措置 ---
-  legalBlock(doc, 54, 55, 55, 26, "派遣先が派遣労働者を雇用する場合の紛争防止措置", FUNSO, 6.5, 6);
+  legalBlock(doc, 54, 55, 55, 26, "派遣先が派遣労働者を雇用する場合の紛争防止措置", FUNSO, 7.5, 7);
 
   // --- Rows 56-57: 無期雇用限定 ---
   legalBlock(doc, 56, 57, 57, 26,
-    "派遣労働者を無期雇用派遣労働者又は６０歳以上の者に限定するか否かの別", MUKI, 6.5, 6);
+    "派遣労働者を無期雇用派遣労働者又は６０歳以上の者に限定するか否かの別", MUKI, 7.5, 7);
 
   // ═══ ROW 58: Signature text ═══
   cell(doc, 58, 0, 58, 26,

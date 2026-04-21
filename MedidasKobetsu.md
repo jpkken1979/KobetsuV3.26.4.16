@@ -125,22 +125,31 @@ function cell(doc, r1, c1, r2, c2, text, fs, opts)
 
 ## 5. Font Sizes por sección
 
+Ajuste 2026-04-21: subidos ~+1pt across the board para mejorar legibilidad visual
+respetando el balance con las zonas densas de texto legal. El auto-shrink de `cell()`
+sigue cuidando los casos edge (nombres largos, calendars extensos).
+
 | Sección | Font Size | Nota |
 |---------|-----------|------|
 | Título | 13 pt | noBorder |
-| Intro texto | 7 pt | noBorder, wrap |
-| Side labels (派遣先, 派遣元) | 7 pt | |
+| Intro texto | 8.5 pt | noBorder, wrap |
+| Side labels (派遣先, 派遣元) | 8 pt | |
 | Side label (派遣内容) | 5 pt | Narrow cell, no wrap |
-| Row labels (派遣先事業所, etc.) | 6.5 pt | center |
-| Content values | 7 pt | |
-| Person row labels | 6.5 pt | center |
-| Legal labels (安全・衛生, etc.) | 6.5 pt | center, wrap |
-| Legal text | 6 pt | top, wrap |
-| Legal text (苦情/契約解除) | 5.5 pt | top, wrap (longer text) |
-| Checkboxes (☑/□) | 7 pt | |
+| Row labels (派遣先事業所, etc.) | 7 pt | center |
+| Inner labels (名称/所在地/部署/役職/TEL) | 7.5 pt | center |
+| Content values | 8 pt | |
+| Person row labels | 7 pt | center |
+| Legal labels (安全・衛生, etc.) | 7.5 pt | center, wrap |
+| Legal text (安全衛生/便宜/紛争/無期) | 7 pt | top, wrap |
+| Legal text (苦情/契約解除) | 6.5 pt | top, wrap (longer text) |
+| Checkboxes (☑/□) | 8 pt | value / 7 pt label |
+| Shifts 1-2 (就業時間/休憩) | 8 pt | renderMultiShift |
+| Shifts 3+ cascade | 7.5 → 4.5 pt | degrades if >2 shifts |
 | Signature text | 8 pt | noBorder |
-| Contract date | 9 pt | noBorder |
-| Signature names | 8 pt | noBorder |
+| Contract date | 11 pt | noBorder |
+| (甲)/(乙) labels | 10 pt | noBorder, bold |
+| UNS name | 12 pt | auto-shrink if narrow |
+| UNS address / rep / license | 10 pt | bold |
 
 ## 6. Patrones de layout
 
