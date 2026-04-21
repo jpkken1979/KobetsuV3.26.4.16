@@ -405,7 +405,7 @@ These rules are injected into every session automatically. When they conflict wi
 | `domain-rules.md` | Never auto-modify data, Excel trim keys, closingDay/paymentDay are text, cancelled contracts hidden |
 | `language.md` | Responses in Spanish, code in English, commits in Spanish |
 | `commits.md` | `<type>(<scope>): <description>` format |
-| `security.md` | No hardcoded secrets, no `shell=True`, no `.env` commits |
+| `security.md` | No hardcoded secrets, no `shell=True`, `.env` versionado (excepción documentada, repo privado) |
 | `typescript.md` | Strict mode, no `any`, naming conventions |
 | `python.md` | Type hints, Google docstrings, ruff + mypy |
 | `best-practices.md` | MCP-first, 4-layer arch, backward-compatible refactors |
@@ -432,7 +432,7 @@ These rules are injected into every session automatically. When they conflict wi
 
 `data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
 
-> **`.env` está gitignoreado** (no se versiona). Cada dev/máquina mantiene su propio `.env` local a partir de `.env.example`, que sí se versiona como plantilla sin secretos. Ver `.claude/rules/security.md`.
+> **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (decisión explícita — único desarrollador/usuario). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens. Ver `.claude/rules/security.md`.
 
 ---
 

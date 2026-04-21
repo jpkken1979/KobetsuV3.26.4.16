@@ -6,10 +6,10 @@ Aplica a todo el código Python, TypeScript y Bash del repositorio.
 
 - **NUNCA** hardcodear secrets, tokens o API keys en código fuente — usar variables de entorno
 - **NUNCA** usar `shell=True` en subprocess — siempre `shlex.split()` + `shell=False`
-- `.env` está **gitignoreado** (ver `.gitignore` línea con `.env`) y NO debe
-  commitearse. Cada dev / máquina mantiene su propio `.env` local a partir de
-  `.env.example`, que sí se versiona como plantilla sin secretos. Si en algún
-  momento se detecta que `.env` fue commiteado por error, sacarlo con
+- `.env` **SÍ se versiona** en este repo por decisión explícita: repo privado,
+  único desarrollador/usuario, sin forks. `.env.example` sigue como plantilla
+  pública sin secretos. Si en algún momento el repo se vuelve público o se
+  hace fork externo, sacar `.env` del tracking inmediatamente con
   `git rm --cached .env` y rotar todos los tokens.
 - Validar y sanear inputs del usuario antes de cualquier procesamiento
 - Datos sensibles UNS (`UNS_BANK_*`, `UNS_DISPATCH_LICENSE`) solo en env vars

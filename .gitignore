@@ -11,7 +11,9 @@ data/kobetsu-auto-*.db
 data/backups/
 
 # Env and local config
-.env
+# NOTA: .env SÍ se versiona en este repo privado (decisión explícita — único
+# desarrollador/usuario). En forks o mirrors públicos, sacar con
+# `git rm --cached .env` y rotar todos los tokens.
 .env.local
 *.local
 
