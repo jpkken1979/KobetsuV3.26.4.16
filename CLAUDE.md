@@ -10,7 +10,15 @@ Japanese labor dispatch contract management system (人材派遣個別契約書�
 - **Language:** Full-stack TypeScript (ESM modules)
 - **Database:** SQLite (WAL mode) at `data/kobetsu.db`
 - **Usage:** Internal/local-first admin application — public-web hardening is not the main focus, but mutating API routes do use rate limiting via `server/middleware/security.ts`
-- **Drift guard:** `server/__tests__/claude-md-drift.test.ts` re-verifies los conteos de `Route files (N` y `Service modules (N` contra `server/routes/` y `server/services/`. Si tocás ese árbol, actualizá también este archivo o el test falla.
+
+## Gotchas críticos
+
+Antes de tocar código, leer estas secciones (todas marcadas `— CRITICAL` más abajo):
+
+1. **Work Hours / Shift Data Flow** — `factory.workHours` es la fuente de verdad; `workHoursDay/Night` son auxiliares.
+2. **Import Safety** — factory import NUNCA sobrescribe con null/vacío; headers export/import idénticos.
+3. **Rate Priority Chain** — `billingRate ?? hourlyRate ?? factory.hourlyRate` con `??`, NUNCA `||` (0 es válido).
+4. **UI Accessibility** — todo `motion` debe respetar `useReducedMotion()`; variants fuera del componente.
 
 ## Primary Project Docs
 
@@ -78,6 +86,8 @@ node scripts/excel-to-grid-spec.cjs <file> <sheet> [start] [end]  # Parse Excel 
 ```
 
 ## Architecture
+
+> **Dónde está qué:** Routes HTTP → `server/routes/*.ts` · Business logic → `server/services/*.ts` · PDFs → `server/pdf/*.ts` · React pages → `src/routes/*.tsx` · React Query hooks → `src/lib/hooks/*.ts` · Tipos API → `src/lib/api-types.ts` · Tokens UI → `src/index.css` (`@theme`)
 
 ### How the Dev Server Works
 
@@ -389,6 +399,7 @@ Different format from all other companies — 3 separate generators in `server/p
 - **Coverage thresholds:** globals 50/50/50/50 (lines/functions/statements/branches), per-file raised: `contract-dates.ts` 95, `batch-helpers.ts` 85, `koritsu-pdf-parser.ts` 80. Coverage include list is scoped to `server/services/**` + `src/routes/companies/-table-*.tsx`
 - **Server tests:** `server/__tests__/` (unit + integration with real SQLite)
 - **Frontend tests:** colocated with components
+- **Drift guard:** `server/__tests__/claude-md-drift.test.ts` re-verifica los conteos de `Route files (N` y `Service modules (N` contra `server/routes/` y `server/services/`. Si tocás ese árbol, actualizá este archivo o el test falla.
 - **CI Pipeline:** `.github/workflows/ci.yml` — verify locally with `npm run lint && npm run typecheck && npm run build && npm run test:run`
 - **PDF smoke tests:** standalone scripts in project root (see PDF Test Scripts above). Regenerate golden snapshots with `npm run test:pdf-snapshots:update` after changing any generator
 - Mocks only for external dependencies — prefer real SQLite for integration tests
@@ -430,7 +441,7 @@ These rules are injected into every session automatically. When they conflict wi
 
 ## Files NOT to Commit
 
-`data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
+`data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `.env.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
 
 > **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (decisión explícita — único desarrollador/usuario). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens. Ver `.claude/rules/security.md`.
 
@@ -440,48 +451,13 @@ These rules are injected into every session automatically. When they conflict wi
 
 ## Integracion Antigravity
 
-Proyecto integrado con **Antigravity v6.0.0**.
-Instalado por Nexus el 2026-04-08.
+Proyecto integrado con **Antigravity v6.0.0** (instalado por Nexus el 2026-04-08). Runtime MCP-first con gateway en `:4747`, memoria `antigravity-memory` (mem0), y SDK JS/TS en `.antigravity/sdk/antigravity.js`. Config en `.antigravity/config.json` y `.antigravity/ai_manifest.json`.
 
-### Persona activa: gentleman
+Detalles operativos en reglas auto-inyectadas:
 
-El estilo de comunicacion de la IA se adapta segun el modo de persona.
-Modos disponibles: `gentleman` (detallado, pedagogico), `neutral` (factual),
-`conciso` (minimalista). Configurar via `ANTIGRAVITY_PERSONA` env var o
-`.antigravity/config.json`. Ver `.claude/rules/persona.md` para detalles.
-
-### Runtime MCP-first
-
-```
-.agent/
-  agents/ skills/ skills-custom/ workflows/
-  scripts/ core/ mcp/ plugins/
-.claude/
-  settings.json hooks/ rules/
-.antigravity/
-  config.json sdk/ ai_manifest.json rules.md
-```
-
-### Clientes compatibles
-
-- Claude Code: `.claude/settings.json` + `.mcp.json`
-- Cursor: `.cursor/mcp.json` + `.cursorrules`
-- Windsurf: `.windsurf/mcp.json` + `.windsurfrules`
-- VS Code / Roo / Cline: `.vscode/mcp.json` y `.vscode/cline_mcp_settings.json`
-- Zed: `.zed/settings.json`
-- Cualquier IA/IDE con MCP: `.mcp.json` y `.antigravity/ai_manifest.json`
-
-### SDK JS/TS
-
-```js
-import { runAgent } from "./.antigravity/sdk/antigravity.js";
-const result = await runAgent("explorer", "analiza el repo");
-```
-
-### Memoria
-
-- Memoria MCP: `antigravity-memory` (mem0)
-- Memoria de proyecto: `ESTADO_PROYECTO.md`
-- Reglas compartidas: `.claude/rules/` y `.antigravity/rules.md`
+- `ecosystem-usage.md` — orden MCP-first, fallback local
+- `memory-engine.md` — antigravity-memory (mem0), endpoints del gateway
+- `persona.md` — modos `gentleman` / `neutral` / `conciso` y `ANTIGRAVITY_PERSONA`
+- `.antigravity/rules.md` — runtime completo, tiers de agentes, SDK
 
 <!-- ANTIGRAVITY-END -->
