@@ -44,10 +44,8 @@ Aplica a todo el código del repositorio actual.
 ## Git
 
 - Commits en espanol, formato convencional: `tipo(scope): descripcion`
-- No commitear `*.db`, `*.log`
-- Excepcion documentada: `.env` SI se versiona porque el repo es privado
-  (ver `.gitignore` lineas 151-153 y `.claude/rules/security.md`). Esta excepcion
-  NO aplica a forks ni mirrors publicos.
+- No commitear `*.db`, `*.log`, ni `.env` (gitignoreado — cada dev mantiene su
+  propio `.env` a partir de `.env.example`)
 - Feature branches para cambios grandes
 - No force push a main
 

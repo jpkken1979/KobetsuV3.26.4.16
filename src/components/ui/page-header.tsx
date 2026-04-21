@@ -18,7 +18,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("flex flex-col gap-4 rounded-[1.5rem] border border-border/60 bg-card/80 p-4 shadow-[var(--shadow-card)] md:flex-row md:items-start md:justify-between md:p-5", className)}>
+    <div className={cn("flex flex-col gap-4 rounded-[1.5rem] border border-border/60 bg-card/80 p-4 shadow-[var(--shadow-card)] md:flex-row md:items-start md:justify-between md:p-6", className)}>
       <div className="min-w-0 flex-1">
         {tag && (
           <div className="mb-3">

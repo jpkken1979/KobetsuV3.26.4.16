@@ -6,10 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Japanese labor dispatch contract management system (人材派遣個別契約書管理) for **ユニバーサル企画株式会社 (Universal Kikaku KK)**. Manages dispatch worker contracts, employee records, factory configurations, and generates legally compliant PDF documents per 派遣法第26条.
 
-- **Version:** 26.3.31
+- **Version:** 26.4.16 (ver `ESTADO_PROYECTO.md` para el número canónico y el changelog)
 - **Language:** Full-stack TypeScript (ESM modules)
 - **Database:** SQLite (WAL mode) at `data/kobetsu.db`
 - **Usage:** Internal/local-first admin application — public-web hardening is not the main focus, but mutating API routes do use rate limiting via `server/middleware/security.ts`
+- **Drift guard:** `server/__tests__/claude-md-drift.test.ts` re-verifies los conteos de `Route files (N` y `Service modules (N` contra `server/routes/` y `server/services/`. Si tocás ese árbol, actualizá también este archivo o el test falla.
 
 ## Primary Project Docs
 
@@ -137,20 +138,30 @@ src/
 ├── lib/
 │   ├── api-types.ts        # All TypeScript interfaces
 │   ├── api.ts              # Typed fetch wrapper
-│   ├── query-keys.ts       # Centralized React Query key factory
+│   ├── app-settings.ts     # App-level settings (tema, densidad, etc.)
+│   ├── chart-colors.ts     # Paleta compartida para Recharts (light/dark)
+│   ├── constants.ts        # Constantes globales (rate multipliers, formatos)
+│   ├── contract-dates.ts   # Helpers cliente (espejo parcial de server/services/contract-dates)
+│   ├── excel/              # Parsers/builders ExcelJS compartidos
 │   ├── mutation-helpers.ts # Shared toast helpers for mutations
+│   ├── query-keys.ts       # Centralized React Query key factory
 │   ├── shift-utils.ts      # Shift/break time calculations
+│   ├── teiji-utils.ts      # Utilidades de 定時 (horario estándar)
+│   ├── utils.ts            # `cn()` y helpers misc
 │   └── hooks/              # React Query CRUD hooks (see table below)
 ├── stores/
-│   └── contract-form.ts    # Zustand: 5-step contract wizard state
+│   ├── contract-form.ts    # Zustand: 5-step contract wizard state
+│   └── ui-prefs.ts         # Zustand: UI preferences (densidad, filtros persistidos, etc.)
 ├── components/
 │   ├── layout/             # root-layout, sidebar, header, command-palette
-│   ├── ui/                 # 15 reusable primitives (button, card, dialog, etc.)
-│   └── contract/           # 8 wizard step components
+│   ├── ui/                 # 19 reusable primitives (alert, animated, badge, button, card, confirm-dialog, dialog, empty-state, error-boundary, input, page-header, select, skeleton, status-badge, switch, table, tabs, textarea, tooltip)
+│   └── contract/           # 8 wizard step components (batch-shared, cascading-select, contract-form, contract-preview, date-calculator, employee-selector, rate-preview, work-conditions)
 └── routes/                 # TanStack file-based routes (see table below)
 ```
 
-**React Query hooks (`src/lib/hooks/`):**
+**React Query + utility hooks (`src/lib/hooks/`, 21 archivos):**
+
+*Dominio CRUD:*
 | Hook | Purpose |
 |------|---------|
 | `use-companies.ts` | Companies CRUD + list |
@@ -159,10 +170,29 @@ src/
 | `use-contracts.ts` | Contracts CRUD + batch operations |
 | `use-data-check.ts` | Completeness matrix queries |
 | `use-shift-templates.ts` | Shift pattern CRUD |
-| `use-factory-cascade.ts` | Company → Factory → Dept → Line cascade for shouheisha/contracts |
+| `use-company-yearly-config.ts` | Per-company annual config CRUD |
+| `use-factory-yearly-config.ts` | Per-line annual config CRUD |
+| `use-contract-wizard.ts` | Wiring del wizard 5-step + split por tarifa |
+| `use-koritsu-import.ts` | Flujo de import específico コーリツ (Excel + PDF parse) |
+
+*Admin panel (token-gated):*
+| Hook | Purpose |
+|------|---------|
+| `use-admin-tables.ts` | Lista de tablas disponibles en el admin explorer |
+| `use-admin-columns.ts` | Metadata de columnas para grilla admin |
+| `use-admin-rows.ts` | Paginación de filas de cualquier tabla |
+| `use-admin-crud.ts` | Create / update / delete controlado por el servidor |
+| `use-admin-sql.ts` | SELECT-only runner con blocklist |
+| `use-admin-stats.ts` | Métricas agregadas (totales, drift, últimas mutaciones) |
+| `use-admin-backup.ts` | Backup manual + listado de snapshots |
+
+*Utility / UX:*
+| Hook | Purpose |
+|------|---------|
 | `use-theme.ts` | Light/dark theme state |
 | `use-debounce.ts` | Debounced value utility |
-| `use-unsaved-warning.ts` | Unsaved changes guard |
+| `use-unsaved-warning.ts` | Unsaved changes guard (beforeunload + TanStack Router) |
+| `use-reduced-motion.ts` | Respeta `prefers-reduced-motion` para todos los `motion` |
 
 **Frontend routes (`src/routes/`):**
 | Path | Purpose |
@@ -174,7 +204,7 @@ src/
 | `/employees` | Employee list with search/filter |
 | `/contracts` | Contract list with filters + cancelled toggle |
 | `/contracts/new` | 5-step contract wizard |
-| `/contracts/:contractId` | Contract detail + employee assignment editor |
+| `/contracts/:contractId` | Contract detail + employee assignment editor (con `-edit-contract-dialog.tsx` para edición inline) |
 | `/contracts/batch` | Batch contract generation |
 | `/contracts/new-hires` | Batch creation for new hires (preview → confirm) |
 | `/contracts/mid-hires` | Batch creation for mid-hires (preview → confirm) |
@@ -198,9 +228,10 @@ src/
 
 ### Large Files Warning
 - Several route/component files exceed 500 lines. Consider splitting when adding features:
-  - `shouheisha.tsx` (1177L) — recruitment bulk for 外国人材, largest route file
-  - `companies/-koritsu-components.tsx` (805L), `companies/koritsu.tsx` (768L), `contracts/index.tsx` (786L), `import/-import-page.tsx` (761L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `employees/index.tsx` (705L), `settings/index.tsx` (617L), `contracts/mid-hires.tsx` (586L), `contracts/new-hires.tsx` (552L), `history/index.tsx` (538L)
-  - Server: `services/koritsu-pdf-parser.ts` (759L), `routes/factories.ts` (644L), `services/import-factories-service.ts` (643L)
+  - `shouheisha.tsx` (1194L) — recruitment bulk for 外国人材, largest route file
+  - `employees/index.tsx` (829L), `companies/-koritsu-components.tsx` (805L), `contracts/index.tsx` (787L), `companies/koritsu.tsx` (769L), `settings/index.tsx` (763L), `import/-import-page.tsx` (762L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `admin/-employee-table.tsx` (716L), `companies/-import-modal.tsx` (602L), `data-check/-flat-view.tsx` (578L), `admin/-stats-dashboard.tsx` (536L), `admin/-audit-explorer.tsx` (515L), `contracts/mid-hires.tsx` (555L), `contracts/new-hires.tsx` (552L), `contracts/$contractId.tsx` (541L), `contracts/new.tsx` (532L), `history/index.tsx` (540L)
+  - Shared: `src/lib/api-types.ts` (907L) — interfaces agrupadas por dominio; partir si se vuelve incómodo navegar
+  - Server: `routes/factories.ts` (864L), `services/batch-contracts.ts` (818L), `services/koritsu-pdf-parser.ts` (759L), `services/import-factories-service.ts` (661L)
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
 - `closingDayText` and `paymentDayText` are free text (`"当月末"`, `"翌月20日"`), NOT numbers — use the `*Text` schema fields in all UI and API
@@ -326,7 +357,7 @@ Different format from all other companies — 3 separate generators in `server/p
 - NEVER use `useRef` as close guard in Radix dialogs — causes zombie state
 - NEVER manipulate `body.style.overflow` manually — Radix handles scroll locking
 - ⚠️ `p-5` spacing is PROHIBITED — use `p-4` or `p-6` only
-- Design reference screenshots in `LUNARIS-exports/dark/` and `LUNARIS-exports/light/` (14 screens each)
+- Especificación viva del design system en `design-system/jp-kobetsu/MASTER.md` (reemplaza el viejo `LUNARIS-exports/`)
 
 ### UI Accessibility — CRITICAL
 - All `motion` animations (`animate=`, `whileHover`, `whileTap`, `transition=`) MUST check `useReducedMotion()` first
@@ -395,13 +426,13 @@ These rules are injected into every session automatically. When they conflict wi
 | `WORKFLOW_RULES.md` | Workflow methodology — consult for tasks with 3+ steps |
 | `ESTADO_PROYECTO.md` | Project state document (Spanish) |
 | `Koritsu/` | コーリツ Excel template + 指揮命令者 PDF reference |
-| `LUNARIS-exports/` | Design reference screenshots (28 screens) |
+| `design-system/jp-kobetsu/MASTER.md` | Design system spec (colores, spacing, componentes) |
 
 ## Files NOT to Commit
 
 `data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
 
-> **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (ver `.claude/rules/security.md`). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens.
+> **`.env` está gitignoreado** (no se versiona). Cada dev/máquina mantiene su propio `.env` local a partir de `.env.example`, que sí se versiona como plantilla sin secretos. Ver `.claude/rules/security.md`.
 
 ---
 

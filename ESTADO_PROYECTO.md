@@ -1,6 +1,6 @@
-# ESTADO DEL PROYECTO — JP個別契約書v26.3.25
+# ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-20
+> Última actualización: 2026-04-21
 
 ---
 
