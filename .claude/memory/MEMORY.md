@@ -4,7 +4,6 @@
 - [Plan A+B 2026-04-15 — Settings/Admin fixes + Database Reset](project_plan_a_b_2026_04_15.md) — 5 bug fixes + endpoint reset-all + Danger Zone UI; 762 tests; commits e478785..fe0ed21
 - [Sesion 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes](session_2026-04-15b.md) — tsx no cargaba .env; bypass localhost en adminGuardMiddleware; --env-file .env en dev scripts; commit ecd281c
 - [Sesion 2026-04-15c — factory/company yearly config + table UX](session_2026-04-15c.md) — inkan 朱肉; MSGothic font; factory_yearly_config + company_yearly_config cascade; 年度 button tabla; light mode fix
-- [Sesion 2026-04-20 — Toggle auto-fill horarios shouheisha](session_2026-04-20.md) — split applyFactoryDefaults; Switch componente; cascading-select fix workHoursDay
-- [Sesion 2026-04-20b — EditContractDialog + cascading-select + shouheisha](session_2026-04-20b.md) — modal edición 社員/派遣先 en /contracts/:id; strip (8.5) workHours; 762 tests; commit 813a4e1
+- [Sesion 2026-04-21 — Hardening deps + CLAUDE.md refactor](session_2026-04-21.md) — revert .env a versionado; body limit 10→5MB; CLAUDE.md 487→463L; npm update (18 warnings→0); override esbuild (4 CVE→0)
+- [Decision — Override esbuild>=0.25.0](decision_esbuild_override.md) — cerrar CVE GHSA-67mh-4wv8-2f99 via overrides en vez de esperar upstream drizzle-kit
 - [GitHub repo KobetsuV3](reference_github.md) — https://github.com/jpkken1979/KobetsuV3.26.4.16
-- [DataTotal siempre commitear](feedback_datatotal.md) — carpeta de exports importantes, repo privado, nunca ignorar

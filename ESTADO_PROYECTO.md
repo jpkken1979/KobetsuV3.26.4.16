@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-21
+> Última actualización: 2026-04-21 (sesión nocturna — hardening deps + refactor CLAUDE.md)
 
 ---
 
@@ -29,6 +29,28 @@
 	- ~~replicar `recordPdfVersion()` en las 4 rutas restantes~~ → resuelto (bundle, set, factory, ids)
 	- decidir estrategia de backup remoto (Litestream o `cp` con rotación) — **requiere decisión del usuario**
 - Los bloques históricos más abajo se conservan como bitácora de sesión; si contradicen este resumen, prevalece esta sección y la sesión más reciente.
+
+## Sesión 2026-04-21 — Hardening dependencias + refactor CLAUDE.md
+
+**Ciclo completo post-pull (audit-pro + /init + hardening):**
+
+1. **Pull de 4 commits del merge PR #1** — fixes P1/P2 del audit-pro anterior (`shouheisha.tsx` sin `p-5`, versiones docs sincronizadas).
+2. **Revert politica `.env`** — vuelve a versionarse por decision explicita (repo privado, single-user). Documentado en 3 lugares con warning para forks publicos.
+3. **Body limit `server/index.ts:52`** — 10MB → 5MB. Excel maximo del repo: 57KB → 87x headroom.
+4. **CLAUDE.md refactor post-/init** — 487 → 463 lineas. Nueva seccion "Gotchas criticos" + ancla "Donde esta que" + drift guard movido a Testing + Antigravity colapsado (delega a reglas auto-inyectadas).
+5. **`npm update`** — 25 paquetes minor/patch (vitest 4.1.4, react 19.2.5, tailwind 4.2.3, vite 8.0.9, ts 6.0.3, etc.). 18 lint warnings → 0 (eslint-disable justificado en test fixtures).
+6. **Override esbuild >=0.25.0** — cierra `GHSA-67mh-4wv8-2f99` (CVSS 5.3, dev-only via drizzle-kit) sin esperar upstream. Detalle: `.claude/memory/decision_esbuild_override.md`.
+
+**Resultado final:**
+- `npm audit`: 4 moderate → **0 vulnerabilities**
+- Lint: 18 warnings → **0**
+- Tests: 762/762 pass (42 suites)
+- Typecheck: clean
+- Build: OK
+
+**Commits**: `15e6907` → `7b504da` → `e1b379d` → `59db590` → `2c96ed7`
+
+**Pendientes**: `@hono/node-server@2` (release de hace 10h, esperar 2-4 semanas); backup remoto (Litestream vs `cp`).
 
 ## Sesión 2026-04-20 — toggle auto-fill horarios en shouheisha
 
