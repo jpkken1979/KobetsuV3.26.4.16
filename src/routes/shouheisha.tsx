@@ -586,7 +586,7 @@ function ShouheishaPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
         <div className="space-y-6">
-          <Card className="p-5">
+          <Card className="p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">派遣先の選択</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -738,7 +738,7 @@ function ShouheishaPage() {
             )}
           </Card>
 
-          <Card className="p-5">
+          <Card className="p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">招聘者の情報</h2>
@@ -907,7 +907,7 @@ function ShouheishaPage() {
             </Button>
           </Card>
 
-          <Card className="p-5">
+          <Card className="p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">工場の既定値</h2>
@@ -1004,7 +1004,7 @@ function ShouheishaPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="p-5">
+          <Card className="p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">価格と期間</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -1131,7 +1131,7 @@ function ShouheishaPage() {
             </div>
           </Card>
 
-          <Card className="p-5">
+          <Card className="p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">生成結果</h2>
               <p className="mt-1 text-sm text-muted-foreground">

@@ -229,8 +229,9 @@ src/
 ### Large Files Warning
 - Several route/component files exceed 500 lines. Consider splitting when adding features:
   - `shouheisha.tsx` (1194L) — recruitment bulk for 外国人材, largest route file
-  - `employees/index.tsx` (829L), `companies/-koritsu-components.tsx` (805L), `contracts/index.tsx` (787L), `companies/koritsu.tsx` (769L), `settings/index.tsx` (763L), `import/-import-page.tsx` (762L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `admin/-employee-table.tsx` (716L), `admin/-stats-dashboard.tsx` (536L), `admin/-audit-explorer.tsx` (515L), `contracts/mid-hires.tsx` (555L), `contracts/new-hires.tsx` (552L), `contracts/$contractId.tsx` (541L), `contracts/new.tsx` (532L), `history/index.tsx` (540L)
-  - Server: `routes/factories.ts` (864L), `services/koritsu-pdf-parser.ts` (759L), `services/import-factories-service.ts` (661L)
+  - `employees/index.tsx` (829L), `companies/-koritsu-components.tsx` (805L), `contracts/index.tsx` (787L), `companies/koritsu.tsx` (769L), `settings/index.tsx` (763L), `import/-import-page.tsx` (762L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `admin/-employee-table.tsx` (716L), `companies/-import-modal.tsx` (602L), `data-check/-flat-view.tsx` (578L), `admin/-stats-dashboard.tsx` (536L), `admin/-audit-explorer.tsx` (515L), `contracts/mid-hires.tsx` (555L), `contracts/new-hires.tsx` (552L), `contracts/$contractId.tsx` (541L), `contracts/new.tsx` (532L), `history/index.tsx` (540L)
+  - Shared: `src/lib/api-types.ts` (907L) — interfaces agrupadas por dominio; partir si se vuelve incómodo navegar
+  - Server: `routes/factories.ts` (864L), `services/batch-contracts.ts` (818L), `services/koritsu-pdf-parser.ts` (759L), `services/import-factories-service.ts` (661L)
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
 - `closingDayText` and `paymentDayText` are free text (`"当月末"`, `"翌月20日"`), NOT numbers — use the `*Text` schema fields in all UI and API
@@ -431,7 +432,7 @@ These rules are injected into every session automatically. When they conflict wi
 
 `data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
 
-> **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (ver `.claude/rules/security.md`). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens.
+> **`.env` está gitignoreado** (no se versiona). Cada dev/máquina mantiene su propio `.env` local a partir de `.env.example`, que sí se versiona como plantilla sin secretos. Ver `.claude/rules/security.md`.
 
 ---
 
