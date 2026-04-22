@@ -9,6 +9,12 @@
  * Based on analysis of 35 unique abbreviations → 14 companies (80 factory configs).
  */
 
+/**
+ * Resultado de resolver una abreviatura de派遣先 a nombre completo de empresa y fabrica.
+ * @property companyName - Nombre completo de la empresa
+ * @property factoryName - Nombre de la fabrica o null si no se preciso
+ * @property verified - true si la asignacion fue verificada manualmente
+ */
 export interface DispatchResolution {
   companyName: string;
   factoryName: string | null;

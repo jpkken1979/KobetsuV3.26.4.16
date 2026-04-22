@@ -11,14 +11,19 @@ import { ZipFile } from "yazl";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+/** Ruta al font MSGothic para PDFs. */
 export const FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "MSGothic.ttf");
+/** Ruta al font BIZ UD Mincho para PDFs. */
 export const MINCHO_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "BIZUDMincho-0.ttf");
 const GOTHIC_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "MSGothic.ttf");
 const CENTURY_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "CenturySchoolbook.ttf");
 const PMINCHO_FONT_PATH = path.join(__dirname, "..", "pdf", "fonts", "MSPMincho.ttf");
 const OUTPUT_DIR = path.join(__dirname, "..", "..", "output");
+/** Directorio de salida para PDFs de 個別契約書 Kobetsu. */
 export const KOBETSU_OUTPUT_DIR = path.join(OUTPUT_DIR, "kobetsu");
+/** Directorio de salida para PDFs de 労働契約書. */
 export const ROUDOU_OUTPUT_DIR = path.join(OUTPUT_DIR, "roudou");
+/** Directorio de salida para PDFs de コーリツ. */
 export const KORITSU_OUTPUT_DIR = path.join(OUTPUT_DIR, "koritsu");
 const INDEX_DIR = path.join(OUTPUT_DIR, ".index");
 
@@ -79,6 +84,9 @@ export function writeToFile(doc: InstanceType<typeof PDFDocument>, filepath: str
   });
 }
 
+/**
+ * Lee el indice de archivos generados para un contrato desde el archivo JSON en output/.index/.
+ */
 export async function readContractDocIndex(contractId: number): Promise<string[]> {
   const indexPath = path.join(INDEX_DIR, `${contractId}.json`);
   if (!fs.existsSync(indexPath)) return [];
@@ -92,6 +100,9 @@ export async function readContractDocIndex(contractId: number): Promise<string[]
   }
 }
 
+/**
+ * Agrega filenames al indice de archivos de un contrato, evitando duplicados.
+ */
 export async function appendContractDocIndex(contractId: number, filenames: string[]) {
   if (filenames.length === 0) return;
   if (!fs.existsSync(INDEX_DIR)) {
@@ -103,6 +114,9 @@ export async function appendContractDocIndex(contractId: number, filenames: stri
   await fs.promises.writeFile(indexPath, JSON.stringify({ contractId, files: merged }, null, 2), "utf-8");
 }
 
+/**
+ * Crea un archivo ZIP con los PDFs indicados y lo guarda en baseDir.
+ */
 export function createZipArchive(zipFilename: string, filenames: string[], baseDir: string = KOBETSU_OUTPUT_DIR): Promise<string> {
   return new Promise((resolve, reject) => {
     if (filenames.length === 0) {
@@ -131,6 +145,9 @@ export function createZipArchive(zipFilename: string, filenames: string[], baseD
 
 // ─── Fetch full contract data with relations ────────────────────────
 
+/**
+ * Obtiene un contrato con todas sus relaciones (company, factory, employees + employee).
+ */
 export async function getContractData(contractId: number) {
   const contract = await db.query.contracts.findFirst({
     where: eq(contracts.id, contractId),
@@ -149,6 +166,10 @@ export async function getContractData(contractId: number) {
  * Wrapper async: obtiene yearly config según startDate del contrato y llama buildCommonData.
  * Usar este en todos los route handlers para aplicar overrides anuales automáticamente.
  */
+/**
+ * Wrapper asincrono: obtiene la config anual segun startDate y luego llama a buildCommonData.
+ * Usar en todos los route handlers para aplicar overrides anuales automaticamente.
+ */
 export async function buildCommonDataForPDF(
   contract: NonNullable<Awaited<ReturnType<typeof getContractData>>>
 ) {
@@ -158,6 +179,10 @@ export async function buildCommonDataForPDF(
   return buildCommonData(contract, yearlyConfig, companyConfig);
 }
 
+/**
+ * Construye el objeto de datos comun para todos los PDFs a partir de un contrato + configs anuales.
+ * Aplica cascade: factory yearly config → company yearly config → factory static fields.
+ */
 export function buildCommonData(
   contract: NonNullable<Awaited<ReturnType<typeof getContractData>>>,
   yearlyConfig?: FactoryYearlyConfig | null,

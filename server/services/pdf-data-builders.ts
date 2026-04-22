@@ -19,7 +19,10 @@ type ContractWithRelations = NonNullable<Awaited<ReturnType<typeof getContractDa
 
 // ─── Koritsu data builders ──────────────────────────────────────────
 
-/** Build KoritsuKobetsuData from common data + contract metadata */
+/**
+ * Construye KoritsuKobetsuData a partir de commonData + metadata del contrato.
+ * Usado por el generador PDF de 個別契約書 para empresas コーリツ.
+ */
 export function buildKoritsuKobetsuData(
   common: CommonData,
   contract: ContractWithRelations,
@@ -68,7 +71,9 @@ export function buildKoritsuKobetsuData(
   };
 }
 
-/** Build KoritsuTsuchishoData from common data + contract */
+/**
+ * Construye KoritsuTsuchishoData para empresas コーリツ.
+ */
 export function buildKoritsuTsuchishoData(
   common: CommonData,
   contract: ContractWithRelations,
@@ -85,7 +90,9 @@ export function buildKoritsuTsuchishoData(
   };
 }
 
-/** Build KoritsuDaichoData for a single employee (generates one page per call) */
+/**
+ * Construye KoritsuDaichoData para empresas コーリツ (una pagina por empleado).
+ */
 export function buildKoritsuDaichoData(
   common: CommonData,
   contract: ContractWithRelations,
@@ -121,7 +128,9 @@ export function buildKoritsuDaichoData(
 
 // ─── Standard data builders ─────────────────────────────────────────
 
-/** Build KobetsuData for standard (non-Koritsu) companies */
+/**
+ * Construye KobetsuData para empresas estandar (no コーリツ).
+ */
 export function buildStandardKobetsuData(
   common: CommonData,
   contract: ContractWithRelations,
@@ -137,7 +146,9 @@ export function buildStandardKobetsuData(
   };
 }
 
-/** Build TsuchishoData for standard companies */
+/**
+ * Construye TsuchishoData para empresas estandar.
+ */
 export function buildStandardTsuchishoData(
   common: CommonData,
   empList: PDFEmployeeData[],
@@ -151,7 +162,9 @@ export function buildStandardTsuchishoData(
   };
 }
 
-/** Build DaichoData for a single employee (standard 派遣先管理台帳) */
+/**
+ * Construye DaichoData para un empleado (派遣先管理台帳 estandar).
+ */
 export function buildStandardDaichoData(
   common: CommonData,
   emp: PDFEmployeeData,
@@ -168,7 +181,9 @@ export function buildStandardDaichoData(
   };
 }
 
-/** Build HakenmotoDaichoData for a single employee (派遣元管理台帳) */
+/**
+ * Construye HakenmotoDaichoData para un empleado (派遣元管理台帳).
+ */
 export function buildHakenmotoDaichoData(
   common: CommonData,
   emp: PDFEmployeeData,

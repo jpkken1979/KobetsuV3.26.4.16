@@ -105,6 +105,9 @@ export async function listPdfVersions(filters: {
 
 // ─── getPdfVersion ───────────────────────────────────────────────────
 
+/**
+ * Obtiene una version de PDF por su ID. Retorna null si no existe.
+ */
 export async function getPdfVersion(id: number): Promise<PdfVersion | null> {
   const result = db
     .select()

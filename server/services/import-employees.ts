@@ -16,6 +16,10 @@ import { parseHaizokusaki } from "./koritsu-pdf-parser.js";
 import { createAutoBackup } from "./backup.js";
 
 // Todos los encabezados de columna que el importador de empleados reconoce
+/**
+ * Conjunto de todos los encabezados de columna que el importador de empleados reconoce.
+ * Incluye variantes en japones, ingles y media anchura.
+ */
 export const EMPLOYEE_KNOWN_HEADERS = new Set([
   "社員№", "社員番号", "社員No", "employeeNumber",
   "氏名", "fullName",
@@ -384,11 +388,17 @@ export async function importCompanies(
 }
 
 // Claves que siempre se sincronizan en el diff (mismo conjunto que en el import)
+/**
+ * Claves que siempre se sincronizan en el diff, incluso si el valor es null.
+ */
 export const DIFF_ALWAYS_SYNC_KEYS = new Set([
   "companyId", "factoryId", "clientEmployeeId", "status",
 ]);
 
 // Claves que se comparan en el diff
+/**
+ * Claves que se comparan en el diff para detectar cambios entre el Excel y la base de datos.
+ */
 export const DIFF_COMPARE_KEYS = [
   "fullName", "katakanaName", "gender", "nationality", "birthDate",
   "hourlyRate", "billingRate", "visaExpiry", "visaType", "postalCode",

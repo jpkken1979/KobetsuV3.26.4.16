@@ -13,6 +13,9 @@ import {
 // Tipos públicos
 // ---------------------------------------------------------------------------
 
+/**
+ * Resultado del import de fabricas desde Excel TBKaisha.
+ */
 export interface FactoryImportResult {
   inserted: number;
   updated: number;
@@ -23,6 +26,9 @@ export interface FactoryImportResult {
   companiesUpdated: number;
 }
 
+/**
+ * Fabrica presente en Excel pero ausente en DB (candidata a insert).
+ */
 export interface FactoryDiffInsert {
   company: string;
   factory: string;
@@ -30,6 +36,9 @@ export interface FactoryDiffInsert {
   line: string | null;
 }
 
+/**
+ * Fabrica presente en ambos (Excel y DB) con cambios detectados.
+ */
 export interface FactoryDiffUpdate {
   factoryId: number;
   company: string;
@@ -39,6 +48,9 @@ export interface FactoryDiffUpdate {
   changes: Record<string, { old: unknown; new: unknown }>;
 }
 
+/**
+ * Fabrica presente en DB pero ausente en el Excel (candidata a eliminacion).
+ */
 export interface FactoryDiffMissing {
   factoryId: number;
   company: string;
@@ -48,6 +60,9 @@ export interface FactoryDiffMissing {
   line: string | null;
 }
 
+/**
+ * Resultado del diff entre Excel y DB para fabricas.
+ */
 export interface FactoryDiffResult {
   inserts: FactoryDiffInsert[];
   updates: FactoryDiffUpdate[];
@@ -455,6 +470,9 @@ export async function importFactories(
 // Campos para diff display
 // ---------------------------------------------------------------------------
 
+/**
+ * Campos que se comparan en el diff de fabricas (DB vs Excel).
+ */
 export const DIFF_FIELDS: { key: string; excelKey: string; label: string }[] = [
   { key: "department", excelKey: "部署", label: "部署" },
   { key: "lineName", excelKey: "ライン名", label: "ライン名" },

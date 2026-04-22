@@ -143,6 +143,9 @@ export function normalizeWidth(s: string): string {
     .replace(/\u3000/g, " ");
 }
 
+/**
+ * Normaliza el campo de配属先/配属ライン: valores vacios, "0", "-" o "ー" se convierten en string vacio.
+ */
 export function normalizePlacement(value: unknown): string {
   const normalized = String(value ?? "").trim();
   if (!normalized || normalized === "0" || normalized === "-" || normalized === "ー") {

@@ -3,6 +3,10 @@
 // An employee re-enters if: exitDate → re-entry hireDate gap ≤ 365 days.
 // actualHireDate = first entry's hireDate (not the re-entry date).
 
+/**
+ * Registro de entrada de empleado en empresas 高雄工業.
+ * Representa una fila del historial de contratacion.
+ */
 export interface TakaoEntry {
   employeeNumber: string;
   companyName: string;
@@ -12,6 +16,9 @@ export interface TakaoEntry {
   factoryName: string | null;
 }
 
+/**
+ * Re-entrada detectada de un empleado 高雄 dentro de los 365 dias posteriores a la salida.
+ */
 export interface TakaoReEntry {
   employeeNumber: string;
   fullName: string;

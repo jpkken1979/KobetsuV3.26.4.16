@@ -278,6 +278,10 @@ export interface BatchContext {
  * Builds the common context needed by both analyzeBatch and analyzeNewHires.
  * Fetches active factories for the company and validates the start date.
  */
+/**
+ * Construye el contexto comun usado por analyzeBatch y analyzeNewHires.
+ * Obtiene las fabricas activas de la empresa y valida la fecha de inicio.
+ */
 export async function buildBatchContext(
   companyId: number,
   startDate: string,
@@ -290,6 +294,10 @@ export async function buildBatchContext(
 /**
  * Bulk version of getActiveEmployees — fetches all active employees for multiple factories
  * in a single query and returns a Map<factoryId, Employee[]>.
+ */
+/**
+ * Version bulk de getActiveEmployees — obtiene todos los empleados activos
+ * de multiples fabricas en una sola consulta y retorna Map<factoryId, Employee[]>.
  */
 export async function getActiveEmployeesByFactories(
   factoryIds: number[],

@@ -72,6 +72,9 @@ export async function getDashboardStats(warningDays: number): Promise<DashboardS
   };
 }
 
+/**
+ * Obtiene contratos activos que vencen dentro de los proximos warningDays dias.
+ */
 export async function getExpiringContracts(warningDays: number) {
   const today = toLocalDateStr(new Date());
   const expiryWindow = toLocalDateStr(new Date(Date.now() + warningDays * 24 * 60 * 60 * 1000));
@@ -87,6 +90,9 @@ export async function getExpiringContracts(warningDays: number) {
   });
 }
 
+/**
+ * Obtiene fabricas con fecha de抵触日 proxima dentro de warningDays dias.
+ */
 export async function getTeishokubiAlerts(warningDays: number) {
   const today = toLocalDateStr(new Date());
   const warningDate = toLocalDateStr(new Date(Date.now() + warningDays * 24 * 60 * 60 * 1000));
@@ -103,6 +109,9 @@ export async function getTeishokubiAlerts(warningDays: number) {
   });
 }
 
+/**
+ * Obtiene empleados activos con visa proxima a vencer en los proximos 90 dias.
+ */
 export async function getVisaExpiryAlerts() {
   const today = toLocalDateStr(new Date());
   const ninetyDaysLater = toLocalDateStr(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000));
@@ -119,6 +128,9 @@ export async function getVisaExpiryAlerts() {
   });
 }
 
+/**
+ * Obtiene la distribucion de empleados activos por nacionalidad.
+ */
 export function getNationalityBreakdown() {
   const results = db
     .select({
@@ -137,6 +149,9 @@ export function getNationalityBreakdown() {
   }));
 }
 
+/**
+ * Obtiene la distribucion de empleados activos por empresa cliente.
+ */
 export function getByCompanyBreakdown() {
   const results = db
     .select({
@@ -156,6 +171,9 @@ export function getByCompanyBreakdown() {
   }));
 }
 
+/**
+ * Obtiene registros del audit log con filtros opcionales y paginacion.
+ */
 export async function getAuditLogs(params: AuditQueryParams) {
   const { limit, offset, action, entityType, search } = params;
 

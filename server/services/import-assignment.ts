@@ -15,6 +15,10 @@ function normKey(s: string): string {
     .replace(/\u3000/g, " ");
 }
 
+/**
+ * Construye un mapa de busqueda multi-nivel para resolver配属先 por companyId + factoryName + department + lineName.
+ * Genera claves en cascada: full key, dept+line, line-only, factory-name-only.
+ */
 export function buildFactoryLookup(allFactories: FactoryLookupEntry[]): Map<string, number> {
   const lookup = new Map<string, number>();
   for (const factory of allFactories) {
@@ -51,6 +55,10 @@ interface ResolveFactoryAssignmentInput {
   factoryLookup: Map<string, number>;
 }
 
+/**
+ * Resuelve el factoryId a partir de department + lineName + resolvedFactoryName.
+ * Prueba claves en orden de especificidad: full key > dept+line > line > factoryName.
+ */
 export function resolveFactoryAssignment({
   companyId,
   department,

@@ -140,7 +140,10 @@ export function detectSharedRoles(
   return result as Record<RoleKey, RoleSummary>;
 }
 
-// DB function: gets role summary for all factories of a company
+/**
+ * Obtiene el resumen de roles compartidos para todas las fabricas de una empresa.
+ * Detecta roles consistentes entre lineas y lista overrides individuales.
+ */
 export function getFactoryGroupRoles(
   companyId: number
 ): FactoryGroupRoles[] {
@@ -176,8 +179,10 @@ export function getFactoryGroupRoles(
     .sort((a, b) => a.factoryName.localeCompare(b.factoryName, "ja"));
 }
 
-// DB function: bulk-updates a specific role across lines in a factory group
-// EXCEPTION SAFETY: excludeLineIds skips lines with intentional overrides
+/**
+ * Actualiza de forma masiva un rol especifico en todas las lineas de un grupo de fabrica.
+ * EXCEPTION SAFETY: excludeLineIds omite las lineas con overrides intencionales.
+ */
 export function bulkUpdateFactoryRoles(
   companyId: number,
   factoryName: string,

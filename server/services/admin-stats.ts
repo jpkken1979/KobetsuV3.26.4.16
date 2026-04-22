@@ -20,6 +20,11 @@ import { count, sql, isNull, isNotNull, and, gte } from "drizzle-orm";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+/**
+ * Estadisticas aggregate del panel de administracion.
+ * Incluye conteos de tablas, distribuciones por estado, ranking de fabricas,
+ * contratos proximos a vencer y campos nulos en employees/factories.
+ */
 export interface AdminStats {
   counts: Record<string, number>;
   contractStatusDistribution: Record<string, number>;

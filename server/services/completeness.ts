@@ -1,8 +1,14 @@
+/**
+ * Lista de campos obligatorios para un registro de empleado completo.
+ */
 export const REQUIRED_EMPLOYEE_FIELDS = [
   "fullName", "katakanaName", "nationality", "gender", "birthDate",
   "hireDate",
 ] as const;
 
+/**
+ * Lista de campos obligatorios para un registro de fabrica completo.
+ */
 export const REQUIRED_FACTORY_FIELDS = [
   "address", "phone", "jobDescription",
   "supervisorName", "supervisorDept", "supervisorPhone",
@@ -16,6 +22,10 @@ export const REQUIRED_FACTORY_FIELDS = [
 
 type Completeness = "green" | "yellow" | "red" | "gray";
 
+/**
+ * Calcula el nivel de completitud de un empleado y su fabrica asociada.
+ * @returns "green" si ambos completos, "yellow" si uno, "red" si ninguno, "gray" si no hay datos
+ */
 export function calcCompleteness(
   emp: Record<string, unknown>,
   factory: Record<string, unknown> | null,
@@ -43,6 +53,9 @@ function checkFactoryFields(factory: Record<string, unknown>): boolean {
   return true;
 }
 
+/**
+ * Lista los campos faltantes para un empleado y su fabrica.
+ */
 export function getMissingFields(
   emp: Record<string, unknown>,
   factory: Record<string, unknown> | null,
