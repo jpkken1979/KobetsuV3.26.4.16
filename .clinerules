@@ -17,13 +17,13 @@ Para tareas complejas (3+ pasos, bug fixing, refactoring): consulta `WORKFLOW_RU
 <!-- ANTIGRAVITY-RULES-START -->
 # Antigravity Ecosystem Rules
 
-This project uses **Antigravity v6.0.0** — a modular AI runtime
-with 117 active agents and 795 skills.
+This project uses **Antigravity v6.1.4** — a modular AI runtime
+with 131 active agents and 800 skills.
 
 ## MCP Gateway
 
 - Local gateway: `http://localhost:4747` (localhost:4747)
-- Active MCP servers: antigravity, antigravity-agents, antigravity-skills, antigravity-observations, antigravity-intelligence, antigravity-ui, antigravity-memory, stitch
+- Active MCP servers: antigravity, antigravity-agents, antigravity-skills, antigravity-observations, antigravity-intelligence, antigravity-ui, antigravity-memory, antigravity-watcher, antigravity-context-engine, stitch
 
 ## Agent Protocol
 
@@ -33,8 +33,8 @@ with 117 active agents and 795 skills.
 
 ## Key Directories
 
-- `.agent/agents/`   — 117 agents (tier 1–7)
-- `.agent/skills/`   — 795 skills
+- `.agent/agents/`   — 131 agents (tier 1–7)
+- `.agent/skills/`   — 800 skills
 - `.agent/workflows/` — multi-agent orchestration workflows
 - `.antigravity/`    — config, manifest, rules, SDK
 - `.mcp.json`        — MCP server configuration

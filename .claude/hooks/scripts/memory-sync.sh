@@ -55,3 +55,45 @@ if [ "$SYNCED" -gt 0 ]; then
 else
   echo '{"suppressOutput": true}'
 fi
+
+# === AUTO-COMMIT BRAIN CHANGES ===
+# Todo cambio en .agent/brain/ y .claude/memory/ debe subirse a git
+# inmediatamente para sincronizar entre PCs.
+
+cd "$REPO_ROOT"
+
+# Agregar todo lo que cambie en brain y memories (sin hacer add de todo el repo)
+BRAIN_CHANGES=$(git status --porcelain .agent/brain/ .claude/memory/ 2>/dev/null | grep -v '^??' | wc -l)
+
+if [ "$BRAIN_CHANGES" -gt 0 ]; then
+  git add .agent/brain/ .claude/memory/
+
+  # Obtener fecha actual para el mensaje
+  DATE=$(date '+%Y-%m-%d')
+  git commit -m "chore(memory): sincronizar memorias y brain ($DATE)
+
+Co-Authored-By: Claude <noreply@anthropic.com>" 2>/dev/null
+
+  # Intentar push (si falla, es critico — el usuario pierde memorias entre PCs)
+  if git push 2>/dev/null; then
+    echo "{\"systemMessage\": \"Brain + memorias subidos a git\"}"
+  else
+    # Push falló — notificar visiblemente. El usuario debe saberlo.
+    echo "{\"systemMessage\": \"WARNING: Brain + memorias quedaron en commit local. Push falló (offline o sin acceso).\"}"
+    echo "[Antigravity Memory] Push falló — tus memorias no sincronizan con otras PCs hasta que hagas git push manualmente"
+  fi
+fi
+
+# Sync planning files (active plans)
+PLANNING_SRC="$HOME/.claude/projects/$PROJECT_SLUG/planning"
+PLANNING_DST=".claude/planning"
+mkdir -p "$PLANNING_DST"
+if [ -d "$PLANNING_SRC" ]; then
+  for f in "$PLANNING_SRC"/**/*.md; do
+    [ ! -f "$f" ] && continue
+    BASENAME=$(basename "$f")
+    if [ ! -f "$PLANNING_DST/$BASENAME" ] || ! cmp -s "$f" "$PLANNING_DST/$BASENAME"; then
+      cp "$f" "$PLANNING_DST/$BASENAME"
+    fi
+  done
+fi

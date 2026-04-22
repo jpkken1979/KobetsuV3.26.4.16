@@ -4,7 +4,19 @@ Aplica a todas las sesiones de Claude Code en este repositorio.
 
 ## Triggers de guardado automatico
 
-Despues de completar cualquiera de estas acciones, guardar automaticamente en memoria del proyecto (`.claude/memory/`):
+Despues de completar cualquiera de estas acciones, guardar automaticamente en:
+1. **`.claude/memory/`** — archivos markdown (sincronizables por git)
+2. **`.agent/brain/`** — Brain Network (conocimiento estructurado con cross-refs, decay temporal, expansion semantica)
+
+Para ingestar en el Brain:
+```python
+import sys; sys.path.insert(0, '.agent')
+from core.brain import Brain; from pathlib import Path
+brain = Brain(Path('.agent/brain'), app_id='nexus-mother')
+brain.ingest(title="...", context="...", area="...", tags=[...], node_type="...", importance="...")
+```
+
+Triggers de guardado:
 
 ### 1. Decisiones de arquitectura
 Cuando se tome una decision de diseno significativa (nueva abstraccion, cambio de patron, eleccion de libreria):

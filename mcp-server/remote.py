@@ -356,6 +356,14 @@ def main() -> None:
 
     if "--no-auth" in args:
         allow_no_auth = True
+        # Warning si --no-auth combinado con bind no-localhost
+        if host not in ("localhost", "127.0.0.1", "::1", "0.0.0.0"):
+            logger.warning(
+                "ADVERTENCIA: --no-auth activo con host '%s'. "
+                "El servidor es accesible sin autenticacion desde la red. "
+                "Usar --no-auth SOLO en desarrollo local.",
+                host,
+            )
 
     if not API_TOKEN and not allow_no_auth:
         logger.error(

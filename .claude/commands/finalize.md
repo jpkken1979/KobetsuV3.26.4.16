@@ -122,9 +122,9 @@ cd nexus-app && npm run lint 2>&1 | head -20
 
 ---
 
-## PASO 3 — Guardar en memoria persistente
+## PASO 3 — Guardar en memoria persistente (3 sistemas)
 
-Guarda un resumen completo en **ambos** sistemas de memoria:
+Guarda un resumen completo en **los 3 sistemas** de memoria:
 
 ### 3.1 Auto-memory de Claude Code
 
@@ -161,6 +161,61 @@ memory_store({
 
 Si el gateway no responde, omitir silenciosamente (no bloquear el flujo).
 
+### 3.3 Brain Network (conocimiento estructurado)
+
+Ingestar la sesion en el Brain Network para que el conocimiento sea consultable
+con cross-refs, expansion semantica, y temporal decay:
+
+```python
+import sys; sys.path.insert(0, '.agent')
+from core.brain import Brain
+from pathlib import Path
+
+brain = Brain(Path('.agent/brain'), app_id='nexus-mother')
+brain.ingest(
+    title="Sesion YYYY-MM-DD — [tema principal]",
+    context="[que se hizo y por que]",
+    decisions="[decisiones tecnicas tomadas]",
+    output="[archivos creados/modificados, commits]",
+    pending="[lo que quedo pendiente]",
+    area="[dev|ops|ux|business|architecture|security]",
+    tags=["[tags relevantes]"],
+    node_type="session",
+    importance="[normal|high|critical]",
+)
+```
+
+Si hubo **bugs resueltos**, crear nodo adicional tipo `pattern`:
+```python
+brain.ingest(
+    title="Fix: [descripcion del bug]",
+    context="Sintoma: [que pasaba]. Root cause: [por que].",
+    decisions="Fix: [como se arreglo]. Prevencion: [como evitarlo].",
+    area="ops",
+    tags=["bugfix", "root-cause", "[area afectada]"],
+    node_type="pattern",
+    importance="high",
+)
+```
+
+Si hubo **decisiones de arquitectura**, crear nodo tipo `adr`:
+```python
+brain.ingest(
+    title="Decision: [que se decidio]",
+    context="[contexto y motivacion]",
+    decisions="[la decision y alternativas descartadas]",
+    area="architecture",
+    tags=["decision", "adr", "[area]"],
+    node_type="adr",
+    importance="high",
+)
+```
+
+Siempre agregar los archivos del brain al commit:
+```bash
+git add .agent/brain/
+```
+
 ---
 
 ## PASO 4 — Actualizar ESTADO_PROYECTO.md
@@ -171,6 +226,32 @@ Si los cambios son significativos (nueva feature, fix importante, refactor):
 2. Actualiza la fecha de última actualización
 3. Agrega una entrada en la sección de la sesión actual con fecha de hoy
 4. Actualiza el estado verificado si corresponde
+
+---
+
+## PASO 4.5 — Sincronizar Brain con docs del repo (auto-ingest)
+
+Si tocaste cualquier `.md` del repo (CLAUDE.md, RULES.md, `.claude/rules/`, `docs/`, `nexus-app/CLAUDE.md`, README, etc.), corré el crawler para que el Brain absorba los cambios:
+
+```bash
+python .agent/scripts/repo_crawler.py --apply
+```
+
+Comportamiento esperado:
+- **Idempotente**: si nada cambió en los .md whitelisted, devuelve `0 nuevos, 0 actualizados, 0 archivados` y termina rápido (segundos).
+- Si hay nuevos .md → ingesta nodos al Brain con tags semánticos canónicos (`nexus`, `arari`, `kobetsu`, etc.) y cross-linking automático.
+- Si renombraste/borraste .md → archiva los nodos huérfanos (`status="archived"`).
+- Si modificaste un .md ya ingestado → actualiza el nodo existente (mismo slug, hash nuevo).
+
+Asegurate de que los archivos del brain modificados/creados queden incluidos en el commit:
+
+```bash
+git add .agent/brain/concepts/ .agent/brain/sessions/ .agent/brain/index.md .agent/brain/log.md
+```
+
+Si NO tocaste ningún `.md` whitelisted, podés saltar este paso (el crawler igual sería idempotente, pero no aporta nada).
+
+Ver `.claude/rules/repo-crawler.md` para política completa de tags y paths.
 
 ---
 

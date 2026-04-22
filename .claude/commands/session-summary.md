@@ -43,4 +43,29 @@ date: {YYYY-MM-DD}
 ```
 
 4. Actualiza `ESTADO_PROYECTO.md` agregando una entrada al historial de sesiones con fecha, resumen y archivos principales.
-5. Muestra el resumen generado al usuario para confirmacion antes de guardar.
+5. **Ingesta en el Brain Network** para conocimiento estructurado:
+
+```python
+import sys; sys.path.insert(0, '.agent')
+from core.brain import Brain
+from pathlib import Path
+
+brain = Brain(Path('.agent/brain'), app_id='nexus-mother')
+brain.ingest(
+    title="Sesion {fecha} — {tema}",
+    context="{resumen de que se hizo}",
+    decisions="{decisiones tecnicas}",
+    output="{archivos creados/modificados}",
+    pending="{pendientes}",
+    area="{dev|ops|ux|business|architecture}",
+    tags=["{tags relevantes}"],
+    node_type="session",
+    importance="{normal|high|critical}",
+)
+```
+
+Si hubo bugfixes, crear nodo adicional con node_type="pattern" e importance="high".
+Si hubo decisiones de arquitectura, crear nodo con node_type="adr".
+
+6. Incluir `.agent/brain/` en el commit de sincronizacion.
+7. Muestra el resumen generado al usuario para confirmacion antes de guardar.

@@ -279,6 +279,60 @@ def _write_json_file(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _validate_url(url: str) -> None:
+    """Valida que la URL sea segura para requests HTTP salientes.
+
+    Rechaza schemes no-HTTP/HTTPS y hostnames privados/internos para
+    prevenir ataques SSRF (Server-Side Request Forgery).
+
+    Args:
+        url: URL a validar.
+
+    Raises:
+        ValueError: Si la URL tiene scheme inválido o apunta a un host privado.
+    """
+    parsed = urllib.parse.urlparse(url)
+
+    # Solo permitir HTTP y HTTPS
+    if parsed.scheme not in {"http", "https"}:
+        raise ValueError(f"Scheme no permitido: '{parsed.scheme}'. Solo se permiten http/https.")
+
+    hostname = parsed.hostname or ""
+    if not hostname:
+        raise ValueError("URL sin hostname válido.")
+
+    hostname_lower = hostname.lower()
+
+    # Rechazar localhost y variantes
+    _BLOCKED_HOSTNAMES = {
+        "localhost",
+        "::1",
+        "0.0.0.0",  # noqa: S104
+    }
+    if hostname_lower in _BLOCKED_HOSTNAMES:
+        raise ValueError(f"Hostname bloqueado por política SSRF: '{hostname}'.")
+
+    # Rechazar IPs de loopback IPv4 (127.x.x.x)
+    _LOOPBACK_RE = re.compile(r"^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+    if _LOOPBACK_RE.match(hostname_lower):
+        raise ValueError(f"IP de loopback bloqueada por política SSRF: '{hostname}'.")
+
+    # Rechazar link-local (169.254.x.x) — metadata services en cloud providers
+    _LINK_LOCAL_RE = re.compile(r"^169\.254\.\d{1,3}\.\d{1,3}$")
+    if _LINK_LOCAL_RE.match(hostname_lower):
+        raise ValueError(f"IP link-local bloqueada por política SSRF: '{hostname}'.")
+
+    # Rechazar rangos privados RFC 1918
+    _PRIVATE_RANGES = [
+        re.compile(r"^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$"),
+        re.compile(r"^192\.168\.\d{1,3}\.\d{1,3}$"),
+        re.compile(r"^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$"),
+    ]
+    for pattern in _PRIVATE_RANGES:
+        if pattern.match(hostname_lower):
+            raise ValueError(f"IP de red privada bloqueada por política SSRF: '{hostname}'.")
+
+
 def _http_json(
     *,
     method: str,
@@ -286,7 +340,25 @@ def _http_json(
     payload: dict[str, Any] | None = None,
     timeout: int = 8,
 ) -> tuple[int, dict[str, Any] | list[Any] | str]:
-    """Ejecuta request HTTP JSON simple usando stdlib."""
+    """Ejecuta request HTTP JSON simple usando stdlib.
+
+    Valida la URL antes de realizar la request para prevenir SSRF.
+
+    Args:
+        method: Método HTTP (GET, POST, etc.).
+        url: URL destino. Debe ser HTTP/HTTPS y apuntar a un host público.
+        payload: Cuerpo JSON opcional para la request.
+        timeout: Tiempo máximo de espera en segundos.
+
+    Returns:
+        Tupla (status_code, body) donde body es el JSON parseado o string raw.
+
+    Raises:
+        ValueError: Si la URL no pasa la validación anti-SSRF.
+    """
+    # Validar URL antes de cualquier request para prevenir SSRF
+    _validate_url(url)
+
     data_bytes: bytes | None = None
     headers = {"Accept": "application/json"}
     if payload is not None:
@@ -355,6 +427,31 @@ class AntigravityMCPServer:
             len(self.agents),
             len(self.workflows),
         )
+
+    def _validate_url(self, url: str) -> None:
+        """Valida que la URL sea segura para requests HTTP salientes.
+
+        Delega a la función module-level `_validate_url` para prevenir SSRF.
+        Adicionalmente verifica que el hostname coincida con el registry configurado.
+
+        Args:
+            url: URL a validar.
+
+        Raises:
+            ValueError: Si la URL tiene scheme inválido, apunta a un host privado,
+                o no corresponde al hostname del registry configurado.
+        """
+        # Validación base anti-SSRF (scheme + rangos privados)
+        _validate_url(url)
+
+        # Restricción adicional: solo permitir el hostname del registry configurado
+        parsed_url = urllib.parse.urlparse(url)
+        parsed_registry = urllib.parse.urlparse(self.registry_url)
+        if parsed_url.hostname != parsed_registry.hostname:
+            raise ValueError(
+                f"Host '{parsed_url.hostname}' no está en la lista de hosts permitidos. "
+                f"Solo se permite '{parsed_registry.hostname}'."
+            )
 
     def _load_ecosystem_config(self) -> dict[str, Any]:
         """Carga configuración del ecosistema (.antigravity/config.json)."""
@@ -663,6 +760,56 @@ class AntigravityMCPServer:
                     description="Devuelve estadísticas completas del ecosistema Antigravity.",
                     inputSchema={"type": "object", "properties": {}, "required": []},
                 ),
+                # Brain Network tools — red de inteligencia distribuida
+                Tool(
+                    name="brain_query",
+                    description=(
+                        "Buscar conocimiento en la red de brains del ecosistema. "
+                        "Busca en el Mother Brain + todos los app brains registrados. "
+                        "Soporta expansion semantica (auth↔jwt↔login, daicho↔nomina↔payroll)."
+                    ),
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "question": {
+                                "type": "string",
+                                "description": "Pregunta o termino de busqueda",
+                            },
+                            "limit": {"type": "integer", "default": 10},
+                            "app_filter": {
+                                "type": "string",
+                                "description": "Filtrar a un brain especifico",
+                            },
+                        },
+                        "required": ["question"],
+                    },
+                ),
+                Tool(
+                    name="brain_ingest",
+                    description=(
+                        "Ingestar conocimiento nuevo en un brain de la red. "
+                        "Crea nodo con frontmatter YAML, cross-refs bidireccionales, "
+                        "y auto-sync al Mother Brain."
+                    ),
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "title": {"type": "string", "description": "Titulo del conocimiento"},
+                            "context": {"type": "string", "description": "Contexto/background"},
+                            "decisions": {"type": "string", "description": "Decisiones tomadas"},
+                            "area": {"type": "string", "description": "Area (dev, ops, ux, etc.)"},
+                            "tags": {"type": "array", "items": {"type": "string"}},
+                            "node_type": {"type": "string", "default": "session"},
+                            "importance": {"type": "string", "default": "normal"},
+                        },
+                        "required": ["title"],
+                    },
+                ),
+                Tool(
+                    name="brain_stats",
+                    description="Estadisticas de la red de brains: nodos, conexiones, apps.",
+                    inputSchema={"type": "object", "properties": {}, "required": []},
+                ),
         ]
 
         # Auto-descubrir nombres desde el catálogo real (evita listas estáticas desincronizadas)
@@ -790,7 +937,104 @@ class AntigravityMCPServer:
             }
             return [TextContent(type="text", text=json.dumps(stats, indent=2, ensure_ascii=False))]
 
+        if name == "brain_query":
+            return self._brain_query(arguments)
+
+        if name == "brain_ingest":
+            return self._brain_ingest(arguments)
+
+        if name == "brain_stats":
+            return self._brain_stats(arguments)
+
         return [TextContent(type="text", text=f"Tool desconocida: {name}")]
+
+    # ------------------------------------------------------------------
+    # Brain Network helpers
+    # ------------------------------------------------------------------
+
+    def _get_brain_network(self):
+        """Lazy-init del BrainNetwork."""
+        if not hasattr(self, "_brain_network"):
+            try:
+                import sys as _sys
+                agent_dir = str(Path(__file__).parent.parent / ".agent")
+                if agent_dir not in _sys.path:
+                    _sys.path.insert(0, agent_dir)
+                from core.brain_network import BrainNetwork
+                self._brain_network = BrainNetwork(Path(__file__).parent.parent)
+            except Exception as e:
+                logger.warning("BrainNetwork no disponible: %s", e)
+                self._brain_network = None
+        return self._brain_network
+
+    def _brain_query(self, arguments: dict) -> list[TextContent]:
+        """Busca en la red de brains."""
+        network = self._get_brain_network()
+        if not network:
+            return [TextContent(type="text", text=json.dumps({"error": "BrainNetwork no disponible"}))]
+        question = arguments.get("question", "")
+        if not question:
+            return [TextContent(type="text", text=json.dumps({"error": "question requerido"}))]
+        results = network.query_network(
+            question,
+            limit=int(arguments.get("limit", 10)),
+            app_filter=arguments.get("app_filter"),
+        )
+        return [TextContent(type="text", text=json.dumps({
+            "success": True,
+            "total": len(results),
+            "results": [
+                {
+                    "brain_id": r.brain_id,
+                    "slug": r.node.slug,
+                    "title": r.node.title,
+                    "type": r.node.type,
+                    "area": r.node.area,
+                    "tags": r.node.tags,
+                    "date": r.node.date,
+                    "context": r.node.context[:500] if r.node.context else "",
+                    "relevance": round(r.relevance_score, 2),
+                }
+                for r in results
+            ],
+        }, ensure_ascii=False, indent=2))]
+
+    def _brain_ingest(self, arguments: dict) -> list[TextContent]:
+        """Ingesta conocimiento en el Mother Brain."""
+        network = self._get_brain_network()
+        if not network:
+            return [TextContent(type="text", text=json.dumps({"error": "BrainNetwork no disponible"}))]
+        title = arguments.get("title", "")
+        if not title:
+            return [TextContent(type="text", text=json.dumps({"error": "title requerido"}))]
+        node = network.mother.ingest(
+            title=title,
+            context=arguments.get("context", ""),
+            decisions=arguments.get("decisions", ""),
+            area=arguments.get("area", "general"),
+            tags=arguments.get("tags", []),
+            node_type=arguments.get("node_type", "session"),
+            importance=arguments.get("importance", "normal"),
+        )
+        return [TextContent(type="text", text=json.dumps({
+            "success": True,
+            "slug": node.slug,
+            "title": node.title,
+            "type": node.type,
+            "tags": node.tags,
+            "related": node.related,
+        }, ensure_ascii=False, indent=2))]
+
+    def _brain_stats(self, arguments: dict) -> list[TextContent]:
+        """Estadisticas de la red de brains."""
+        network = self._get_brain_network()
+        if not network:
+            return [TextContent(type="text", text=json.dumps({"error": "BrainNetwork no disponible"}))]
+        stats = network.network_stats()
+        return [TextContent(type="text", text=json.dumps({
+            "success": True,
+            **stats,
+        }, ensure_ascii=False, indent=2))]
 
     async def _run_skill(self, arguments: dict) -> list[TextContent]:
         """Ejecuta una skill de forma segura con límite de concurrencia y timeout global."""
@@ -844,7 +1088,7 @@ class AntigravityMCPServer:
             )
             output = result.stdout or result.stderr or "Sin salida"
             return [TextContent(type="text", text=output)]
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error("Global timeout exceeded for skill '%s' (%ds)", skill_name, GLOBAL_SKILL_TIMEOUT_SECONDS)
             return [TextContent(type="text", text=f"Timeout global ({GLOBAL_SKILL_TIMEOUT_SECONDS}s) excedido para skill '{skill_name}'.")]
         except subprocess.TimeoutExpired:

@@ -35,6 +35,16 @@
             "statusMessage": "Sincronizando memorias..."
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\".claude/hooks/scripts/session-report.sh\"",
+            "timeout": 10000
+          }
+        ]
       }
     ],
     "PostToolUse": [

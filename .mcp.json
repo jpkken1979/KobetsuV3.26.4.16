@@ -1,63 +1,83 @@
 {
   "mcpServers": {
     "antigravity": {
-      "command": "python",
+      "command": "py",
       "args": [
-        "mcp-server\\server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\mcp-server\\server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
       }
     },
     "antigravity-agents": {
-      "command": "python",
+      "command": "py",
       "args": [
-        ".agent\\mcp\\agents-server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\agents-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
       }
     },
     "antigravity-skills": {
-      "command": "python",
+      "command": "py",
       "args": [
-        ".agent\\mcp\\skills-server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\skills-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
       }
     },
     "antigravity-observations": {
-      "command": "python",
+      "command": "py",
       "args": [
-        ".agent\\mcp\\observations-server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\observations-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
       }
     },
     "antigravity-intelligence": {
-      "command": "python",
+      "command": "py",
       "args": [
-        ".agent\\mcp\\intelligence-server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\intelligence-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
       }
     },
     "antigravity-ui": {
-      "command": "python",
+      "command": "py",
       "args": [
-        ".agent\\mcp\\ui-server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\ui-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
       }
     },
     "antigravity-memory": {
-      "command": "python",
+      "command": "py",
       "args": [
-        ".agent\\mcp\\memory-server.py"
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\memory-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman"
+      }
+    },
+    "antigravity-watcher": {
+      "command": "py",
+      "args": [
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\watcher-server.py"
+      ],
+      "env": {
+        "ANTIGRAVITY_PERSONA": "gentleman",
+        "ANTIGRAVITY_WATCHER_GATEWAY": "true",
+        "ANTIGRAVITY_WATCHER_BRAIN": "true"
+      }
+    },
+    "antigravity-context-engine": {
+      "command": "py",
+      "args": [
+        "C:\\Users\\kenji\\OneDrive\\Desktop\\KobetsuVsKonetsu\\KobetsuV3\\.agent\\mcp\\context-engine-server.py"
       ],
       "env": {
         "ANTIGRAVITY_PERSONA": "gentleman"
@@ -110,7 +130,7 @@
         "npx",
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "."
+        "C:/Users/kenji/OneDrive/Desktop/KobetsuVsKonetsu/KobetsuV3"
       ]
     }
   }

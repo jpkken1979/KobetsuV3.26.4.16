@@ -36,7 +36,11 @@ import json
 import logging
 import os
 import sys
-from datetime import UTC, datetime
+try:
+    from datetime import datetime, UTC
+except ImportError:  # Python < 3.11
+    from datetime import datetime, timezone
+    UTC = timezone.utc
 from pathlib import Path
 
 SECURITY_UTILS_PATH = Path(__file__).with_name("security_utils.py")
@@ -77,6 +81,13 @@ WORKFLOWS_DIR = PROJECT_ROOT / ".agent" / "workflows"
 CONTEXT_DIR = PROJECT_ROOT / ".context"
 OBSERVATIONS_DIR = PROJECT_ROOT / ".antigravity" / "observations"
 API_KEY = os.environ.get("ANTIGRAVITY_API_KEY", "")
+# Cuando True, replica el comportamiento legado: requests desde localhost no
+# requieren API key incluso si ANTIGRAVITY_API_KEY no está configurada.
+# Activar explícitamente con ANTIGRAVITY_ALLOW_LOCALHOST_NOAUTH=true en desarrollo.
+# En producción debe permanecer False (valor por defecto).
+ALLOW_LOCALHOST_NOAUTH: bool = (
+    os.environ.get("ANTIGRAVITY_ALLOW_LOCALHOST_NOAUTH", "false").lower() == "true"
+)
 PUBLIC_PATHS = {"/.well-known/agent.json", "/health", "/openapi.json"}
 
 
@@ -199,13 +210,32 @@ class AntiqravityGateway:
         )
 
     def _check_auth(self, request: Request) -> Response | None:
+        """Verifica autenticación de la request.
+
+        Lógica:
+        - Rutas públicas (PUBLIC_PATHS) no requieren auth.
+        - Si ANTIGRAVITY_API_KEY está configurada, toda request privada debe
+          incluir el header X-API-Key con el valor correcto (timing-safe).
+        - Si no hay API_KEY configurada:
+            - Con ANTIGRAVITY_ALLOW_LOCALHOST_NOAUTH=true (modo desarrollo),
+              las requests desde localhost pasan sin key (comportamiento legado).
+            - Sin ese flag (producción por defecto), retorna 401 siempre para
+              forzar la configuración explícita de una API key.
+
+        Args:
+            request: Request HTTP entrante de aiohttp.
+
+        Returns:
+            None si la autenticación es válida, Response de error en caso contrario.
+        """
         path = request.path
         if path in PUBLIC_PATHS:
             return None
 
         client_ip = request.remote or ""
+
         if not API_KEY:
-            if is_localhost_client(client_ip):
+            if ALLOW_LOCALHOST_NOAUTH and is_localhost_client(client_ip):
                 return None
             return self._json(
                 {"error": "Unauthorized: configure ANTIGRAVITY_API_KEY"},
@@ -550,6 +580,97 @@ class AntiqravityGateway:
         )
 
     # ----------------------------------------------------------------
+    # Brain Network
+    # ----------------------------------------------------------------
+
+    def _get_brain_network(self):
+        """Lazy-init del BrainNetwork."""
+        if not hasattr(self, "_brain_network"):
+            try:
+                import sys as _sys
+                agent_dir = str(PROJECT_ROOT / ".agent")
+                if agent_dir not in _sys.path:
+                    _sys.path.insert(0, agent_dir)
+                from core.brain_network import BrainNetwork
+                self._brain_network = BrainNetwork(PROJECT_ROOT)
+            except Exception as e:
+                logger.warning("BrainNetwork no disponible: %s", e)
+                self._brain_network = None
+        return self._brain_network
+
+    async def handle_brain_query(self, request: Request) -> Response:
+        """GET /v1/brain/query?q=<question>&limit=10"""
+        auth_error = self._check_auth(request)
+        if auth_error:
+            return auth_error
+        network = self._get_brain_network()
+        if not network:
+            return self._json({"error": "BrainNetwork no disponible"}, status=503, request=request)
+        question = request.query.get("q", "")
+        limit = int(request.query.get("limit", "10"))
+        if not question:
+            return self._json({"error": "q es requerido"}, status=400, request=request)
+        results = network.query_network(question, limit=limit)
+        return self._json({
+            "success": True,
+            "total": len(results),
+            "results": [
+                {
+                    "brain_id": r.brain_id,
+                    "slug": r.node.slug,
+                    "title": r.node.title,
+                    "type": r.node.type,
+                    "area": r.node.area,
+                    "tags": r.node.tags,
+                    "context": r.node.context[:300] if r.node.context else "",
+                    "relevance": round(r.relevance_score, 2),
+                }
+                for r in results
+            ],
+        }, request=request)
+
+    async def handle_brain_ingest(self, request: Request) -> Response:
+        """POST /v1/brain/ingest {title, context, area, tags, ...}"""
+        auth_error = self._check_auth(request)
+        if auth_error:
+            return auth_error
+        network = self._get_brain_network()
+        if not network:
+            return self._json({"error": "BrainNetwork no disponible"}, status=503, request=request)
+        try:
+            body = await request.json()
+        except Exception:
+            return self._json({"error": "JSON invalido"}, status=400, request=request)
+        title = body.get("title", "")
+        if not title:
+            return self._json({"error": "title requerido"}, status=400, request=request)
+        node = network.mother.ingest(
+            title=title,
+            context=body.get("context", ""),
+            decisions=body.get("decisions", ""),
+            area=body.get("area", "general"),
+            tags=body.get("tags", []),
+            node_type=body.get("node_type", "session"),
+            importance=body.get("importance", "normal"),
+        )
+        return self._json({
+            "success": True,
+            "slug": node.slug,
+            "title": node.title,
+            "related": node.related,
+        }, request=request)
+
+    async def handle_brain_stats(self, request: Request) -> Response:
+        """GET /v1/brain/stats"""
+        auth_error = self._check_auth(request)
+        if auth_error:
+            return auth_error
+        network = self._get_brain_network()
+        if not network:
+            return self._json({"error": "BrainNetwork no disponible"}, status=503, request=request)
+        return self._json({"success": True, **network.network_stats()}, request=request)
+
+    # ----------------------------------------------------------------
     # Stats
     # ----------------------------------------------------------------
 
@@ -708,6 +829,9 @@ class AntiqravityGateway:
         app.router.add_get("/v1/agents", self.handle_list_agents)
         app.router.add_get("/v1/agents/{name}", self.handle_get_agent)
         app.router.add_get("/v1/memory/{resource}", self.handle_memory)
+        app.router.add_get("/v1/brain/query", self.handle_brain_query)
+        app.router.add_post("/v1/brain/ingest", self.handle_brain_ingest)
+        app.router.add_get("/v1/brain/stats", self.handle_brain_stats)
         app.router.add_get("/v1/stats", self.handle_stats)
         app.router.add_get("/openapi.json", self.handle_openapi)
         return app
@@ -726,9 +850,18 @@ def main() -> None:
     logger.info("CORS permitido: %s", ", ".join(gateway.allowed_origins))
     if API_KEY:
         logger.info("Auth API key: ACTIVADA")
+    elif ALLOW_LOCALHOST_NOAUTH:
+        logger.warning(
+            "Auth API key: DESACTIVADA (modo desarrollo). "
+            "Endpoints privados aceptan clientes localhost sin key. "
+            "Configurar ANTIGRAVITY_API_KEY para producción."
+        )
     else:
         logger.warning(
-            "Auth API key: DESACTIVADA. Los endpoints privados solo aceptan clientes localhost."
+            "Auth API key: DESACTIVADA. "
+            "Todos los endpoints privados retornan 401. "
+            "Configurar ANTIGRAVITY_API_KEY o activar "
+            "ANTIGRAVITY_ALLOW_LOCALHOST_NOAUTH=true para desarrollo local."
         )
     logger.info("Agent Card: http://%s:%d/.well-known/agent.json", args.host, args.port)
     logger.info("OpenAPI:    http://%s:%d/openapi.json", args.host, args.port)

@@ -13,11 +13,11 @@ Antes de escribir código, crear archivos, o resolver cualquier tarea:
 3. **Consulta la documentación** en `.context/APP_KNOWLEDGE.md`
 4. **Revisa las reglas de código** en `.antigravity/rules.md`
 
-**NO reinventes la rueda.** Este ecosistema tiene 120 agentes activos y 931+ skills. Es muy probable que lo que necesitas ya exista.
+**NO reinventes la rueda.** Revisa primero el ecosistema local y sus catálogos antes de crear algo nuevo. Usa `make status`, MCP o los directorios canónicos para conocer el inventario actual.
 
 ---
 
-## 2. MAPA DE AGENTES DISPONIBLES (40 activos)
+## 2. MAPA DE AGENTES DISPONIBLES
 
 ### Tier 1 - Orquestación
 | Agente | Cuándo usarlo |
@@ -153,7 +153,7 @@ python .agent/scripts/invoke-agent.py <nombre-agente> "<tarea>"
 
 ---
 
-## 4. SKILLS DISPONIBLES (793+)
+## 4. SKILLS DISPONIBLES
 
 Las skills están en `.agent/skills/`. Antes de crear una solución nueva, busca:
 
@@ -168,7 +168,7 @@ cat .agent/skills/<nombre>/SKILL.md
 curl http://localhost:4747/v1/skills?search=<keyword>
 ```
 
-### Skills Custom del Proyecto (6)
+### Skills Custom del Proyecto
 | Skill | Ubicación | Uso |
 |-------|-----------|-----|
 | `startup` | `.agent/skills-custom/startup/` | Verificar entorno, iniciar servidores |
@@ -180,7 +180,30 @@ curl http://localhost:4747/v1/skills?search=<keyword>
 
 ---
 
-## 5. REGLAS DE CÓDIGO OBLIGATORIAS
+## 5. REGLAS DE CÓDIGO OBLIGATORIAS E IA (KARPATHY GUIDELINES)
+
+Para minimizar errores comunes de programación con IA, aplica rigurosamente estos 4 principios:
+
+1. **Piensa Antes de Codificar (Think Before Coding)**
+   - No asumas. Si algo es ambiguo o confuso, detente y pregunta.
+   - Expón tus suposiciones detalladamente. Expresa múltiples interpretaciones si existen.
+   - Propón siempre la opción más sencilla y cuestiona si hay un enfoque mejor.
+
+2. **Simplicidad Primero (Simplicity First)**
+   - Escribe el código mínimo necesario para resolver el problema. Nada especulativo.
+   - Sin características extra, abstracciones prematuras ni flexibilidad no solicitada.
+   - Si puedes escribir la solución en 50 líneas en vez de 200, hazlo.
+
+3. **Cambios Quirúrgicos (Surgical Changes)**
+   - Toca sólo lo que te han pedido. No refactorices código que no está roto.
+   - No "mejores" comentarios colaterales ni estilos adyacentes; respeta el estándar actual.
+   - Si tu código deja funciones/variables huérfanas, elimínalas, pero no toques *dead code* preexistente a menos que se te pida. Cada línea modificada debe vincularse directamente a la petición.
+
+4. **Ejecución Orientada a Objetivos (Goal-Driven Execution)**
+   - Transforma tareas en métricas verificables. En vez de "Arregla el bug", formula "Escribe un test que reproduzca el bug, y haz que pase".
+   - Define un plan corto con criterios de éxito verificables antes de grandes refactors.
+
+---
 
 ### Idioma
 - **Respuestas al usuario**: Español
@@ -281,37 +304,26 @@ Ver `TESTING_METHODOLOGY.md` para:
 ## 6. ESTRUCTURA DEL PROYECTO
 
 ```
-AntigravitiSkillUSN/
+OpenAntigravity/
 ├── .agent/                    # Core del ecosistema
-│   ├── agents/                # 119 activos
-│   ├── skills/                # 794 base skills (907 total con custom + plugins)
-│   ├── skills-custom/         # 41 skills del proyecto
-│   ├── plugins/               # 72 plugins integrados
-│   ├── core/                  # 54 módulos core
-│   ├── mcp/                   # MCP + HTTP Gateway servers
-│   │   ├── gateway.py         # Gateway universal v3.0
-│   │   ├── agents-server.py   # MCP con 96+ agentes
-│   │   ├── intelligence-server.py  # 23 módulos de inteligencia
-│   │   ├── ui-server.py       # Herramientas UI/UX
-│   │   └── skills-server.py   # Acceso a 600+ skills
+│   ├── agents/                # Definiciones e identidades de agentes
+│   ├── skills/                # Catálogo principal de skills
+│   ├── skills-custom/         # Extensiones y capacidades del proyecto
+│   ├── plugins/               # Plugins integrados
+│   ├── core/                  # Runtime y orquestación
+│   ├── mcp/                   # Servidores MCP y gateway HTTP
 │   ├── cli/                   # Interfaz CLI
 │   ├── sdk/                   # Python SDK
-│   ├── scripts/               # 29 scripts utilitarios
-│   └── workflows/             # 24 slash commands
+│   ├── scripts/               # Scripts utilitarios
+│   └── workflows/             # Comandos y flujos auxiliares
 ├── .antigravity/              # Reglas y configuración
-│   └── rules.md               # Estándares de código
 ├── .claude/                   # Config para Claude Code
-│   ├── settings.json          # MCP servers, hooks, agentes
-│   └── agents/                # Aliases de agentes
 ├── .context/                  # Contexto persistente
-│   ├── APP_KNOWLEDGE.md       # Conocimiento del proyecto
-│   ├── LEARNINGS.md           # Aprendizajes
-│   └── SESSION_LOG.md         # Log de sesiones
-├── tests/                     # 181 archivos de test
+├── tests/                     # Suite de tests
 ├── dashboard/                 # Web monitoring UI
 ├── mcp-server/                # Servidor MCP standalone
-├── ESTADO_PROYECTO.md         # Estado actual del proyecto
-├── AGENTS.md                  # Referencia de agentes
+├── ESTADO_PROYECTO.md         # Bitácora operativa e histórica
+├── AGENTS.md                  # Guía de trabajo
 └── RULES.md                   # ← ESTE ARCHIVO
 ```
 
@@ -321,11 +333,11 @@ AntigravitiSkillUSN/
 
 | Server | Puerto/Método | Descripción |
 |--------|--------------|-------------|
-| Gateway Universal | `:4747` HTTP/SSE | Control completo del ecosistema |
-| antigravity-agents | MCP stdio | 96+ agentes como tools |
-| antigravity-intelligence | MCP stdio | 23 módulos de inteligencia |
+| Gateway Universal | `:4747` HTTP/SSE | Punto de entrada del ecosistema |
+| antigravity-agents | MCP stdio | Catálogo y ejecución de agentes |
+| antigravity-intelligence | MCP stdio | Inteligencia y reasoning del ecosistema |
 | antigravity-ui-ux | MCP stdio | Herramientas UI/UX |
-| antigravity-skills | MCP stdio | 600+ skills |
+| antigravity-skills | MCP stdio | Catálogo y ejecución de skills |
 | context7 | MCP stdio | Documentación actualizada de librerías |
 | playwright | MCP stdio | Automatización de browser |
 | filesystem | MCP stdio | Operaciones de archivos |
@@ -364,11 +376,10 @@ Cuando necesites contexto, lee estos archivos en este orden:
 
 > **Antes de crear algo nuevo, SIEMPRE verifica si ya existe un agente o skill que lo haga.**
 >
-> Este ecosistema tiene 119 agentes activos y 907+ skills. La probabilidad de que tu tarea ya esté cubierta es muy alta.
+> Consulta primero los catálogos MCP, `make status` o los directorios canónicos del runtime.
 >
 > Si no existe, créalo como un nuevo skill en `.agent/skills-custom/` o como un nuevo agente en `.agent/agents/`, siguiendo las estructuras documentadas en `.antigravity/rules.md`.
 
 ---
 
-*Antigravity Ecosystem v5.0.0 | 119 agentes | 907+ skills | 10+ IDEs | 4 LLM providers*
 *Este archivo debe ser leído por TODA IA antes de trabajar en este proyecto.*
