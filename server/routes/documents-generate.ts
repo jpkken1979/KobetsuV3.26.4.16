@@ -2,16 +2,17 @@
 // Handlers split into:
 //   documents-generate-single.ts    — POST /generate/:contractId
 //   documents-generate-individual.ts — POST /keiyakusho/:employeeNumber, /shugyojoken/:employeeNumber
-//   documents-generate-batch.ts     — POST /generate-batch, /generate-set, /generate-factory, /generate-by-ids
+//   documents-generate-batch-bundle.ts  — handleGenerateBatch
+//   documents-generate-batch-set.ts     — handleGenerateSet
+//   documents-generate-batch-factory.ts — handleGenerateFactory
+//   documents-generate-batch-ids.ts     — handleGenerateByIds
 import { Hono } from "hono";
 import { handleGenerateSingle } from "./documents-generate-single.js";
 import { handleKeiyakusho, handleShugyojoken } from "./documents-generate-individual.js";
-import {
-  handleGenerateBatch,
-  handleGenerateSet,
-  handleGenerateFactory,
-  handleGenerateByIds,
-} from "./documents-generate-batch.js";
+import { handleGenerateBatch } from "./documents-generate-batch-bundle.js";
+import { handleGenerateSet } from "./documents-generate-batch-set.js";
+import { handleGenerateFactory } from "./documents-generate-batch-factory.js";
+import { handleGenerateByIds } from "./documents-generate-batch-ids.js";
 
 // Re-export for backward compatibility (documents.ts imports from this file)
 export { readContractDocIndex, KOBETSU_OUTPUT_DIR, ROUDOU_OUTPUT_DIR, KORITSU_OUTPUT_DIR } from "../services/document-generation.js";
