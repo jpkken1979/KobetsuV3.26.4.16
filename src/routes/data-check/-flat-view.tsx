@@ -7,7 +7,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { COMPLETENESS_CONFIG, FIELD_LABELS } from "./-completeness";
 import type { DataCheckEmployee } from "@/lib/api-types";
 import { AlertCircle, ArrowUp, ArrowDown, ArrowUpDown, X } from "lucide-react";
-import { appendTeiji } from "@/lib/teiji-utils";
 
 // ─── Column Definition ──────────────────────────────────────────────
 
@@ -127,7 +126,6 @@ function getCellValue(emp: DataCheckEmployee, key: string): string {
     const factory = emp.factory;
     if (!factory) return "";
     const val = String((factory as unknown as Record<string, unknown>)[key] ?? "");
-    if (key === "workHours" && val) return appendTeiji(val, factory.breakTimeDay);
     return val;
   }
   // Employee fields

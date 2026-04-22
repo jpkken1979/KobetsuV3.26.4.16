@@ -4,7 +4,7 @@
  * GRID-BASED LAYOUT matching Excel template 個別契約書TEXPERT2026.1
  * 27 columns (A-AA) × 64 rows, A4 portrait
  */
-import { type Doc, UNS, yen, getTakaoJigyosho, formatDateJP, compactTimeFormat, appendTeiji } from "./helpers.js";
+import { type Doc, UNS, yen, getTakaoJigyosho, formatDateJP, compactTimeFormat } from "./helpers.js";
 import type { CellOpts } from "./types.js";
 import path from "node:path";
 import fs from "node:fs";
@@ -478,10 +478,8 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
   cell(doc, 17, 7, 17, 26, data.calendar, 8);
 
   // --- Rows 18-21: 就業時間 (smart layout: 2-column for 3+ shifts) ---
-  // Append 定時 (net hours) to each shift: "A勤務：7:00～15:30 (7.75)"
   cell(doc, 18, 2, 21, 6, "就業時間", 7.5, { align: "center", wrap: true });
-  const workHoursWithTeiji = appendTeiji(data.workHours, data.breakTime);
-  renderMultiShift(doc, workHoursWithTeiji, 18, 21);
+  renderMultiShift(doc, data.workHours, 18, 21);
 
   // --- Rows 22-25: 休憩時間 (smart layout: 2-column for 3+ shifts) ---
   cell(doc, 22, 2, 25, 6, "休憩時間", 7.5, { align: "center", wrap: true });

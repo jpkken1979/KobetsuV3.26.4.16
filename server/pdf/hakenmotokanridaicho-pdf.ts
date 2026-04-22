@@ -22,7 +22,6 @@ import {
   formatDateJP,
   parseDate,
   compactTimeFormat,
-  appendTeiji,
   adjustToBusinessDay,
   getTakaoJigyosho,
 } from "./helpers.js";
@@ -162,8 +161,7 @@ export function generateHakenmotoKanriDaichoPDF(doc: Doc, data: HakenmotoDaichoD
   // Detect multi-shift for adaptive sizing
   const shiftLineCount = (data.workHours || "").split("\n").filter(Boolean).length;
   const manyShifts = shiftLineCount > 2;
-  const workHoursWithTeiji = appendTeiji(data.workHours, data.breakTime);
-  const workHoursDisplay = manyShifts ? compactTimeFormat(workHoursWithTeiji) : workHoursWithTeiji;
+  const workHoursDisplay = manyShifts ? compactTimeFormat(data.workHours) : data.workHours;
   const breakTimeDisplay = manyShifts ? compactTimeFormat(data.breakTime) : data.breakTime;
 
   // Adaptive heights: shrink fixed sections when shifts need more space

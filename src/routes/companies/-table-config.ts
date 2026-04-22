@@ -1,5 +1,4 @@
 import { type Factory } from "@/lib/api";
-import { appendTeiji } from "@/lib/teiji-utils";
 
 export type CompanyTableCellType = "text" | "number" | "date";
 
@@ -113,7 +112,7 @@ export const COLUMNS: CompanyTableColumn[] = [
   { key: "managerUnsPhone", label: "TEL", group: "managerUns", width: 150, getter: (factory) => factory.managerUnsPhone ?? "" },
   { key: "jobDescription", label: "仕事内容", group: "work", width: 260, getter: (factory) => factory.jobDescription ?? "" },
   { key: "shiftPattern", label: "シフト", group: "work", width: 130, getter: (factory) => factory.shiftPattern ?? "" },
-  { key: "workHours", label: "就業時間", group: "work", width: 300, readOnly: true, getter: (factory) => appendTeiji(factory.workHours ?? "", factory.breakTimeDay) },
+  { key: "workHours", label: "就業時間", group: "work", width: 300, readOnly: true, getter: (factory) => factory.workHours ?? "" },
   { key: "breakTime", label: "休憩時間", group: "work", width: 300, readOnly: true, getter: (factory) => factory.breakTimeDay || (factory.breakTime ? `${factory.breakTime}分` : "") },
   { key: "overtimeHours", label: "時間外", group: "work", width: 160, getter: (factory) => factory.overtimeHours ?? "" },
   { key: "overtimeOutsideDays", label: "就業日外労働", group: "work", width: 160, getter: (factory) => factory.overtimeOutsideDays ?? "" },
