@@ -235,9 +235,8 @@ function ContractsList() {
     }
 
     return [...groups.values()];
-    // Deps reactivos: recomputar cuando data/filtros/sort cambian.
+    // Deps reactivos: recomputar cuando data/filtros/sort changed.
     // NO usar [table] solo — table es ref estable y no invalida el memo.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flatContracts, globalFilter, sorting, table]);
 
   const [setModalGroup, setSetModalGroup] = useState<ContractGroup | null>(null);
