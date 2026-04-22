@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { AnimatedPage } from "@/components/ui/animated";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/ui/page-header";
@@ -566,16 +567,16 @@ function ShouheishaPage() {
         />
       </div>
 
-      <Card className="border-border/60 bg-gradient-to-br from-card to-muted/20 p-4 shadow-[var(--shadow-card)]">
+      <Card variant="default" className="p-4">
         <div className="grid gap-3 md:grid-cols-4">
           {[
-            "1. 会社と工場を選ぶ",
-            "2. 招聘者の情報を入力",
-            "3. 価格と期間を設定",
-            "4. ボタンで一括生成",
+            "会社と工場を選ぶ",
+            "招聘者の情報を入力",
+            "価格と期間を設定",
+            "ボタンで一括生成",
           ].map((step, index) => (
-            <div key={step} className="rounded-xl border border-border/60 bg-background/70 px-4 py-3">
-              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-primary/70">
+            <div key={step} className="rounded-md border border-border/60 bg-background/70 px-4 py-3">
+              <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                 STEP {index + 1}
               </div>
               <div className="text-sm font-medium">{step}</div>
@@ -586,7 +587,7 @@ function ShouheishaPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
         <div className="space-y-6">
-          <Card className="p-6">
+          <Card variant="default" className="p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">派遣先の選択</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -600,7 +601,7 @@ function ShouheishaPage() {
                   <Building2 className="h-3.5 w-3.5" />
                   企業
                 </div>
-                <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
+                <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/60 p-2">
                   {companies.map((company) => (
                     <button
                       key={company.id}
@@ -684,7 +685,7 @@ function ShouheishaPage() {
             </div>
 
             {(selectedCompany || selectedFactoryLabel) && (
-              <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-muted/30 px-3 py-3 text-sm">
+              <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg bg-muted/30 px-3 py-3 text-sm">
                 {selectedCompany && (
                   <span className="rounded-md bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
                     {selectedCompany.name}
@@ -702,7 +703,7 @@ function ShouheishaPage() {
             )}
 
             {selectedFactory && (
-              <div className="mt-4 rounded-xl border border-border/60 bg-background/70 p-4">
+              <div className="mt-4 rounded-lg border border-border/60 bg-background/70 p-4">
                 <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   工場サマリー
@@ -738,7 +739,7 @@ function ShouheishaPage() {
             )}
           </Card>
 
-          <Card className="p-6">
+          <Card variant="default" className="p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">招聘者の情報</h2>
@@ -746,22 +747,18 @@ function ShouheishaPage() {
                   ここに入れるデータを、そのまま個別契約書・台帳・労働契約書に流します。複数人を同じ工場・ラインに一括で登録できます。
                 </p>
               </div>
-              <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                {recruits.length}名
-              </span>
+              <Badge variant="info" size="sm" className="mono-tabular">{recruits.length}名</Badge>
             </div>
 
             <div className="space-y-4">
               {recruits.map((recruit, index) => (
                 <div
                   key={recruit.id}
-                  className="rounded-xl border border-border/60 bg-background/40 p-4"
+                  className="rounded-lg border border-border/60 bg-background/40 p-4"
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-md bg-primary/15 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-primary">
-                        招聘者 #{index + 1}
-                      </span>
+                      <Badge variant="info" size="sm">招聘者 #{index + 1}</Badge>
                       {recruit.fullName.trim() || recruit.katakanaName.trim() ? (
                         <span className="text-sm text-muted-foreground">
                           {recruit.fullName.trim() || recruit.katakanaName.trim()}
@@ -907,7 +904,7 @@ function ShouheishaPage() {
             </Button>
           </Card>
 
-          <Card className="p-6">
+          <Card variant="default" className="p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold">工場の既定値</h2>
@@ -1004,7 +1001,7 @@ function ShouheishaPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className="p-6">
+          <Card variant="default" className="p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">価格と期間</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -1044,7 +1041,7 @@ function ShouheishaPage() {
             </div>
 
             {contractDates && (
-              <div className="mt-4 rounded-xl bg-muted/30 px-4 py-3 text-sm">
+              <div className="mt-4 rounded-lg bg-muted/30 px-4 py-3 text-sm">
                 <div className="flex items-center gap-2 font-medium">
                   <ShieldCheck className="h-4 w-4 text-primary" />
                   {contractDateOverride ? "反映される日付" : "自動計算"}
@@ -1062,7 +1059,7 @@ function ShouheishaPage() {
               </div>
             )}
 
-            <div className="mt-4 rounded-xl border border-dashed border-border/60 bg-background/50 p-4">
+            <div className="mt-4 rounded-lg border border-dashed border-border/60 bg-background/50 p-4">
               <label className="flex items-start gap-3">
                 <input
                   type="checkbox"
@@ -1131,7 +1128,7 @@ function ShouheishaPage() {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card variant="default" className="p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold">生成結果</h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -1140,12 +1137,12 @@ function ShouheishaPage() {
             </div>
 
             {!result ? (
-              <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+              <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
                 まだ生成されていません。
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-xl bg-muted/30 px-4 py-3 text-sm">
+                <div className="rounded-lg bg-muted/30 px-4 py-3 text-sm">
                   <div className="font-medium text-foreground">
                     {result.employees.length === 1
                       ? result.employees[0].fullName
@@ -1164,7 +1161,7 @@ function ShouheishaPage() {
                       href={artifact.path}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3 text-sm transition-colors hover:bg-muted/40"
+                      className="flex items-center justify-between rounded-md border border-border/60 px-4 py-3 text-sm transition-colors hover:bg-muted/40"
                     >
                       <span>{artifact.label}</span>
                       <span className="text-xs text-muted-foreground">{artifact.filename}</span>
@@ -1172,8 +1169,8 @@ function ShouheishaPage() {
                   ))}
                 </div>
                 {result.zipFilename && (
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary dark:text-primary/90">
-                    ZIPでまとめて保存しました: {result.zipFilename}
+                  <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[var(--color-status-ok-muted)] px-4 py-3 text-sm text-[var(--color-status-ok)]">
+                    ZIPでまとめて保存しました: <span className="font-medium">{result.zipFilename}</span>
                   </div>
                 )}
                 <div className="flex gap-3">

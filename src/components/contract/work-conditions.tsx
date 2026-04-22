@@ -111,8 +111,8 @@ export function WorkConditions() {
                 className={cn(
                   "h-full rounded-full transition-all duration-500",
                   filledCount === totalLegal
-                    ? "bg-green-500"
-                    : "bg-amber-500"
+                    ? "bg-[var(--color-status-ok)]"
+                    : "bg-[var(--color-status-warning)]"
                 )}
                 style={{ width: `${progressPercent}%` }}
               />
@@ -120,10 +120,10 @@ export function WorkConditions() {
           </div>
           <div
             className={cn(
-              "rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset",
+              "rounded-md px-3 py-1 text-xs font-semibold ring-1 ring-inset",
               filledCount === totalLegal
-                ? "bg-green-50 text-green-700 ring-green-200 dark:bg-green-900/50 dark:text-green-300 dark:ring-green-700"
-                : "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:ring-amber-700"
+                ? "bg-[var(--color-status-ok-muted)] text-[var(--color-status-ok)] ring-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]"
+                : "bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning)] ring-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)]"
             )}
           >
             {filledCount}/{totalLegal}
@@ -132,7 +132,7 @@ export function WorkConditions() {
       </div>
 
       {/* Section: Work conditions */}
-      <fieldset className="space-y-4 rounded-xl border border-border/60 p-4">
+      <fieldset className="space-y-4 rounded-lg border border-border/60 p-4">
         <legend className="flex items-center gap-2 px-2 text-sm font-semibold">
           <Briefcase className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           業務・勤務条件
@@ -263,7 +263,7 @@ export function WorkConditions() {
       </fieldset>
 
       {/* Section: Supervisors */}
-      <fieldset className="space-y-4 rounded-xl border border-border/60 p-4">
+      <fieldset className="space-y-4 rounded-lg border border-border/60 p-4">
         <legend className="flex items-center gap-2 px-2 text-sm font-semibold">
           <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           指揮命令者・苦情処理・責任者
@@ -359,7 +359,7 @@ export function WorkConditions() {
       </fieldset>
 
       {/* Section: Safety & Legal */}
-      <fieldset className="space-y-4 rounded-xl border border-border/60 p-4">
+      <fieldset className="space-y-4 rounded-lg border border-border/60 p-4">
         <legend className="flex items-center gap-2 px-2 text-sm font-semibold">
           <Shield className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           安全衛生・福利厚生・措置
@@ -429,14 +429,14 @@ export function WorkConditions() {
 
       {/* Compliance warning */}
       {filledCount < totalLegal && (
-        <div role="alert" aria-live="polite" className="flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
-          <div className="mt-0.5 rounded-lg bg-amber-100 p-1.5 dark:bg-amber-900/50">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+        <div role="alert" aria-live="polite" className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" aria-hidden="true" />
+            <div className="flex-1 text-sm">
+              <p className="font-semibold text-[var(--color-status-warning)]">法定16項目のうち {totalLegal - filledCount} 項目が未入力です</p>
+              <p className="mt-0.5 text-[0.6875rem] text-foreground/70">すべて入力しないとコンプライアンス違反になる可能性があります。</p>
+            </div>
           </div>
-          <p className="text-sm text-amber-700 dark:text-amber-400">
-            法定16項目のうち <span className="font-bold">{totalLegal - filledCount}</span>{" "}
-            項目が未入力です。すべて入力しないとコンプライアンス違反になる可能性があります。
-          </p>
         </div>
       )}
 

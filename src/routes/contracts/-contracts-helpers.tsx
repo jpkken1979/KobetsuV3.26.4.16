@@ -11,13 +11,13 @@ export function ExpiryDateDisplay({ startDate, endDate }: { startDate?: string; 
     daysLeft < 0
       ? "text-muted-foreground"
       : daysLeft <= 7
-      ? "text-red-500 font-bold"
+      ? "text-[var(--color-status-error)] font-bold"
       : daysLeft <= 30
-      ? "text-amber-500 font-bold"
+      ? "text-[var(--color-status-warning)] font-bold"
       : "text-muted-foreground/70";
 
   return (
-    <span className={cn("transition-colors", urgency)}>
+    <span className={cn("mono-tabular transition-colors", urgency)}>
       {startDate} ~ {endDate}
       {daysLeft >= 0 && daysLeft <= 30 && (
         <span className="ml-2 text-[10px]">({daysLeft}日)</span>

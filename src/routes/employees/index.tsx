@@ -317,20 +317,24 @@ function EditableText({
 
 // ─── Avatar & Visa Badge helpers ──────────────────────────────────────
 
-const AVATAR_GRADIENTS = [
-  "from-blue-500 to-blue-700",
-  "from-cyan-500 to-teal-600",
-  "from-amber-400 to-orange-500",
-  "from-emerald-400 to-teal-500",
+const AVATAR_TOKENS = [
+  "var(--color-chart-1)",
+  "var(--color-chart-2)",
+  "var(--color-chart-4)",
+  "var(--color-chart-5)",
+  "var(--color-chart-6)",
+  "var(--color-chart-7)",
 ];
 
 function EmployeeAvatar({ name }: { name: string }) {
-  const idx = (name.codePointAt(0) ?? 0) % AVATAR_GRADIENTS.length;
+  const idx = (name.codePointAt(0) ?? 0) % AVATAR_TOKENS.length;
   return (
-    <div className={cn(
-      "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-white",
-      AVATAR_GRADIENTS[idx]
-    )}>
+    <div
+      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+      style={{
+        background: `linear-gradient(135deg, ${AVATAR_TOKENS[idx]}, color-mix(in srgb, ${AVATAR_TOKENS[idx]} 75%, black))`,
+      }}
+    >
       {name[0]?.toUpperCase() ?? "?"}
     </div>
   );
@@ -488,8 +492,7 @@ function EmployeesList() {
       {/* Header */}
       <PageHeader
         title="派遣社員一覧"
-        tag="EMPLOYEE_REGISTRY"
-        tagColor="text-emerald-500/80"
+        tag="EMPLOYEE REGISTRY"
         subtitle={`在籍 ${employees?.filter((e: Employee) => e.status === 'active' && e.employeeNumber !== '0').length ?? 0} / 合計 ${filteredEmployees.length} 名`}
       >
         {hasCustomWidths && (
@@ -501,47 +504,29 @@ function EmployeesList() {
       </PageHeader>
 
       {/* Tabs */}
-      <div className="border-b border-border">
+      <div className="border-b border-border/60">
         <nav className="flex gap-1" role="tablist">
-          <button
-            role="tab"
-            aria-selected={activeTab === "list"}
-            onClick={() => setActiveTab("list")}
-            className={cn(
-              "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "list"
-                ? "border-emerald-500 text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-            )}
-          >
-            一覧
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === "import"}
-            onClick={() => setActiveTab("import")}
-            className={cn(
-              "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "import"
-                ? "border-emerald-500 text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-            )}
-          >
-            インポート
-          </button>
-          <button
-            role="tab"
-            aria-selected={activeTab === "datacheck"}
-            onClick={() => setActiveTab("datacheck")}
-            className={cn(
-              "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors",
-              activeTab === "datacheck"
-                ? "border-emerald-500 text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-            )}
-          >
-            データチェック
-          </button>
+          {([
+            { key: "list", label: "一覧" },
+            { key: "import", label: "インポート" },
+            { key: "datacheck", label: "データチェック" },
+          ] as const).map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={activeTab === t.key}
+              onClick={() => setActiveTab(t.key)}
+              className={cn(
+                "focus-premium relative -mb-px px-4 py-2.5 text-sm font-medium transition-colors",
+                "border-b-2",
+                activeTab === t.key
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
         </nav>
       </div>
 
@@ -563,16 +548,18 @@ function EmployeesList() {
             <button
               onClick={() => setActiveOnly(!activeOnly)}
               className={cn(
-                "flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all cursor-pointer",
+                "focus-premium flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-all cursor-pointer",
                 activeOnly
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 shadow-sm shadow-emerald-500/10 hover:bg-emerald-500/15"
-                  : "border-border/60 bg-card text-muted-foreground hover:bg-muted/50 hover:border-primary/30"
+                  ? "border-[color-mix(in_srgb,var(--color-status-ok)_45%,transparent)] bg-[var(--color-status-ok-muted)] text-[var(--color-status-ok)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-status-ok)_20%,transparent),0_4px_12px_-4px_color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]"
+                  : "border-border/60 bg-card text-muted-foreground hover:border-[color-mix(in_srgb,var(--color-primary)_35%,var(--color-border))] hover:bg-card/90",
               )}
             >
-              <span className={cn(
-                "h-2 w-2 rounded-full transition-colors",
-                activeOnly ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/30"
-              )} />
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full transition-colors",
+                  activeOnly ? "live-dot text-[var(--color-status-ok)]" : "bg-muted-foreground/30",
+                )}
+              />
               {activeOnly ? "在籍のみ" : "全員表示"}
             </button>
           </div>
@@ -592,7 +579,7 @@ function EmployeesList() {
           ) : filteredEmployees.length > 0 ? (
             <div
               ref={containerRef}
-              className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]"
+              className="overflow-hidden rounded-lg border border-border/60 bg-card/80 shadow-[var(--shadow-card)] backdrop-blur-sm"
             >
               <div ref={scrollContainerRef} className="overflow-auto max-h-[calc(100vh-240px)]">
                   <table 
@@ -793,30 +780,31 @@ function EmployeesList() {
             initial={{ y: 80, x: "-50%", opacity: 0 }}
             animate={{ y: 0, x: "-50%", opacity: 1 }}
             exit={{ y: 80, x: "-50%", opacity: 0 }}
-            className="fixed bottom-8 left-1/2 z-50 flex items-center justify-between gap-6 rounded-2xl border border-primary/20 bg-card/90 px-6 py-3 shadow-2xl backdrop-blur-xl transition-all"
+            className={cn(
+              "fixed bottom-8 left-1/2 z-50 flex items-center gap-5 rounded-lg border bg-card/90 px-5 py-2.5 backdrop-blur-xl",
+              "border-[color-mix(in_srgb,var(--color-primary)_40%,var(--color-border))]",
+              "shadow-[0_16px_40px_-8px_color-mix(in_srgb,var(--color-primary)_30%,transparent),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_22%,transparent)]",
+            )}
           >
-            <div className="flex items-center gap-3 border-r border-border pr-6">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white shadow-sm shadow-primary/20">
+            <div className="flex items-center gap-2 border-r border-border/60 pr-5">
+              <span className="mono-tabular flex h-6 w-6 items-center justify-center rounded-md bg-primary text-[0.6875rem] font-bold text-primary-foreground">
                 {selectedIds.size}
               </span>
-              <span className="text-sm font-semibold tracking-tight text-foreground">
-                選択中
-              </span>
+              <span className="text-sm font-semibold tracking-tight text-foreground">選択中</span>
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" className="h-9 rounded-xl">
+              <Button size="sm" variant="outline">
                 CSVエクスポート
               </Button>
-              <Button size="sm" variant="outline" className="h-9 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10">
+              <Button size="sm" variant="destructive">
                 一括削除...
               </Button>
-              <div className="h-4 w-px bg-border mx-2" />
-              <Button 
-                size="sm" 
-                variant="ghost" 
+              <div className="mx-1 h-4 w-px bg-border/60" />
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => setSelectedIds(new Set())}
-                className="h-9 rounded-xl text-muted-foreground hover:text-foreground"
               >
                 解除
               </Button>

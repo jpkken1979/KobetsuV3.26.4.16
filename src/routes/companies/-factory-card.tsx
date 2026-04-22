@@ -105,7 +105,7 @@ export function FactoryCard({
             "mt-1 truncate text-[10px] font-bold tracking-tight px-1.5 py-0.5 rounded-md inline-block border",
             factory.lineName
               ? "bg-white/5 border-border text-muted-foreground"
-              : "bg-red-500/10 border-red-500/20 text-red-400"
+              : "bg-[var(--color-status-error-muted)] border-[var(--color-status-error)]/20 text-[var(--color-status-error)]"
           )}>
             {factory.lineName || "ライン未設定"}
           </p>
@@ -132,7 +132,7 @@ export function FactoryCard({
                 e.stopPropagation();
                 setEditingRate(true);
               }}
-              className="gauge-value flex items-center gap-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-sm font-black text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.1)] transition-all hover:bg-emerald-500/20"
+              className="gauge-value flex items-center gap-1 rounded-lg bg-[var(--color-status-ok-muted)] border border-[var(--color-status-ok)]/20 px-2.5 py-1 text-sm font-black text-[var(--color-status-ok)] shadow-[0_0_10px_rgba(16,185,129,0.1)] transition-all hover:bg-[var(--color-status-ok)]/20"
             >
               <span className="text-[10px] opacity-60">¥</span>
               {factory.hourlyRate!.toLocaleString()}
@@ -186,8 +186,8 @@ export function FactoryCard({
             }}
             className={cn(
               "mt-1 w-full flex items-center justify-center gap-2 rounded-lg border px-2 py-1.5 text-[10px] font-black transition-all",
-              conflictStatus.tone === "expired" && "bg-red-500/10 border-red-500/30 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]",
-              conflictStatus.tone === "warning" && "bg-amber-500/10 border-amber-500/30 text-amber-400",
+              conflictStatus.tone === "expired" && "bg-[var(--color-status-error-muted)] border-[var(--color-status-error)]/30 text-[var(--color-status-error)] shadow-[0_0_10px_rgba(239,68,68,0.1)]",
+              conflictStatus.tone === "warning" && "bg-[var(--color-status-warning-muted)] border-[var(--color-status-warning)]/30 text-[var(--color-status-warning)]",
               conflictStatus.tone === "normal" && "bg-primary/5 border-border/60 text-muted-foreground/60 hover:border-primary/20",
             )}
           >
@@ -218,8 +218,8 @@ export function FactoryCard({
           className={cn(
             "h-7 px-3 rounded-md text-[10px] font-black transition-all",
             confirming
-              ? "bg-red-600 text-white shadow-[0_0_15px_rgba(220,20,60,0.4)]"
-              : "bg-muted/30 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
+              ? "bg-[var(--color-status-error)] text-white shadow-[0_0_15px_rgba(220,20,60,0.4)]"
+              : "bg-muted/30 text-muted-foreground hover:text-[var(--color-status-error)] hover:bg-[var(--color-status-error-muted)]"
           )}
           onClick={(e) => {
             e.stopPropagation();

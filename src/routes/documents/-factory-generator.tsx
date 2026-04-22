@@ -40,8 +40,8 @@ function DocDiagram({ kobetsuCopies, contractCount = 1, employeeCount = 1 }: Doc
       : [
           { label: "個別契約書", sublabel: "通知書込み（1通）", icon: FileText, color: "text-primary", bg: "bg-primary/10", count: contractCount, each: true },
         ]),
-    { label: "派遣先管理台帳", sublabel: "クライアント保管", icon: Building2, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30", count: employeeCount, each: false },
-    { label: "派遣元管理台帳", sublabel: "社内保管", icon: Building2, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/30", count: employeeCount, each: false },
+    { label: "派遣先管理台帳", sublabel: "クライアント保管", icon: Building2, color: "text-[var(--color-status-ok)]", bg: "bg-[var(--color-status-ok-muted)]", count: employeeCount, each: false },
+    { label: "派遣元管理台帳", sublabel: "社内保管", icon: Building2, color: "text-[var(--color-status-warning)]", bg: "bg-[var(--color-status-warning-muted)]", count: employeeCount, each: false },
   ];
 
   return (
@@ -361,15 +361,15 @@ export function FactoryGenerator() {
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-            className="rounded-xl border border-emerald-200/60 bg-emerald-50/50 p-4 dark:border-emerald-800/40 dark:bg-emerald-950/30"
+            className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_8%,transparent)] p-4"
           >
             <div className="mb-4 flex items-center gap-2.5">
-              <div className="rounded-lg bg-emerald-100 p-1.5 dark:bg-emerald-900/50">
-                <Check className="h-5 w-5 text-emerald-600" />
+              <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)] p-1.5">
+                <Check className="h-5 w-5 text-[var(--color-status-ok)]" />
               </div>
               <div>
-                <h3 className="font-semibold text-emerald-800 dark:text-emerald-300">生成完了</h3>
-                <p className="text-xs text-emerald-700/70 dark:text-emerald-400/60">
+                <h3 className="font-semibold text-[var(--color-status-ok)]">生成完了</h3>
+                <p className="text-xs text-[color-mix(in_srgb,var(--color-status-ok)_70%,transparent)]">
                   {result.contractCount}契約 / {result.employeeCount}名 / {result.fileCount}ファイル
                 </p>
               </div>
@@ -383,8 +383,8 @@ export function FactoryGenerator() {
                 { label: "ファイル", value: result.fileCount, icon: FileText },
               ].map(({ label, value, icon: Icon }) => (
                 <div key={label} className="rounded-lg bg-white p-3 dark:bg-card/80">
-                  <Icon className="mx-auto mb-1 h-4 w-4 text-emerald-600" />
-                  <p className="text-lg font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{value}</p>
+                  <Icon className="mx-auto mb-1 h-4 w-4 text-[var(--color-status-ok)]" />
+                  <p className="text-lg font-bold tabular-nums text-[var(--color-status-ok)]">{value}</p>
                   <p className="text-[10px] text-muted-foreground/60">{label}</p>
                 </div>
               ))}
@@ -394,7 +394,7 @@ export function FactoryGenerator() {
             <a
               href={result.zipPath}
               download={result.zipFilename}
-              className="btn-press flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-emerald-700 hover:shadow-md"
+              className="btn-press flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-status-ok)] py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-[color-mix(in_srgb,var(--color-status-ok)_85%,black)] hover:shadow-md"
             >
               <Download className="h-4 w-4" />
               ZIPをダウンロード — {result.zipFilename}
@@ -407,12 +407,12 @@ export function FactoryGenerator() {
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             role="alert"
-            className="flex items-start gap-3 rounded-xl border border-red-200/60 bg-red-50/50 p-4 dark:border-red-800/40 dark:bg-red-950/30"
+            className="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_8%,transparent)] p-4"
           >
-            <div className="rounded-lg bg-red-100 p-1.5 dark:bg-red-900/50">
-              <AlertCircle className="h-5 w-5 text-red-600" />
+            <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)] p-1.5">
+              <AlertCircle className="h-5 w-5 text-[var(--color-status-error)]" />
             </div>
-            <p className="text-sm text-red-700 dark:text-red-400">
+            <p className="text-sm text-[var(--color-status-error)]">
               {generateMutation.error.message}
             </p>
           </motion.div>

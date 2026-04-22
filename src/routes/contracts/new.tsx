@@ -175,23 +175,50 @@ function NewContractWizard() {
       </div>
 
       {/* Step indicator */}
-      <div className="flex gap-4">
-        {[1, 2].map((step) => (
-          <div
-            key={step}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold",
-              state.step === step
-                ? "bg-primary text-primary-foreground"
-                : state.step > step
-                ? "bg-green-500/20 text-green-600"
-                : "bg-muted text-muted-foreground"
-            )}
-          >
-            {state.step > step ? <Check className="h-4 w-4" /> : step}
-            {step === 1 ? "派遣先・期間" : "社員選択"}
-          </div>
-        ))}
+      <div className="flex gap-3">
+        {[
+          { id: 1, label: "派遣先・期間" },
+          { id: 2, label: "社員選択" },
+        ].map((s, i, arr) => {
+          const isCompleted = state.step > s.id;
+          const isCurrent = state.step === s.id;
+          return (
+            <div key={s.id} className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className={cn(
+                    "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all",
+                    isCompleted
+                      ? "bg-gradient-to-br from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)] text-foreground"
+                      : isCurrent
+                      ? "bg-primary text-primary-foreground"
+                      : "border-2 border-border text-muted-foreground"
+                  )}
+                >
+                  {isCompleted ? <Check className="h-3.5 w-3.5" /> : s.id}
+                </div>
+                <span
+                  className={cn(
+                    "text-sm font-semibold",
+                    isCurrent ? "text-foreground" : isCompleted ? "text-primary/70" : "text-muted-foreground"
+                  )}
+                >
+                  {s.label}
+                </span>
+              </div>
+              {i < arr.length - 1 && (
+                <div
+                  className={cn(
+                    "h-0.5 w-8 transition-all duration-500",
+                    isCompleted
+                      ? "bg-gradient-to-r from-[var(--gradient-accent-from)] to-[var(--gradient-accent-to)]"
+                      : "bg-border"
+                  )}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Step 1 */}
@@ -232,7 +259,7 @@ function NewContractWizard() {
                 {state.factoryId && (
                   <>
                     <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-                    <span className="rounded-md bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-200 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-700">
+                    <span className="rounded-md bg-[var(--color-status-ok-muted)] px-2.5 py-1 text-xs font-medium text-[var(--color-status-ok)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]">
                       {lines.find((l) => l.id === state.factoryId)?.lineName ?? "選択済"}
                     </span>
                   </>
@@ -247,7 +274,7 @@ function NewContractWizard() {
                   <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
                   派遣先企業
                 </div>
-                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="企業一覧">
+                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="企業一覧">
                   {companies?.map((company) => (
                     <button
                       key={company.id}
@@ -273,7 +300,7 @@ function NewContractWizard() {
                   <FactoryIcon className="h-3.5 w-3.5" aria-hidden="true" />
                   工場名
                 </div>
-                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="工場一覧">
+                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="工場一覧">
                   {state.companyId && isCascadeLoading ? (
                     <div className="space-y-2 p-2">
                       {Array.from({ length: 4 }).map((_, i) => (
@@ -311,7 +338,7 @@ function NewContractWizard() {
                   <Layers className="h-3.5 w-3.5" aria-hidden="true" />
                   配属先
                 </div>
-                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="配属先一覧">
+                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="配属先一覧">
                   {departments.length > 0 ? (
                     departments.map((dept) => (
                       <button
@@ -345,7 +372,7 @@ function NewContractWizard() {
                   <Layers className="h-3.5 w-3.5" aria-hidden="true" />
                   ライン
                 </div>
-                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="ライン一覧">
+                <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="ライン一覧">
                   {lines.length > 0 ? (
                     lines.map((line) => (
                       <button
@@ -379,11 +406,11 @@ function NewContractWizard() {
 
             {/* Auto-fill confirmation */}
             {selectedLine && (
-              <div className="rounded-xl border border-green-200/60 bg-green-50/50 p-4 dark:border-green-800/40 dark:bg-green-950/30">
-                <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+              <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[var(--color-status-ok-muted)] p-4">
+                <p className="text-sm font-semibold text-[var(--color-status-ok)]">
                   工場データから自動入力しました
                 </p>
-                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-green-700 dark:text-green-400/80">
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-[var(--color-status-ok)]">
                   <span>時給: ¥{selectedLine.hourlyRate ?? 0}/h</span>
                   <span>残業: ¥{Math.round((selectedLine.hourlyRate ?? 0) * 1.25)}/h</span>
                   <span>指揮命令者: {selectedLine.supervisorName || "未設定"}</span>
@@ -401,20 +428,20 @@ function NewContractWizard() {
               <h2 className="text-lg font-semibold">契約期間</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium">開始日</label>
+                  <label className="mb-1.5 block text-xs font-semibold text-foreground/80">開始日</label>
                   <input
                     type="date"
                     value={state.startDate}
                     onChange={(e) => handleStartDateChange(e.target.value)}
-                    className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+                    className="w-full rounded-md border border-input/80 bg-background px-3 py-2.5 text-sm shadow-xs transition-all focus:border-primary/30 focus:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">期間</label>
+                  <label className="mb-1.5 block text-xs font-semibold text-foreground/80">期間</label>
                   <select
                     value={state.period}
                     onChange={(e) => handlePeriodChange(e.target.value)}
-                    className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+                    className="w-full rounded-md border border-input/80 bg-background px-3 py-2.5 text-sm shadow-xs transition-all focus:border-primary/30 focus:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10"
                   >
                     <option value="1month">1ヶ月</option>
                     <option value="2months">2ヶ月</option>
@@ -426,12 +453,12 @@ function NewContractWizard() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium">終了日</label>
+                <label className="mb-1.5 block text-xs font-semibold text-foreground/80">終了日</label>
                 <input
                   type="date"
                   value={state.endDate}
                   onChange={(e) => wizard.setEndDate(e.target.value, true)}
-                  className="mt-1 w-full rounded border border-border bg-background px-3 py-2"
+                  className="w-full rounded-md border border-input/80 bg-background px-3 py-2.5 text-sm shadow-xs transition-all focus:border-primary/30 focus:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10"
                 />
               </div>
               <div className="flex flex-col gap-2">
@@ -454,9 +481,11 @@ function NewContractWizard() {
                 )}
               </div>
               {effectiveConflictStr && state.endDate > effectiveConflictStr && (
-                <div className="flex items-center gap-2 text-amber-600 text-sm">
-                  <AlertTriangle className="h-4 w-4" />
-                  終了日が抵触日を超えています
+                <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
+                    <p className="text-sm font-semibold text-[var(--color-status-warning)]">終了日が抵触日を超えています</p>
+                  </div>
                 </div>
               )}
             </Card>
@@ -511,9 +540,13 @@ function NewContractWizard() {
           </Card>
 
           {employeesByRate.length > 1 && (
-            <div className="flex items-center gap-2 text-amber-600 text-sm">
-              <AlertTriangle className="h-4 w-4" />
-              複数の単価が選択されています — {employeesByRate.length}件の契約が作成されます
+            <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
+                <p className="text-sm font-semibold text-[var(--color-status-warning)]">
+                  複数の単価が選択されています — {employeesByRate.length}件の契約が作成されます
+                </p>
+              </div>
             </div>
           )}
 

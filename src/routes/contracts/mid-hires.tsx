@@ -41,7 +41,9 @@ import {
   CalendarDays,
   CheckSquare,
   Square,
+  AlertTriangle,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/contracts/mid-hires")({
@@ -218,7 +220,7 @@ function MidHiresBatch() {
         <ResultHeader title="途中入社一括作成完了" created={result.created} skipped={result.skipped} />
 
         {result.contracts?.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border/60 bg-muted/30 px-4 py-3">
               <h3 className="text-sm font-semibold">作成された契約</h3>
             </div>
@@ -232,15 +234,13 @@ function MidHiresBatch() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground mono-tabular">
                       {c.startDate} ~ {c.endDate}
                     </span>
-                    <span className="font-mono text-xs font-bold text-blue-400">
+                    <span className="mono-tabular text-xs font-bold text-[var(--color-status-info)]">
                       ¥{c.hourlyRate?.toLocaleString()}/h
                     </span>
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30">
-                      {c.employeeCount}名
-                    </span>
+                    <Badge variant="info" size="sm">{c.employeeCount}名</Badge>
                   </div>
                 </div>
               ))}
@@ -249,7 +249,7 @@ function MidHiresBatch() {
         )}
 
         {result.contracts?.some((c: MidHiresCreatedContract) => c.employees?.length > 0) && (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border/60 bg-muted/30 px-4 py-3">
               <h3 className="text-sm font-semibold">社員別の個別開始日</h3>
             </div>
@@ -460,15 +460,10 @@ function MidHiresBatch() {
               />
 
               {/* Search button */}
-              <button
+              <Button
+                className="mt-4 w-full"
                 onClick={handleSearch}
                 disabled={!canSearch || midHiresPreview.isPending}
-                className={cn(
-                  "btn-press mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all",
-                  canSearch && !midHiresPreview.isPending
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-xl"
-                    : "cursor-not-allowed bg-muted text-muted-foreground"
-                )}
               >
                 {midHiresPreview.isPending ? (
                   <>
@@ -481,7 +476,7 @@ function MidHiresBatch() {
                     途中入社者を検索
                   </>
                 )}
-              </button>
+              </Button>
             </Section>
           )}
         </div>
@@ -491,7 +486,7 @@ function MidHiresBatch() {
           {preview && preview.lines?.length > 0 ? (
             <div className="sticky top-6 space-y-4">
               {/* Summary */}
-              <div className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
+              <div className="rounded-lg border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
                 <h3 className="mb-3 text-sm font-semibold">検出結果</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <StatCard label="契約数" value={activeContractCount} icon={FileText} />
@@ -502,9 +497,9 @@ function MidHiresBatch() {
 
               {/* Banner: preview desactualizado */}
               {isPreviewStale && (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-200/60 bg-amber-50/50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-400">
-                  <span>⚠</span>
-                  <span>Las fechas de 抵触日 cambiaron — buscá de nuevo para actualizar los empleados elegibles.</span>
+                <div className="flex items-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[var(--color-status-warning-muted)] px-3 py-2 text-xs text-[var(--color-status-warning)]">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  <span>抵触日の日付が変更されました。再度検索して対象社員を更新してください。</span>
                 </div>
               )}
 
@@ -521,19 +516,15 @@ function MidHiresBatch() {
               />
 
               {/* Create button */}
-              <button
+              <Button
+                variant="success"
+                className="w-full"
                 onClick={() => setShowConfirm(true)}
                 disabled={!canCreate}
-                className={cn(
-                  "btn-press flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all",
-                  canCreate
-                    ? "bg-green-600 text-white shadow-lg shadow-green-600/20 hover:bg-green-700 hover:shadow-xl"
-                    : "cursor-not-allowed bg-muted text-muted-foreground"
-                )}
               >
                 <UserPlus className="h-4 w-4" />
-                {activeContractCount}件の契約 {generateDocs ? "+ PDF" : ""} を一括作成
-              </button>
+                <span className="mono-tabular">{activeContractCount}</span>件の契約 {generateDocs ? "+ PDF" : ""} を一括作成
+              </Button>
             </div>
           ) : preview && preview.lines?.length === 0 ? (
             <EmptyState

@@ -303,16 +303,16 @@ function KoritsuImportPage() {
                     dragOver
                       ? "border-primary/30 bg-primary/5 dark:shadow-[0_0_30px_rgba(155,167,255,0.08)]"
                       : file
-                        ? "border-green-300/60 bg-green-50/30 dark:border-green-800/40 dark:bg-green-950/20"
+                        ? "border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[var(--color-status-ok-muted)]"
                         : "border-border hover:border-primary/40 hover:bg-primary/5"
                   )}
                 >
                   {file ? (
                     <>
-                      <div className="rounded-2xl bg-green-100 p-4 dark:bg-green-900/30">
-                        <FileSpreadsheet className="h-9 w-9 text-green-600 dark:text-green-400" />
+                      <div className="rounded-2xl bg-[var(--color-status-ok-muted)] p-4">
+                        <FileSpreadsheet className="h-9 w-9 text-[var(--color-status-ok)]" />
                       </div>
-                      <p className="mt-3 font-semibold text-green-700 dark:text-green-400">
+                      <p className="mt-3 font-semibold text-[var(--color-status-ok)]">
                         {file.name}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -375,12 +375,12 @@ function KoritsuImportPage() {
                   exit={shouldReduceMotion ? undefined : { opacity: 0 }}
                   role="alert"
                   aria-live="polite"
-                  className="mx-auto max-w-2xl flex items-start gap-3 rounded-xl border border-red-200/60 bg-red-50/50 p-4 dark:border-red-800/40 dark:bg-red-950/30"
+                  className="mx-auto max-w-2xl flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)] p-4"
                 >
-                  <div className="rounded-lg bg-red-100 p-1.5 dark:bg-red-900/50">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  <div className="rounded-lg bg-[var(--color-status-error-muted)] p-1.5">
+                    <AlertCircle className="h-4 w-4 text-[var(--color-status-error)]" />
                   </div>
-                  <p className="text-sm text-red-700 dark:text-red-400">
+                  <p className="text-sm text-[var(--color-status-error)]">
                     {error}
                   </p>
                 </motion.div>
@@ -409,12 +409,12 @@ function KoritsuImportPage() {
 
               <div className="flex flex-wrap items-center gap-2">
                 {data.summary.inserts > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-status-ok-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--color-status-ok)]">
                     新規 {data.summary.inserts}件
                   </span>
                 )}
                 {data.summary.updates > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-status-warning-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--color-status-warning)]">
                     更新 {data.summary.updates}件
                   </span>
                 )}
@@ -424,7 +424,7 @@ function KoritsuImportPage() {
                   </span>
                 )}
                 {data.summary.unassignedEmployees > 0 && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--color-status-error-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--color-status-error)]">
                     <Users className="h-3 w-3" />
                     未配属 {data.summary.unassignedEmployees}名
                   </span>
@@ -453,10 +453,10 @@ function KoritsuImportPage() {
                 <CollapsibleSection
                   title="未配属社員"
                   icon={
-                    <Users className="h-4 w-4 text-red-500 dark:text-red-400" />
+                    <Users className="h-4 w-4 text-[var(--color-status-error)]" />
                   }
                   badge={
-                    <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                    <span className="rounded-full bg-[var(--color-status-error-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-status-error)]">
                       {data.unassigned.length}名
                     </span>
                   }
@@ -601,12 +601,12 @@ function KoritsuImportPage() {
                   exit={shouldReduceMotion ? undefined : { opacity: 0 }}
                   role="alert"
                   aria-live="polite"
-                  className="flex items-start gap-3 rounded-xl border border-red-200/60 bg-red-50/50 p-4 dark:border-red-800/40 dark:bg-red-950/30"
+                  className="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[var(--color-status-error-muted)] p-4"
                 >
-                  <div className="rounded-lg bg-red-100 p-1.5 dark:bg-red-900/50">
-                    <AlertCircle className="h-4 w-4 text-red-600" />
+                  <div className="rounded-lg bg-[var(--color-status-error-muted)] p-1.5">
+                    <AlertCircle className="h-4 w-4 text-[var(--color-status-error)]" />
                   </div>
-                  <p className="text-sm text-red-700 dark:text-red-400">
+                  <p className="text-sm text-[var(--color-status-error)]">
                     {error}
                   </p>
                 </motion.div>
@@ -681,16 +681,16 @@ function ResultView({
       className="space-y-4"
     >
       {/* Summary card */}
-      <div className="mx-auto max-w-2xl rounded-xl border border-green-200/60 bg-green-50/50 p-6 dark:border-green-800/40 dark:bg-green-950/30">
+      <div className="mx-auto max-w-2xl rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)] p-6">
         <div className="mb-4 flex items-center gap-3">
-          <div className="rounded-xl bg-green-100 p-2.5 dark:bg-green-900/50">
-            <Check className="h-6 w-6 text-green-600" />
+          <div className="rounded-xl bg-[var(--color-status-ok-muted)] p-2.5">
+            <Check className="h-6 w-6 text-[var(--color-status-ok)]" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-green-800 dark:text-green-300">
+            <h2 className="text-lg font-bold text-[var(--color-status-ok)]">
               保存完了
             </h2>
-            <p className="text-xs text-green-700/60 dark:text-green-400/60">
+            <p className="text-xs text-[var(--color-status-ok)]/60">
               派遣先責任者データが正常に更新されました
             </p>
           </div>
@@ -698,8 +698,8 @@ function ResultView({
 
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: "追加", value: result.inserted, color: "text-green-600" },
-            { label: "更新", value: result.updated, color: "text-blue-600" },
+            { label: "追加", value: result.inserted, color: "text-[var(--color-status-ok)]" },
+            { label: "更新", value: result.updated, color: "text-[var(--color-status-info)]" },
             { label: "変更なし", value: result.unchanged, color: "text-muted-foreground" },
             { label: "合計", value: result.total, color: "text-foreground" },
           ].map((stat) => (
@@ -721,7 +721,7 @@ function ResultView({
           <button
             type="button"
             onClick={onReset}
-            className="btn-press inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-green-700 hover:shadow-md"
+            className="btn-press inline-flex items-center gap-2 rounded-xl bg-[var(--color-status-ok)] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[color-mix(in_srgb,var(--color-status-ok)_85%,black)] hover:shadow-md"
           >
             <RefreshCw className="h-4 w-4" />
             閉じる
@@ -743,7 +743,7 @@ function ResultView({
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             )}
             <span>変更詳細</span>
-            <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+            <span className="ml-auto rounded-full bg-[var(--color-status-warning-muted)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-status-warning)]">
               {changedCount}件
             </span>
           </button>

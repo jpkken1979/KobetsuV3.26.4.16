@@ -33,8 +33,8 @@ export function ContractForm() {
     <div className="space-y-6">
       {/* Draft recovery banner — shown only on step 1 */}
       {isDraft && !draftDismissed && currentStep === 1 && (
-        <div className="mb-4 flex items-center justify-between rounded-xl border border-amber-200/60 bg-amber-50/50 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-950/30">
-          <p className="text-sm text-amber-700 dark:text-amber-400">
+        <div className="mb-4 flex items-center justify-between rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] px-4 py-3">
+          <p className="text-sm text-[var(--color-status-warning)]">
             前回の下書きが残っています
           </p>
           <div className="flex items-center gap-2">
@@ -43,14 +43,14 @@ export function ContractForm() {
                 reset();
                 setDraftDismissed(false);
               }}
-              className="text-xs font-semibold text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 transition-colors"
+              className="text-xs font-semibold text-[var(--color-status-warning)] transition-colors hover:opacity-70"
             >
               下書きを破棄
             </button>
             <button
               onClick={() => setDraftDismissed(true)}
               aria-label="下書きバナーを閉じる"
-              className="text-xs text-amber-500 hover:text-amber-700 dark:text-amber-500 transition-colors"
+              className="text-xs text-[var(--color-status-warning)] transition-colors hover:opacity-70"
             >
               ✕
             </button>

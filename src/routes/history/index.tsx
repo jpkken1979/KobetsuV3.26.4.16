@@ -117,7 +117,7 @@ function HistorySkeleton() {
             <div className="flex-1 space-y-2">
               <div className="flex items-center gap-2">
                 <div className="skeleton h-4 w-32 rounded" />
-                <div className="skeleton h-5 w-14 rounded-full" />
+                <div className="skeleton h-5 w-14 rounded-md" />
               </div>
               <div className="flex gap-4">
                 <div className="skeleton h-3 w-28 rounded" />
@@ -266,13 +266,13 @@ function HistoryPage() {
                 <option value="cancelled">取消</option>
                 <option value="renewed">更新済</option>
               </Select>
-              <span className="rounded-full bg-muted/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              <span className="rounded-md bg-muted/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 {groups.length}グループ / {filtered.length}件
               </span>
             </>
           )}
           {mode === "roudou" && (
-            <span className="rounded-full bg-muted/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            <span className="rounded-md bg-muted/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
               {laborFiltered.length}件
             </span>
           )}
@@ -328,11 +328,11 @@ function HistoryPage() {
                           <span className="font-semibold">
                             {group.companyName} / {group.factoryName}
                           </span>
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                             {group.contracts.length}件
                           </span>
                           {rateCount > 1 && (
-                            <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-500">
+                            <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-500">
                               単価{rateCount}種
                             </span>
                           )}
@@ -505,7 +505,7 @@ function HistoryPage() {
                     <div className="flex items-center gap-2">
                       <span className="truncate text-sm font-semibold text-foreground">{file.filename}</span>
                       <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        "rounded-md px-2 py-0.5 text-[10px] font-semibold",
                         file.type === "shugyojoken"
                           ? "bg-rose-500/15 text-rose-500"
                           : "bg-primary/15 text-primary"

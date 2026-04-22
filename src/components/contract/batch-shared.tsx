@@ -130,8 +130,8 @@ export function ResultHeader({
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="rounded-xl bg-green-100 p-2.5 dark:bg-green-900/50">
-        <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+      <div className="rounded-lg bg-[var(--color-status-ok-muted)] p-2.5">
+        <CheckCircle2 className="h-6 w-6 text-[var(--color-status-ok)]" />
       </div>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
@@ -190,19 +190,19 @@ export function SkippedLinesList({
   if (items.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
-      <h3 className="mb-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+    <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-4">
+      <h3 className="mb-2 text-sm font-semibold text-[var(--color-status-warning)]">
         スキップされたライン
       </h3>
       <div className="space-y-1">
         {items.map((s, i: number) => (
           <div
             key={i}
-            className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400"
+            className="flex items-center gap-2 text-sm text-[var(--color-status-warning)]"
           >
             <XCircle className="h-3.5 w-3.5" />
             <span>{s.factoryName} {s.lineName}</span>
-            <span className="text-amber-500">({s.reason})</span>
+            <span className="opacity-70">({s.reason})</span>
           </div>
         ))}
       </div>
@@ -316,8 +316,8 @@ export function ConfirmationModalShell({
   return (
     <Dialog open={open} onClose={onClose}>
       <div className="mb-4 flex items-center gap-3">
-        <div className="rounded-xl bg-amber-100 p-2 dark:bg-amber-900/50">
-          <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        <div className="rounded-md bg-[var(--color-status-warning-muted)] p-2">
+          <ShieldAlert className="h-5 w-5 text-[var(--color-status-warning)]" />
         </div>
         <div>
           <DialogTitle>{title}</DialogTitle>
@@ -349,7 +349,7 @@ export function ConfirmationModalShell({
         <button
           onClick={onConfirm}
           disabled={isPending}
-          className="flex-1 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-green-600/20 transition-all hover:bg-green-700 disabled:opacity-50"
+          className="flex-1 rounded-md bg-[var(--color-status-ok)] px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] transition-all hover:opacity-90 disabled:opacity-50"
         >
           {isPending ? (
             <span className="flex items-center justify-center gap-2">

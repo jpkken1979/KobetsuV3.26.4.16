@@ -1,18 +1,16 @@
-import { AnimatedPage, GradientText, NumberTicker } from "@/components/ui/animated";
-import { SpotlightPanel } from "./-dashboard-effects";
-import { PageHeader } from "@/components/ui/page-header";
+import { AnimatedPage, NumberTicker } from "@/components/ui/animated";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  Activity,
   AlertTriangle,
   ArrowUpRight,
   Building2,
-  CalendarClock,
   Factory,
   FileText,
-  ShieldCheck,
   Sparkles,
   TrendingUp,
   Users,
@@ -20,182 +18,117 @@ import {
 import type React from "react";
 
 const heroVariants = {
-  hidden: { opacity: 0, y: 18 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.45, ease: "easeOut" as const },
+    transition: { duration: 0.5, ease: [0.5, 0, 0, 1] as [number, number, number, number] },
   },
 };
 
 const statGridVariants = {
   hidden: {},
+  visible: { transition: { staggerChildren: 0.05 } },
+};
+
+const statItemVariants = {
+  hidden: { opacity: 0, y: 12 },
   visible: {
-    transition: { staggerChildren: 0.04 },
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: [0.5, 0, 0, 1] as [number, number, number, number] },
   },
 };
 
-function DashboardSignal({
-  icon: Icon,
-  label,
-  value,
-  tone = "default",
-  isLoading = false,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  tone?: "default" | "success" | "warning";
-  isLoading?: boolean;
-}) {
-  return (
-    <SpotlightPanel
-      tone={tone === "warning" ? "amber" : tone === "success" ? "rose" : "amber"}
-      spotlightSize={180}
-      className={cn(
-        "rounded-2xl px-4 py-3 shadow-[var(--shadow-card)]",
-        tone === "success" && "border-primary/20 bg-primary/5",
-        tone === "warning" && "border-amber-500/20 bg-amber-500/5",
-        tone === "default" && "border-border/60 bg-card/90",
-      )}
-    >
-      <div className="mb-2 flex items-center gap-2">
-        <div
-          className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-xl",
-            tone === "success" && "bg-primary/10 text-primary",
-            tone === "warning" && "bg-amber-500/10 text-amber-500",
-            tone === "default" && "bg-muted/70 text-muted-foreground",
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          {label}
-        </span>
-      </div>
-      {isLoading ? (
-        <div className="skeleton h-6 w-24 rounded-lg" />
-      ) : (
-        <p className="text-sm font-semibold text-foreground">{value}</p>
-      )}
-    </SpotlightPanel>
-  );
-}
-
-/* ── Stat Card ── */
+/* ── StatCard ── */
 function StatCard({
   title,
   value,
   icon: Icon,
-  color,
-  tone = "amber",
-  gradientFrom,
-  gradientTo,
+  accent = "primary",
   isLoading,
   to,
-  delay = 0,
   trend,
 }: {
   title: string;
   value: number | string;
   icon: React.ElementType;
-  color: string;
-  tone?: "amber" | "rose";
-  gradientFrom: string;
-  gradientTo: string;
+  accent?: "primary" | "accent" | "warning" | "neutral";
   isLoading?: boolean;
   to?: string;
-  delay?: number;
   trend?: "up" | "stable";
 }) {
-  const shouldReduceMotion = useReducedMotion();
+  const accentStyles: Record<string, { icon: string; iconBg: string }> = {
+    primary: {
+      icon: "text-primary",
+      iconBg: "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] ring-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]",
+    },
+    accent: {
+      icon: "text-accent",
+      iconBg: "bg-[color-mix(in_srgb,var(--color-accent)_12%,transparent)] ring-[color-mix(in_srgb,var(--color-accent)_25%,transparent)]",
+    },
+    warning: {
+      icon: "text-[var(--color-status-warning)]",
+      iconBg: "bg-[var(--color-status-warning-muted)] ring-[color-mix(in_srgb,var(--color-status-warning)_28%,transparent)]",
+    },
+    neutral: {
+      icon: "text-muted-foreground",
+      iconBg: "bg-muted ring-border/60",
+    },
+  };
+  const s = accentStyles[accent];
+
   const content = (
-    <SpotlightPanel
-      tone={tone}
-      spotlightSize={220}
-      className={cn(
-        "rounded-3xl bg-gradient-to-br p-4",
-        gradientFrom,
-        gradientTo,
-      )}
-    >
-      <div className="relative flex items-start justify-between gap-2">
-        <div className="min-w-0 space-y-2">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+    <Card variant="elevated" spotlight className="h-full p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="text-[0.625rem] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
             {title}
           </p>
           {isLoading ? (
-            <div className="skeleton h-9 w-16 rounded" />
+            <div className="skeleton h-9 w-20 rounded-md" />
           ) : (
             <div className="flex items-baseline gap-2">
-              <p
-                className={cn(
-                  "text-3xl font-extrabold tabular-nums tracking-tight",
-                  color,
-                )}
-              >
-                {typeof value === "number" ? (
-                  <NumberTicker value={value} />
-                ) : (
-                  value
-                )}
+              <p className={cn("text-display text-[2rem] mono-tabular", s.icon)}>
+                {typeof value === "number" ? <NumberTicker value={value} /> : value}
               </p>
               {trend && (
                 <span
                   className={cn(
-                    "flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+                    "inline-flex items-center gap-0.5 rounded-xs px-1.5 py-0.5 text-[0.625rem] font-bold",
                     trend === "up"
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted/50 text-muted-foreground",
+                      ? "bg-[var(--color-status-ok-muted)] text-[var(--color-status-ok)]"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   {trend === "up" ? (
-                    <ArrowUpRight className="h-3 w-3" />
+                    <>
+                      <ArrowUpRight className="h-3 w-3" />
+                      UP
+                    </>
                   ) : (
-                    <span className="text-[9px]">&mdash;</span>
+                    "—"
                   )}
                 </span>
               )}
             </div>
           )}
         </div>
-        <div
-          className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/40 ring-1 ring-border/50",
-          )}
-        >
-          <Icon className={cn("h-5 w-5", color)} />
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-md ring-1", s.iconBg)}>
+          <Icon className={cn("h-5 w-5", s.icon)} />
         </div>
       </div>
-      <div className="relative mt-4 flex items-center justify-between text-[11px] font-medium text-muted-foreground/80">
-        <span className="rounded-full border border-white/10 bg-background/40 px-2.5 py-1 backdrop-blur-sm">
-          Live overview
-        </span>
-        <span className="inline-flex items-center gap-1">
-          Deep focus
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-        </span>
-      </div>
-    </SpotlightPanel>
+    </Card>
   );
 
-  return (
-    <motion.div
-      initial={shouldReduceMotion ? undefined : { opacity: 0, y: 16 }}
-      animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-      transition={shouldReduceMotion ? undefined : { duration: 0.35, delay }}
-      whileHover={shouldReduceMotion ? undefined : { scale: 1.02, y: -2 }}
-      whileTap={shouldReduceMotion ? undefined : { scale: 0.98 }}
-    >
-      {to ? (
-        <Link to={to} className="block cursor-pointer">
-          {content}
-        </Link>
-      ) : (
-        content
-      )}
+  return to ? (
+    <motion.div variants={statItemVariants}>
+      <Link to={to} className="block cursor-pointer">
+        {content}
+      </Link>
     </motion.div>
+  ) : (
+    <motion.div variants={statItemVariants}>{content}</motion.div>
   );
 }
 
@@ -208,6 +141,7 @@ export interface DashboardStatsData {
   expiringInDays?: number;
 }
 
+/* ── Dashboard Hero ── */
 export function DashboardHeader() {
   const shouldReduceMotion = useReducedMotion();
   return (
@@ -217,94 +151,89 @@ export function DashboardHeader() {
       animate={shouldReduceMotion ? undefined : "visible"}
       className="relative"
     >
-      <SpotlightPanel tone="amber" spotlightSize={320} className="p-6 md:p-8">
-        <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-70 dark:via-white/20" />
-        <div className="relative grid gap-6 lg:grid-cols-[1.4fr_0.9fr] lg:items-end">
+      <Card variant="hero" className="relative overflow-hidden p-8 md:p-10">
+        <div className="relative z-10 grid gap-6 lg:grid-cols-[1.4fr_0.9fr] lg:items-center">
           <div className="space-y-5">
-            <PageHeader
-              title="ダッシュボード"
-              subtitle="契約・社員・アラートを横断して、今動くべき項目を一画面で把握できます。"
-              tag="OVERVIEW"
-              className="gap-3"
-            >
-              <span className="rounded-full border border-primary/15 bg-primary/8 px-3 py-1 text-[10px] font-bold tracking-[0.18em] text-primary shadow-xs">
-                v26.3.31
-              </span>
-            </PageHeader>
-
-            <div className="space-y-3">
-              <p className="max-w-3xl text-3xl font-black tracking-tight text-foreground md:text-4xl">
-                <GradientText from="var(--color-primary)" to="var(--color-accent)">
-                  UNS dispatch command center
-                </GradientText>
-              </p>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                ライン単位の運用、契約期限、社員分布、PDF出力までをまとめて監視するための
-                オペレーションビューです。
-              </p>
+            <div className="inline-flex items-center gap-2">
+              <Badge size="sm" variant="default" dot pulse>
+                LIVE OVERVIEW
+              </Badge>
+              <Badge size="sm" variant="secondary">v26.3.31</Badge>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { label: "Contract flow", value: "Wizard / batch / renew" },
-                { label: "Document layer", value: "PDF bundle & ledgers" },
-                { label: "Alert mesh", value: "Expiry / visa / conflict" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-2xl border border-white/10 bg-background/35 px-4 py-3 backdrop-blur-md"
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                    {item.label}
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-foreground/90">{item.value}</p>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <h1 className="text-display text-4xl md:text-6xl tracking-[-0.04em]">
+                <span className="block text-muted-foreground text-sm font-mono uppercase tracking-[0.2em] mb-2">
+                  UNS Dispatch Control
+                </span>
+                <span className="bg-[linear-gradient(135deg,var(--color-primary),var(--color-accent))] bg-clip-text text-transparent">
+                  ダッシュボード
+                </span>
+              </h1>
+              <p className="max-w-xl text-sm leading-6 text-muted-foreground">
+                契約期限・社員配属・アラートを横断して、今動くべき項目を一画面で把握します。
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <Link
-                to="/contracts/new"
-                className="inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-card)] transition-transform hover:-translate-y-0.5"
-              >
-                <Sparkles className="h-4 w-4" />
-                新規契約を作成
+              <Link to="/contracts/new">
+                <Button>
+                  <Sparkles className="h-4 w-4" />
+                  新規契約を作成
+                </Button>
               </Link>
-              <Link
-                to="/documents"
-                className="inline-flex items-center gap-2 rounded-2xl border border-border/70 bg-background/70 px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/30 hover:bg-card"
-              >
-                <FileText className="h-4 w-4 text-primary" />
-                書類出力へ移動
+              <Link to="/documents">
+                <Button variant="outline">
+                  <FileText className="h-4 w-4" />
+                  書類出力へ
+                </Button>
               </Link>
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-            <DashboardSignal
-              icon={ShieldCheck}
-              label="System"
-              value="監視・出力・台帳フロー稼働中"
-              tone="success"
-            />
-            <DashboardSignal
-              icon={Activity}
-              label="Focus"
-              value="期限アラートと契約更新を優先"
-            />
-            <DashboardSignal
-              icon={CalendarClock}
-              label="Today"
-              value="ライン単位の運用状態を即確認"
-              tone="warning"
-            />
+          {/* Right column: Today's focus */}
+          <div className="relative hidden lg:block">
+            <div className="space-y-3">
+              <FocusLine label="System" value="監視・出力・台帳フロー稼働中" tone="ok" />
+              <FocusLine label="Focus" value="期限アラートと契約更新を優先" tone="info" />
+              <FocusLine label="Today" value="ライン単位の運用状態を即確認" tone="warning" />
+            </div>
           </div>
         </div>
-      </SpotlightPanel>
+      </Card>
     </motion.section>
   );
 }
 
+function FocusLine({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "ok" | "info" | "warning";
+}) {
+  const dotClass =
+    tone === "ok"
+      ? "text-[var(--color-status-ok)]"
+      : tone === "info"
+        ? "text-[var(--color-status-info)]"
+        : "text-[var(--color-status-warning)]";
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-border/50 bg-card/60 px-4 py-3 backdrop-blur-sm">
+      <span className={cn("live-dot", dotClass)} />
+      <div className="min-w-0 flex-1">
+        <p className="text-[0.625rem] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-0.5 text-xs font-medium text-foreground/90">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Dashboard Stats Grid ── */
 export function DashboardStats({
   stats,
   isLoading,
@@ -320,97 +249,61 @@ export function DashboardStats({
       variants={statGridVariants}
       initial={shouldReduceMotion ? undefined : "hidden"}
       animate={shouldReduceMotion ? undefined : "visible"}
-      className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12"
+      className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6"
     >
-      <div className="md:col-span-1 xl:col-span-4">
-        <StatCard
-          title="派遣社員"
-          value={stats?.activeEmployees ?? 0}
-          icon={Users}
-          color="text-primary dark:text-primary"
-          tone="amber"
-          gradientFrom="from-primary/8"
-          gradientTo="to-background"
-          isLoading={isLoading}
-          to="/employees"
-          delay={0.05}
-          trend="up"
-        />
-      </div>
-      <div className="md:col-span-1 xl:col-span-4">
-        <StatCard
-          title="有効契約"
-          value={stats?.activeContracts ?? 0}
-          icon={TrendingUp}
-          color="text-accent dark:text-accent"
-          tone="rose"
-          gradientFrom="from-accent/8"
-          gradientTo="to-background"
-          isLoading={isLoading}
-          to="/contracts"
-          delay={0.08}
-          trend="up"
-        />
-      </div>
-      <div className="md:col-span-2 xl:col-span-4">
-        <StatCard
-          title={`期限 ${conflictWarningDays}日以内`}
-          value={stats?.expiringInDays ?? 0}
-          icon={AlertTriangle}
-          color="text-red-500 dark:text-red-400"
-          tone="rose"
-          gradientFrom="from-red-500/10"
-          gradientTo="to-background"
-          isLoading={isLoading}
-          to="/contracts"
-          delay={0.11}
-        />
-      </div>
-      <div className="md:col-span-1 xl:col-span-3">
-        <StatCard
-          title="派遣先企業"
-          value={stats?.companies ?? 0}
-          icon={Building2}
-          color="text-foreground dark:text-foreground"
-          tone="amber"
-          gradientFrom="from-foreground/8"
-          gradientTo="to-background"
-          isLoading={isLoading}
-          to="/companies"
-          delay={0.14}
-          trend="stable"
-        />
-      </div>
-      <div className="md:col-span-1 xl:col-span-3">
-        <StatCard
-          title="工場・ライン"
-          value={stats?.factories ?? 0}
-          icon={Factory}
-          color="text-foreground dark:text-foreground"
-          tone="amber"
-          gradientFrom="from-foreground/8"
-          gradientTo="to-background"
-          isLoading={isLoading}
-          to="/companies"
-          delay={0.17}
-          trend="stable"
-        />
-      </div>
-      <div className="md:col-span-2 xl:col-span-6">
-        <StatCard
-          title="契約総数"
-          value={stats?.totalContracts ?? 0}
-          icon={FileText}
-          color="text-primary dark:text-primary"
-          tone="amber"
-          gradientFrom="from-primary/8"
-          gradientTo="to-background"
-          isLoading={isLoading}
-          to="/contracts"
-          delay={0.2}
-          trend="up"
-        />
-      </div>
+      <StatCard
+        title="派遣社員"
+        value={stats?.activeEmployees ?? 0}
+        icon={Users}
+        accent="primary"
+        isLoading={isLoading}
+        to="/employees"
+        trend="up"
+      />
+      <StatCard
+        title="有効契約"
+        value={stats?.activeContracts ?? 0}
+        icon={TrendingUp}
+        accent="accent"
+        isLoading={isLoading}
+        to="/contracts"
+        trend="up"
+      />
+      <StatCard
+        title={`期限 ${conflictWarningDays}日以内`}
+        value={stats?.expiringInDays ?? 0}
+        icon={AlertTriangle}
+        accent="warning"
+        isLoading={isLoading}
+        to="/contracts"
+      />
+      <StatCard
+        title="派遣先企業"
+        value={stats?.companies ?? 0}
+        icon={Building2}
+        accent="neutral"
+        isLoading={isLoading}
+        to="/companies"
+        trend="stable"
+      />
+      <StatCard
+        title="工場・ライン"
+        value={stats?.factories ?? 0}
+        icon={Factory}
+        accent="neutral"
+        isLoading={isLoading}
+        to="/companies"
+        trend="stable"
+      />
+      <StatCard
+        title="契約総数"
+        value={stats?.totalContracts ?? 0}
+        icon={FileText}
+        accent="primary"
+        isLoading={isLoading}
+        to="/contracts"
+        trend="up"
+      />
     </motion.div>
   );
 }

@@ -148,7 +148,7 @@ export function FactoryPanel({
               className={cn(
                 "btn-press inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[10px] font-black tracking-widest uppercase transition-all",
                 editingCompany
-                  ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                  ? "bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning)] border border-[var(--color-status-warning)]/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
                   : "bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground border border-border/60",
               )}
             >
@@ -164,7 +164,7 @@ export function FactoryPanel({
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); onClose(); }}
-              className="ml-2 rounded-xl p-2.5 text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-400 border border-transparent hover:border-red-500/20"
+              className="ml-2 rounded-xl p-2.5 text-muted-foreground transition-all hover:bg-[var(--color-status-error-muted)] hover:text-[var(--color-status-error)] border border-transparent hover:border-[var(--color-status-error)]/20"
               aria-label="閉じる"
             >
               <X className="h-5 w-5" />

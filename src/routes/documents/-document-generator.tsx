@@ -50,32 +50,32 @@ const DOC_TYPES: Record<string, {
     desc: "人材派遣個別契約書（1通/契約）",
     icon: FileText,
     perEmployee: false,
-    color: "text-blue-600 dark:text-blue-400",
-    bgColor: "bg-blue-50 dark:bg-blue-900/30",
+    color: "text-[var(--color-status-info)]",
+    bgColor: "bg-[var(--color-status-info-muted)]",
   },
   tsuchisho: {
     label: "通知書",
     desc: "派遣先通知書 — 全従業員リスト",
     icon: ClipboardList,
     perEmployee: false,
-    color: "text-blue-600 dark:text-blue-400",
-    bgColor: "bg-blue-50 dark:bg-blue-900/30",
+    color: "text-[var(--color-status-info)]",
+    bgColor: "bg-[var(--color-status-info-muted)]",
   },
   hakensakiDaicho: {
     label: "派遣先管理台帳",
     desc: "派遣先が保管する台帳（1通/従業員）",
     icon: Building2,
     perEmployee: true,
-    color: "text-emerald-600 dark:text-emerald-400",
-    bgColor: "bg-emerald-50 dark:bg-emerald-900/30",
+    color: "text-[var(--color-status-ok)]",
+    bgColor: "bg-[var(--color-status-ok-muted)]",
   },
   hakenmotoDaicho: {
     label: "派遣元管理台帳",
     desc: "派遣元が保管する台帳（1通/従業員）",
     icon: Building2,
     perEmployee: true,
-    color: "text-amber-600 dark:text-amber-400",
-    bgColor: "bg-amber-50 dark:bg-amber-900/30",
+    color: "text-[var(--color-status-warning)]",
+    bgColor: "bg-[var(--color-status-warning-muted)]",
   },
   shugyoJoken: {
     label: "就業条件明示書",
@@ -199,7 +199,7 @@ export function DocumentGenerator({
                   "rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset tabular-nums",
                   docType.perEmployee
                     ? "bg-primary/10 text-primary ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30"
-                    : "bg-emerald-50 text-emerald-700 ring-emerald-200/60 dark:bg-emerald-900/30 dark:text-emerald-300 dark:ring-emerald-700/40"
+                    : "bg-[var(--color-status-ok-muted)] text-[var(--color-status-ok)] ring-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)]"
                 )}>
                   {count}通
                 </span>
@@ -215,17 +215,17 @@ export function DocumentGenerator({
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-            className="rounded-xl border border-green-200/60 bg-green-50/50 p-4 dark:border-green-800/40 dark:bg-green-950/30"
+            className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_8%,transparent)] p-4"
           >
             <div className="mb-4 flex items-center gap-2.5">
-              <div className="rounded-lg bg-green-100 p-1.5 dark:bg-green-900/50">
-                <Check className="h-5 w-5 text-green-600" />
+              <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)] p-1.5">
+                <Check className="h-5 w-5 text-[var(--color-status-ok)]" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-800 dark:text-green-300">
+                <h3 className="font-semibold text-[var(--color-status-ok)]">
                   生成完了
                 </h3>
-                <p className="text-xs text-green-700/70 dark:text-green-400/60">
+                <p className="text-xs text-[color-mix(in_srgb,var(--color-status-ok)_70%,transparent)]">
                   {generateMutation.data.summary.total}ファイル生成済み
                 </p>
               </div>
@@ -241,11 +241,11 @@ export function DocumentGenerator({
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {isError ? (
-                        <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                        <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-status-error)]" />
                       ) : (
-                        <FileText className="h-4 w-4 shrink-0 text-green-600" />
+                        <FileText className="h-4 w-4 shrink-0 text-[var(--color-status-ok)]" />
                       )}
-                      <span className={cn("truncate text-xs", isError ? "text-red-600" : "")}>
+                      <span className={cn("truncate text-xs", isError ? "text-[var(--color-status-error)]" : "")}>
                         {isError ? file.path : file.filename}
                       </span>
                     </div>
@@ -282,12 +282,12 @@ export function DocumentGenerator({
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             role="alert"
             aria-live="polite"
-            className="flex items-start gap-3 rounded-xl border border-red-200/60 bg-red-50/50 p-4 dark:border-red-800/40 dark:bg-red-950/30"
+            className="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_8%,transparent)] p-4"
           >
-            <div className="rounded-lg bg-red-100 p-1.5 dark:bg-red-900/50">
-              <AlertCircle className="h-5 w-5 text-red-600" />
+            <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)] p-1.5">
+              <AlertCircle className="h-5 w-5 text-[var(--color-status-error)]" />
             </div>
-            <p className="text-sm text-red-700 dark:text-red-400">
+            <p className="text-sm text-[var(--color-status-error)]">
               書類の生成に失敗しました。契約データを確認してください。
             </p>
           </motion.div>

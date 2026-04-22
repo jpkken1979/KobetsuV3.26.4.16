@@ -143,7 +143,7 @@ export function MidHiresPreview({
                         className="rounded-lg border border-border/40 bg-muted/20 p-2"
                       >
                         <div className="mb-1.5 flex items-center justify-between">
-                          <span className="font-mono text-xs font-bold text-blue-400">
+                          <span className="mono-tabular text-xs font-bold text-[var(--color-status-info)]">
                             ¥{rg.rate.toLocaleString()}/h
                           </span>
                           <Badge variant="info" className="text-[10px]">
@@ -162,7 +162,7 @@ export function MidHiresPreview({
                                 <span className="flex-1 truncate text-muted-foreground">
                                   {emp.fullName ?? `ID:${emp.id}`}
                                 </span>
-                                <span className="tabular-nums text-[10px] text-cyan-400">
+                                <span className="mono-tabular text-[10px] text-[var(--color-status-info)]">
                                   入社: {emp.effectiveHireDate}
                                 </span>
                                 <span className="tabular-nums text-[10px] text-muted-foreground/60">
@@ -170,7 +170,7 @@ export function MidHiresPreview({
                                 </span>
                                 {visaExpired && (
                                   <span title="ビザ期限切れ">
-                                    <AlertTriangle className="h-3 w-3 text-red-500" />
+                                    <AlertTriangle className="h-3 w-3 text-[var(--color-status-error)]" />
                                   </span>
                                 )}
                               </li>
@@ -189,16 +189,16 @@ export function MidHiresPreview({
 
       {/* Skipped lines */}
       {skipped.length > 0 && (
-        <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-3 dark:border-amber-800/40 dark:bg-amber-950/30">
-          <p className="mb-1 text-xs font-semibold text-amber-800 dark:text-amber-300">
+        <div className="rounded-lg border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
+          <p className="mb-1 text-xs font-semibold text-[var(--color-status-warning)]">
             対象外のライン
           </p>
           <div className="space-y-0.5">
             {skipped.map((s, i) => (
-              <p key={i} className="text-xs text-amber-700 dark:text-amber-400">
+              <p key={i} className="text-xs text-[var(--color-status-warning)]">
                 {s.factoryName}
                 {s.lineName ? ` › ${s.lineName}` : ""}
-                <span className="ml-1 text-amber-500">({s.reason})</span>
+                <span className="ml-1 opacity-75">({s.reason})</span>
               </p>
             ))}
           </div>

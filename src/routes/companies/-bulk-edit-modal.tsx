@@ -160,8 +160,8 @@ export function BulkEditModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/40 px-4 py-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-              <Copy className="h-4 w-4 text-amber-500" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-status-warning-muted)]">
+              <Copy className="h-4 w-4 text-[var(--color-status-warning)]" />
             </div>
             <div>
               <h3 className="text-sm font-semibold">一括設定</h3>
@@ -185,7 +185,7 @@ export function BulkEditModal({
             <div className="space-y-4 py-6 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
                 {isComplete ? (
-                  <Check className="h-7 w-7 text-emerald-500" />
+                  <Check className="h-7 w-7 text-[var(--color-status-ok)]" />
                 ) : (
                   <motion.div
                     animate={shouldReduceMotion ? {} : { rotate: 360 }}
@@ -218,7 +218,7 @@ export function BulkEditModal({
                 className={cn(
                   "rounded-lg border p-3 transition-all",
                   shiftEnabled
-                    ? "border-amber-500/30 bg-amber-500/[0.06]"
+                    ? "border-[var(--color-status-warning)]/30 bg-[var(--color-status-warning-muted)]"
                     : "border-border/40 bg-transparent",
                 )}
               >
@@ -229,9 +229,9 @@ export function BulkEditModal({
                     onChange={() => setShiftEnabled((v) => !v)}
                     className="h-3.5 w-3.5 rounded border-border accent-primary"
                   />
-                  <Clock className="h-3.5 w-3.5 text-amber-500" />
+                  <Clock className="h-3.5 w-3.5 text-[var(--color-status-warning)]" />
                   <span className="text-xs font-medium">シフト・休憩（全ラインに適用）</span>
-                  <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                  <span className="rounded-md bg-[var(--color-status-warning-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-status-warning)]">
                     {shifts.length}シフト
                   </span>
                 </label>
@@ -346,7 +346,7 @@ export function BulkEditModal({
               <button
                 onClick={handleBulkSave}
                 disabled={enabledFields.size === 0 && !shiftEnabled}
-                className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-medium text-white transition-all hover:bg-amber-700 disabled:opacity-40"
+                className="btn-press inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-status-warning)] px-3.5 py-1.5 text-xs font-medium text-white transition-all hover:bg-[var(--color-status-warning)]/90 disabled:opacity-40"
               >
                 <Copy className="h-3 w-3" />
                 {lines.length} ラインに適用

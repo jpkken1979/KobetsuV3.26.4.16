@@ -241,7 +241,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
       >
         <div className="flex items-center justify-between border-b border-border/60 px-6 py-4">
           <div className="flex items-center gap-3">
-            <FileSpreadsheet className="h-5 w-5 text-emerald-500" />
+            <FileSpreadsheet className="h-5 w-5 text-[var(--color-status-ok)]" />
             <div>
               <h2 className="text-lg font-bold">Excel取込</h2>
               <p className="text-xs text-muted-foreground">
@@ -292,7 +292,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
               </select>
             )}
             {sheetError && (
-              <p className="text-sm text-red-500 mt-1">{sheetError}</p>
+              <p className="text-sm text-[var(--color-status-error)] mt-1">{sheetError}</p>
             )}
             {parsedRows.length > 0 && (
               <span className="text-xs text-muted-foreground">
@@ -332,22 +332,22 @@ export function ImportModal({ onClose }: ImportModalProps) {
               <div className="flex flex-wrap gap-3 rounded-lg border border-border/40 bg-muted/10 px-4 py-3">
                 <span className="flex items-center gap-1.5 text-xs font-bold">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  新規追加: <span className="text-emerald-500">{diff.inserts.length}</span>
+                  新規追加: <span className="text-[var(--color-status-ok)]">{diff.inserts.length}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-xs font-bold">
-                  <span className="h-2 w-2 rounded-full bg-amber-500" />
-                  更新: <span className="text-amber-500">{diff.updates.length}</span>
+                  <span className="h-2 w-2 rounded-full bg-[var(--color-status-warning)]" />
+                  更新: <span className="text-[var(--color-status-warning)]">{diff.updates.length}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-xs font-bold">
                   <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
                   変更なし: <span className="text-muted-foreground">{diff.unchanged}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-xs font-bold">
-                  <span className="h-2 w-2 rounded-full bg-red-500" />
-                  DBのみ: <span className="text-red-500">{diff.missing.length}</span>
+                  <span className="h-2 w-2 rounded-full bg-[var(--color-status-error)]" />
+                  DBのみ: <span className="text-[var(--color-status-error)]">{diff.missing.length}</span>
                 </span>
                 {diff.companyErrors.length > 0 && (
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-red-400">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-[var(--color-status-error)]">
                     <AlertTriangle className="h-3 w-3" />
                     未登録企業: {diff.companyErrors.join(", ")}
                   </span>
@@ -355,14 +355,14 @@ export function ImportModal({ onClose }: ImportModalProps) {
               </div>
 
               {diff.inserts.length > 0 && (
-                <details open className="rounded-lg border border-emerald-500/30 bg-emerald-500/[0.03]">
-                  <summary className="cursor-pointer px-4 py-2.5 text-xs font-bold text-emerald-400">
+                <details open className="rounded-lg border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)]">
+                  <summary className="cursor-pointer px-4 py-2.5 text-xs font-bold text-[var(--color-status-ok)]">
                     新規追加 ({diff.inserts.length}件) — Excelにあり、DBにない
                   </summary>
-                  <div className="border-t border-emerald-500/20 px-4 py-2">
+                  <div className="border-t border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] px-4 py-2">
                     {diff.inserts.map((insert, index) => (
                       <div key={index} className="flex gap-2 py-1 text-[11px]">
-                        <span className="font-bold text-emerald-400">+</span>
+                        <span className="font-bold text-[var(--color-status-ok)]">+</span>
                         <span className="text-foreground/80">{insert.company}</span>
                         <span className="text-muted-foreground">→</span>
                         <span>{insert.factory}</span>
@@ -379,18 +379,18 @@ export function ImportModal({ onClose }: ImportModalProps) {
               )}
 
               {diff.updates.length > 0 && (
-                <details open className="rounded-lg border border-amber-500/30 bg-amber-500/[0.03]">
-                  <summary className="cursor-pointer px-4 py-2.5 text-xs font-bold text-amber-400">
+                <details open className="rounded-lg border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)]">
+                  <summary className="cursor-pointer px-4 py-2.5 text-xs font-bold text-[var(--color-status-warning)]">
                     更新 ({diff.updates.length}件) — 変更されたフィールドあり
                   </summary>
-                  <div className="space-y-1 border-t border-amber-500/20 px-4 py-2">
+                  <div className="space-y-1 border-t border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] px-4 py-2">
                     {diff.updates.map((update) => (
                       <div key={update.factoryId}>
                         <button
                           onClick={() => toggleExpand(update.factoryId)}
-                          className="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-[11px] hover:bg-amber-500/5"
+                          className="flex w-full items-center gap-2 rounded px-1 py-1 text-left text-[11px] hover:bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)]"
                         >
-                          <span className="font-bold text-amber-400">~</span>
+                          <span className="font-bold text-[var(--color-status-warning)]">~</span>
                           <span className="font-medium text-foreground/80">
                             {update.company}
                           </span>
@@ -399,7 +399,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
                           {update.line && (
                             <span className="text-muted-foreground">| {update.line}</span>
                           )}
-                          <span className="ml-auto text-[10px] text-amber-400/60">
+                          <span className="ml-auto text-[10px] text-[var(--color-status-warning)]/60">
                             {Object.keys(update.changes).length}項目
                           </span>
                           <ChevronRight
@@ -416,11 +416,11 @@ export function ImportModal({ onClose }: ImportModalProps) {
                                 <span className="min-w-[140px] shrink-0 font-medium text-muted-foreground">
                                   {field}
                                 </span>
-                                <span className="text-red-400/70 line-through">
+                                <span className="text-[var(--color-status-error)]/70 line-through">
                                   {String(change.old ?? "空")}
                                 </span>
                                 <span className="text-muted-foreground">→</span>
-                                <span className="text-emerald-400">
+                                <span className="text-[var(--color-status-ok)]">
                                   {String(change.new ?? "空")}
                                 </span>
                               </div>
@@ -434,12 +434,12 @@ export function ImportModal({ onClose }: ImportModalProps) {
               )}
 
               {diff.missing.length > 0 && (
-                <details open className="rounded-lg border border-red-500/30 bg-red-500/[0.03]">
-                  <summary className="cursor-pointer px-4 py-2.5 text-xs font-bold text-red-400">
+                <details open className="rounded-lg border border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)]">
+                  <summary className="cursor-pointer px-4 py-2.5 text-xs font-bold text-[var(--color-status-error)]">
                     DBのみ ({diff.missing.length}件) — Excelにない工場（削除可能）
                   </summary>
-                  <div className="border-t border-red-500/20 px-4 py-2">
-                    <label className="mb-2 flex cursor-pointer items-center gap-2 text-[11px] font-bold text-red-400/80">
+                  <div className="border-t border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] px-4 py-2">
+                    <label className="mb-2 flex cursor-pointer items-center gap-2 text-[11px] font-bold text-[var(--color-status-error)]/80">
                       <input
                         type="checkbox"
                         checked={
@@ -454,7 +454,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
                     {diff.missing.map((missing) => (
                       <label
                         key={missing.factoryId}
-                        className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-[11px] hover:bg-red-500/5"
+                        className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 text-[11px] hover:bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)]"
                       >
                         <input
                           type="checkbox"
@@ -462,7 +462,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
                           onChange={() => toggleDelete(missing.factoryId)}
                           className="accent-red-500"
                         />
-                        <span className="font-bold text-red-400">-</span>
+                        <span className="font-bold text-[var(--color-status-error)]">-</span>
                         <span className="text-foreground/80">{missing.company}</span>
                         <span className="text-muted-foreground">→</span>
                         <span>{missing.factory}</span>
@@ -485,13 +485,13 @@ export function ImportModal({ onClose }: ImportModalProps) {
               className={cn(
                 "rounded-lg border p-4 text-sm",
                 result.success
-                  ? "border-emerald-500/30 bg-emerald-500/[0.05]"
-                  : "border-red-500/30 bg-red-500/[0.05]",
+                  ? "border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)]"
+                  : "border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)]",
               )}
             >
               {result.success ? (
                 <>
-                  <div className="flex items-center gap-2 font-bold text-emerald-400">
+                  <div className="flex items-center gap-2 font-bold text-[var(--color-status-ok)]">
                     <CheckCircle2 className="h-4 w-4" />
                     インポート完了
                   </div>
@@ -500,14 +500,14 @@ export function ImportModal({ onClose }: ImportModalProps) {
                       合計: <b>{result.summary.total}</b>
                     </span>
                     <span>
-                      追加: <b className="text-emerald-400">{result.summary.inserted}</b>
+                      追加: <b className="text-[var(--color-status-ok)]">{result.summary.inserted}</b>
                     </span>
                     <span>
-                      更新: <b className="text-amber-400">{result.summary.updated}</b>
+                      更新: <b className="text-[var(--color-status-warning)]">{result.summary.updated}</b>
                     </span>
                     {result.summary.deleted > 0 && (
                       <span>
-                        削除: <b className="text-red-400">{result.summary.deleted}</b>
+                        削除: <b className="text-[var(--color-status-error)]">{result.summary.deleted}</b>
                       </span>
                     )}
                     <span>
@@ -516,19 +516,19 @@ export function ImportModal({ onClose }: ImportModalProps) {
                   </div>
                 </>
               ) : (
-                <div className="flex items-center gap-2 font-bold text-red-400">
+                <div className="flex items-center gap-2 font-bold text-[var(--color-status-error)]">
                   <AlertTriangle className="h-4 w-4" />
                   エラーが発生しました
                 </div>
               )}
               {result.warnings && result.warnings.length > 0 && (
                 <details className="mt-2" open>
-                  <summary className="cursor-pointer text-xs font-bold text-amber-400 hover:text-amber-300">
+                  <summary className="cursor-pointer text-xs font-bold text-[var(--color-status-warning)] hover:text-[var(--color-status-warning)]/80">
                     ⚠️ {result.warnings.length}件の警告 — データに問題があります
                   </summary>
-                  <div className="mt-2 space-y-1 rounded border border-amber-500/20 bg-amber-500/[0.03] p-3">
+                  <div className="mt-2 space-y-1 rounded border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)] p-3">
                     {result.warnings.map((warning, index) => (
-                      <p key={index} className="text-xs text-amber-300">
+                      <p key={index} className="text-xs text-[var(--color-status-warning)]">
                         {warning}
                       </p>
                     ))}
@@ -538,12 +538,12 @@ export function ImportModal({ onClose }: ImportModalProps) {
 
               {result.errors && result.errors.length > 0 && (
                 <details className="mt-2">
-                  <summary className="cursor-pointer text-xs font-bold text-red-400 hover:text-red-300">
+                  <summary className="cursor-pointer text-xs font-bold text-[var(--color-status-error)] hover:text-[var(--color-status-error)]/80">
                     ❌ {result.errors.length}件のエラー
                   </summary>
-                  <div className="mt-2 space-y-1 rounded border border-red-500/20 bg-red-500/[0.03] p-3">
+                  <div className="mt-2 space-y-1 rounded border border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)] p-3">
                     {result.errors.map((error, index) => (
-                      <p key={index} className="text-xs text-red-300">
+                      <p key={index} className="text-xs text-[var(--color-status-error)]">
                         {error}
                       </p>
                     ))}
@@ -557,7 +557,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
         <div className="flex items-center justify-between border-t border-border/60 px-6 py-4">
           <div className="text-xs text-muted-foreground">
             {diff && !result && deleteSelected.size > 0 && (
-              <span className="font-bold text-red-400">
+              <span className="font-bold text-[var(--color-status-error)]">
                 {deleteSelected.size}件の工場を削除します
               </span>
             )}
@@ -578,7 +578,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
                   "flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-white transition-all",
                   importing
                     ? "cursor-not-allowed bg-muted-foreground/30"
-                    : "bg-emerald-500 shadow-sm hover:bg-emerald-600 active:scale-95",
+                    : "bg-[var(--color-status-ok)] shadow-sm hover:bg-[color-mix(in_srgb,var(--color-status-ok)_85%,black)] active:scale-95",
                 )}
               >
                 {importing ? (

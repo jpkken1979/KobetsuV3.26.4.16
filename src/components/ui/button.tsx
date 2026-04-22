@@ -4,32 +4,69 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "btn-press inline-flex cursor-pointer items-center justify-center gap-2 rounded-full font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50",
+  [
+    "btn-press focus-premium shine-hover relative inline-flex cursor-pointer items-center justify-center gap-2",
+    "rounded-md font-semibold tracking-[-0.005em]",
+    "transition-[transform,background-color,border-color,box-shadow,color] duration-200",
+    "disabled:pointer-events-none disabled:opacity-50",
+  ].join(" "),
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-[0_10px_24px_rgba(51,65,163,0.16)] hover:-translate-y-0.5 hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-[0_10px_24px_rgba(190,18,60,0.16)] hover:bg-destructive/90",
-        outline:
-          "border border-border/70 bg-card/80 text-foreground hover:border-primary/25 hover:bg-muted/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost:
-          "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-        link:
-          "text-primary underline-offset-4 hover:underline",
-        cyan:
-          "bg-primary text-primary-foreground hover:-translate-y-0.5 hover:bg-primary/90",
-        success:
-          "bg-success text-success-foreground hover:bg-success/90",
+        // Primary: gradient rojo → naranja con glow doble ring + shine permanente
+        default: cn(
+          "text-primary-foreground border border-transparent",
+          "bg-[linear-gradient(135deg,var(--color-primary),var(--color-accent))]",
+          "shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-primary)_55%,transparent),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]",
+          "hover:-translate-y-[1px]",
+          "hover:shadow-[0_12px_32px_-6px_color-mix(in_srgb,var(--color-primary)_60%,transparent),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_45%,transparent)]",
+          "active:translate-y-0",
+        ),
+        // Destructive: rojo sólido puro, sin naranja
+        destructive: cn(
+          "bg-destructive text-destructive-foreground border border-transparent",
+          "shadow-[0_8px_20px_-6px_color-mix(in_srgb,var(--color-destructive)_55%,transparent)]",
+          "hover:-translate-y-[1px]",
+          "hover:shadow-[0_12px_28px_-4px_color-mix(in_srgb,var(--color-destructive)_60%,transparent)]",
+        ),
+        // Outline: border gradient sutil, bg card translúcida
+        outline: cn(
+          "bg-card/60 text-foreground border border-border/70 backdrop-blur-sm",
+          "hover:border-[color-mix(in_srgb,var(--color-primary)_45%,var(--color-border))]",
+          "hover:bg-card/80",
+          "hover:shadow-[0_4px_14px_-4px_color-mix(in_srgb,var(--color-primary)_25%,transparent)]",
+        ),
+        // Secondary: neutro con hover primary hint
+        secondary: cn(
+          "bg-secondary text-secondary-foreground border border-border/50",
+          "hover:bg-[color-mix(in_srgb,var(--color-secondary)_85%,var(--color-primary))]",
+          "hover:border-[color-mix(in_srgb,var(--color-primary)_30%,var(--color-border))]",
+        ),
+        // Ghost: invisible hasta hover
+        ghost: cn(
+          "text-muted-foreground border border-transparent",
+          "hover:bg-muted/60 hover:text-foreground",
+        ),
+        // Link: inline text con underline animado
+        link: "text-primary underline-offset-4 hover:underline border-none shadow-none",
+        // Legacy aliases — redirigen al default para mantener compatibilidad
+        cyan: cn(
+          "text-primary-foreground border border-transparent",
+          "bg-[linear-gradient(135deg,var(--color-primary),var(--color-accent))]",
+          "shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-primary)_55%,transparent)]",
+          "hover:-translate-y-[1px]",
+        ),
+        success: cn(
+          "bg-[color-mix(in_srgb,var(--color-status-ok)_95%,black)] text-white border border-transparent",
+          "shadow-[0_8px_20px_-6px_color-mix(in_srgb,var(--color-status-ok)_55%,transparent)]",
+          "hover:-translate-y-[1px]",
+        ),
       },
       size: {
         default: "h-10 px-4 py-2 text-sm",
         sm: "h-8 px-3 py-1.5 text-xs",
-        lg: "h-11 px-6 py-3 text-sm",
-        icon: "h-9 w-9 p-0",
+        lg: "h-11 px-6 py-2.5 text-sm",
+        icon: "h-9 w-9 p-0 rounded-md",
       },
     },
     defaultVariants: {
@@ -55,7 +92,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-        {children}
+        <span className="relative z-10 inline-flex items-center gap-2">{children}</span>
       </button>
     );
   },

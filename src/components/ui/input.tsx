@@ -10,13 +10,23 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, icon: Icon, suffix, error, ...props }, ref) => {
     const baseInputClass = cn(
-      "flex h-10 w-full rounded-full border bg-card/80 text-sm shadow-xs transition-all backdrop-blur-sm",
-      "placeholder:text-muted-foreground/45",
-      "focus:outline-none focus:ring-2 focus:shadow-md focus:shadow-primary/10",
+      "flex h-10 w-full rounded-md border bg-card/70 text-sm backdrop-blur-sm",
+      "transition-[border-color,box-shadow,background-color] duration-200",
+      "placeholder:text-muted-foreground/50",
+      "focus:outline-none",
       "disabled:cursor-not-allowed disabled:opacity-50",
       error
-        ? "border-destructive/70 focus:border-destructive focus:ring-destructive/25"
-        : "border-border/70 focus:border-primary/45 focus:ring-primary/25",
+        ? cn(
+            "border-[color-mix(in_srgb,var(--color-destructive)_60%,var(--color-border))]",
+            "focus:border-destructive",
+            "focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-destructive)_18%,transparent),0_6px_18px_-6px_color-mix(in_srgb,var(--color-destructive)_30%,transparent)]",
+          )
+        : cn(
+            "border-border/70",
+            "focus:border-[color-mix(in_srgb,var(--color-primary)_55%,var(--color-border))]",
+            "focus:bg-card/90",
+            "focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_18%,transparent),0_6px_18px_-6px_color-mix(in_srgb,var(--color-primary)_25%,transparent)]",
+          ),
     );
 
     if (Icon || suffix) {
@@ -44,7 +54,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
           {error && (
-            <p className="mt-1 text-xs text-destructive">{error}</p>
+            <p className="mt-1.5 text-xs text-[var(--color-status-error)]">{error}</p>
           )}
         </div>
       );
@@ -59,7 +69,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p className="mt-1 text-xs text-destructive">{error}</p>
+          <p className="mt-1.5 text-xs text-[var(--color-status-error)]">{error}</p>
         )}
       </div>
     );

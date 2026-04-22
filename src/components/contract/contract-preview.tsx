@@ -62,7 +62,7 @@ export function ContractPreview() {
                 className={cn(
                   "h-full rounded-full transition-all duration-500",
                   filledCount === fields.length
-                    ? "bg-green-500"
+                    ? "bg-[var(--color-status-ok)]"
                     : "bg-primary"
                 )}
                 style={{ width: `${progressPercent}%` }}
@@ -80,17 +80,17 @@ export function ContractPreview() {
           <div
             key={field.label}
             className={cn(
-              "flex items-start gap-2.5 rounded-lg p-2 text-sm transition-colors",
-              field.filled ? "bg-green-50/50 dark:bg-green-950/20" : "bg-muted/30"
+              "flex items-start gap-2.5 rounded-md p-2 text-sm transition-colors",
+              field.filled ? "bg-[var(--color-status-ok-muted)]" : "bg-muted/30"
             )}
           >
             {field.filled ? (
-              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-green-500/10">
-                <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)]">
+                <Check className="h-3 w-3 text-[var(--color-status-ok)]" />
               </div>
             ) : (
-              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-                <X className="h-3 w-3 text-red-400" />
+              <div className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--color-status-error)_12%,transparent)]">
+                <X className="h-3 w-3 text-[var(--color-status-error)]" />
               </div>
             )}
             <div className="min-w-0">

@@ -166,13 +166,13 @@ export function StatsDashboard() {
             icon={Users}
             label="社員 (有効)"
             value={data.employeeStatusDistribution["active"] ?? 0}
-            className="border-emerald-500/20 bg-emerald-500/5"
+            className="border-[color-mix(in_srgb,var(--color-status-ok)_20%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_5%,transparent)]"
           />
           <StatCard
             icon={FileText}
             label="契約書 (有効)"
             value={data.contractStatusDistribution["active"] ?? 0}
-            className="border-blue-500/20 bg-blue-500/5"
+            className="border-[color-mix(in_srgb,var(--color-status-info)_20%,transparent)] bg-[color-mix(in_srgb,var(--color-status-info)_5%,transparent)]"
           />
           <StatCard
             icon={Table2}
@@ -416,9 +416,9 @@ export function StatsDashboard() {
           <div className="space-y-3">
             {/* Expiring contracts warning */}
             {data.expiringContracts.length > 0 && (
-              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+              <div className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-warning)_20%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_5%,transparent)] p-4">
                 <div className="mb-3 flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <AlertTriangle className="h-4 w-4 text-[var(--color-status-warning)]" />
                   <h3 className="text-sm font-semibold">
                     契約書期限切れ预警（90日以内）
                   </h3>
@@ -427,14 +427,14 @@ export function StatsDashboard() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="border-b border-amber-500/20">
-                        <th className="pb-2 pr-3 text-left font-semibold text-amber-600 dark:text-amber-400">
+                      <tr className="border-b border-[color-mix(in_srgb,var(--color-status-warning)_20%,transparent)]">
+                        <th className="pb-2 pr-3 text-left font-semibold text-[var(--color-status-warning)]">
                           契約書番号
                         </th>
-                        <th className="pb-2 pr-3 text-left font-semibold text-amber-600 dark:text-amber-400">
+                        <th className="pb-2 pr-3 text-left font-semibold text-[var(--color-status-warning)]">
                           取引先
                         </th>
-                        <th className="pb-2 pr-3 text-left font-semibold text-amber-600 dark:text-amber-400">
+                        <th className="pb-2 pr-3 text-left font-semibold text-[var(--color-status-warning)]">
                           工場
                         </th>
                         <th className="pb-2 text-right font-semibold text-amber-600 dark:text-amber-400">
@@ -446,7 +446,7 @@ export function StatsDashboard() {
                       {data.expiringContracts.slice(0, 10).map((c) => (
                         <tr
                           key={c.contractId}
-                          className="border-b border-amber-500/10 last:border-0"
+                          className="border-b border-[color-mix(in_srgb,var(--color-status-warning)_10%,transparent)] last:border-0"
                         >
                           <td className="py-1.5 pr-3 font-mono font-medium">
                             {c.contractNumber}
@@ -464,7 +464,7 @@ export function StatsDashboard() {
                   </table>
                 </div>
                 {data.expiringContracts.length > 10 && (
-                  <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+                  <p className="mt-2 text-xs text-[var(--color-status-warning)]">
                     ...他{data.expiringContracts.length - 10}件
                   </p>
                 )}

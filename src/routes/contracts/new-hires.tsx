@@ -187,7 +187,7 @@ function NewHiresBatch() {
 
         {/* Created contracts */}
         {result.contracts?.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border/60 bg-muted/30 px-4 py-3">
               <h3 className="text-sm font-semibold">作成された契約</h3>
             </div>
@@ -206,15 +206,13 @@ function NewHiresBatch() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground mono-tabular">
                       {c.startDate} ~ {c.endDate}
                     </span>
-                    <span className="tabular-nums">
+                    <span className="mono-tabular">
                       ¥{c.hourlyRate?.toLocaleString()}/h
                     </span>
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30">
-                      {c.employeeCount}名
-                    </span>
+                    <Badge variant="info" size="sm">{c.employeeCount}名</Badge>
                   </div>
                 </div>
               ))}
@@ -224,7 +222,7 @@ function NewHiresBatch() {
 
         {/* Employee details per contract */}
         {result.contracts?.some((c: NewHiresCreatedContract) => c.employees?.length > 0) && (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border/60 bg-muted/30 px-4 py-3">
               <h3 className="text-sm font-semibold">
                 社員別の個別開始日
@@ -360,15 +358,10 @@ function NewHiresBatch() {
               </div>
 
               {/* Search button */}
-              <button
+              <Button
+                className="mt-4 w-full"
                 onClick={handleSearch}
                 disabled={!canSearch || newHiresPreview.isPending}
-                className={cn(
-                  "btn-press mt-4 flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all",
-                  canSearch && !newHiresPreview.isPending
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90 hover:shadow-xl"
-                    : "cursor-not-allowed bg-muted text-muted-foreground"
-                )}
               >
                 {newHiresPreview.isPending ? (
                   <>
@@ -381,7 +374,7 @@ function NewHiresBatch() {
                     新規入社者を検索
                   </>
                 )}
-              </button>
+              </Button>
             </Section>
           )}
         </div>
@@ -391,9 +384,9 @@ function NewHiresBatch() {
           {preview && preview.lines?.length > 0 ? (
             <div className="sticky top-6 space-y-4">
               {/* Summary */}
-              <div className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
+              <div className="rounded-lg border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
                 <h3 className="mb-4 text-sm font-semibold">
-                  検出結果: {preview.hireDateFrom} ～ {preview.hireDateTo}
+                  検出結果: <span className="mono-tabular">{preview.hireDateFrom} ～ {preview.hireDateTo}</span>
                 </h3>
                 <div className="grid grid-cols-3 gap-3">
                   <StatCard
@@ -415,7 +408,7 @@ function NewHiresBatch() {
               </div>
 
               {/* Employee detail per line */}
-              <div className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+              <div className="rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
                 <div className="border-b border-border/60 px-4 py-3">
                   <h3 className="text-sm font-semibold">
                     ライン別・社員別詳細
@@ -435,7 +428,7 @@ function NewHiresBatch() {
                           </span>
                           {line.conflictDate && (
                             <span
-                              className="text-amber-500"
+                              className="text-[var(--color-status-warning)]"
                               title="抵触日"
                             >
                               抵触{line.conflictDate}
@@ -445,9 +438,9 @@ function NewHiresBatch() {
                       </div>
 
                       {line.rateGroups.map((rg: NewHiresRateGroup) => (
-                        <div key={rg.rate} className="hover-lift mb-2 rounded-[var(--radius-lg)] border border-border bg-card p-3">
+                        <div key={rg.rate} className="hover-lift mb-2 rounded-md border border-border bg-card p-3">
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="font-mono text-xs font-bold text-blue-400">¥{rg.rate.toLocaleString()}/h</span>
+                            <span className="mono-tabular text-xs font-bold text-[var(--color-status-info)]">¥{rg.rate.toLocaleString()}/h</span>
                             <Badge variant="info">{rg.employees.length}名</Badge>
                           </div>
                           <ul className="space-y-1">
@@ -464,7 +457,7 @@ function NewHiresBatch() {
                                     className={cn(
                                       "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-all",
                                       isExcluded
-                                        ? "bg-red-50/50 opacity-50 dark:bg-red-950/20"
+                                        ? "bg-[var(--color-status-error-muted)] opacity-50"
                                         : "hover:bg-muted/40"
                                     )}
                                   >
@@ -477,7 +470,7 @@ function NewHiresBatch() {
                                     </span>
                                     {visaExpired && (
                                       <span title="ビザ期限切れ">
-                                        <AlertTriangle className="h-3 w-3 text-red-500" />
+                                        <AlertTriangle className="h-3 w-3 text-[var(--color-status-error)]" />
                                       </span>
                                     )}
                                   </button>
@@ -493,20 +486,15 @@ function NewHiresBatch() {
               </div>
 
               {/* Create button */}
-              <button
+              <Button
+                variant="success"
+                className="w-full"
                 onClick={() => setShowConfirm(true)}
                 disabled={!canCreate}
-                className={cn(
-                  "btn-press flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all",
-                  canCreate
-                    ? "bg-green-600 text-white shadow-lg shadow-green-600/20 hover:bg-green-700 hover:shadow-xl"
-                    : "cursor-not-allowed bg-muted text-muted-foreground"
-                )}
               >
                 <UserPlus className="h-4 w-4" />
-                {preview.totalContracts}件の契約 +{" "}
-                {generateDocs ? "PDF" : ""} を一括作成
-              </button>
+                <span className="mono-tabular">{preview.totalContracts}</span>件の契約 {generateDocs ? "+ PDF" : ""} を一括作成
+              </Button>
             </div>
           ) : preview && preview.lines?.length === 0 ? (
             <EmptyState
@@ -524,21 +512,21 @@ function NewHiresBatch() {
 
           {/* Skipped lines in preview */}
           {(preview?.skipped?.length ?? 0) > 0 && (
-            <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
-              <h3 className="mb-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+            <div className="rounded-lg border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[var(--color-status-warning-muted)] p-4">
+              <h3 className="mb-2 text-sm font-semibold text-[var(--color-status-warning)]">
                 対象外のライン
               </h3>
               <div className="space-y-1">
                 {preview!.skipped!.map((s: { factoryName: string; lineName?: string; reason: string }, i: number) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400"
+                    className="flex items-center gap-2 text-xs text-[var(--color-status-warning)]"
                   >
                     <XCircle className="h-3 w-3" />
                     <span>
                       {s.factoryName} {s.lineName}
                     </span>
-                    <span className="text-amber-500">({s.reason})</span>
+                    <span className="opacity-80">({s.reason})</span>
                   </div>
                 ))}
               </div>

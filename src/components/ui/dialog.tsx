@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,20 +24,16 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
     [onClose],
   );
 
-  // Focus trap: cycle Tab within the dialog
   const handleFocusTrap = useCallback((e: KeyboardEvent) => {
     if (e.key !== "Tab" || !dialogRef.current) return;
-
     const focusableSelectors =
       'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const focusableElements = Array.from(
       dialogRef.current.querySelectorAll<HTMLElement>(focusableSelectors),
     );
     if (focusableElements.length === 0) return;
-
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
-
     if (e.shiftKey) {
       if (document.activeElement === firstElement) {
         e.preventDefault();
@@ -51,7 +47,6 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
     }
   }, []);
 
-  // Store previous focus on open, restore on close
   useEffect(() => {
     if (open) {
       previousActiveElementRef.current = document.activeElement as HTMLElement | null;
@@ -61,7 +56,6 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
     }
   }, [open]);
 
-  // Auto-focus first focusable element inside dialog
   useEffect(() => {
     if (open && dialogRef.current) {
       const timer = requestAnimationFrame(() => {
@@ -79,7 +73,6 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
     }
   }, [open]);
 
-  // Scroll lock via CSS class (not body.style.overflow manipulation)
   useEffect(() => {
     if (open) {
       document.addEventListener("keydown", handleEscape);
@@ -96,10 +89,10 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
   const motionProps = shouldReduceMotion
     ? {}
     : {
-        initial: { opacity: 0, scale: 0.96, y: -8 },
+        initial: { opacity: 0, scale: 0.96, y: -6 },
         animate: { opacity: 1, scale: 1, y: 0 },
-        exit: { opacity: 0, scale: 0.96, y: -8 },
-        transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+        exit: { opacity: 0, scale: 0.97, y: -4 },
+        transition: { duration: 0.22, ease: [0.5, 0, 0, 1] as [number, number, number, number] },
       };
 
   const overlayMotion = shouldReduceMotion
@@ -108,7 +101,7 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
         initial: { opacity: 0 },
         animate: { opacity: 1 },
         exit: { opacity: 0 },
-        transition: { duration: 0.15 },
+        transition: { duration: 0.18 },
       };
 
   return (
@@ -118,7 +111,7 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
           <motion.div
             ref={overlayRef}
             {...overlayMotion}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/55 backdrop-blur-md"
             onClick={onClose}
           />
           <motion.div
@@ -131,7 +124,9 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
             className={cn(
               "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
               "mx-4 max-h-[85vh] w-full max-w-lg overflow-y-auto",
-              "rounded-2xl border border-border/60 bg-card p-6 shadow-2xl",
+              "rounded-lg border border-border/60 bg-card p-6",
+              "shadow-[0_32px_64px_-16px_rgba(0,0,0,0.45),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_8%,transparent)]",
+              "backdrop-blur-sm",
               className,
             )}
           >
@@ -145,8 +140,6 @@ export function Dialog({ open, onClose, children, className }: DialogProps) {
   );
 }
 
-// Context to pass titleId from Dialog to DialogTitle
-import { createContext, useContext } from "react";
 const DialogContext = createContext<{ titleId: string }>({ titleId: "" });
 
 export function DialogHeader({
@@ -157,7 +150,7 @@ export function DialogHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-4 flex items-center gap-3", className)}>
+    <div className={cn("mb-5 flex items-center gap-3", className)}>
       {children}
     </div>
   );
@@ -171,7 +164,14 @@ export function DialogTitle({
   className?: string;
 }) {
   const { titleId } = useContext(DialogContext);
-  return <h2 id={titleId} className={cn("text-lg font-bold", className)}>{children}</h2>;
+  return (
+    <h2
+      id={titleId}
+      className={cn("text-display text-lg font-bold tracking-[-0.01em]", className)}
+    >
+      {children}
+    </h2>
+  );
 }
 
 export function DialogClose({ onClose }: { onClose: () => void }) {
@@ -179,7 +179,11 @@ export function DialogClose({ onClose }: { onClose: () => void }) {
     <button
       onClick={onClose}
       aria-label="閉じる"
-      className="ml-auto rounded-lg p-1.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+      className={cn(
+        "ml-auto rounded-md p-1.5 text-muted-foreground/60",
+        "transition-colors hover:bg-muted hover:text-foreground",
+        "focus-premium",
+      )}
     >
       <X className="h-4 w-4" aria-hidden="true" />
     </button>

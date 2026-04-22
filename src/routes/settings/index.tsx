@@ -258,8 +258,8 @@ function SettingsPage() {
       {/* Backup */}
       <section className="rounded-xl border border-border/60 bg-card p-6 shadow-[var(--shadow-card)]">
         <h2 className="mb-3 flex items-center gap-2.5 text-sm font-semibold">
-          <div className="rounded-lg bg-rose-50 p-1.5 dark:bg-rose-900/30">
-            <AlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+          <div className="rounded-lg bg-[var(--color-status-warning-muted)] p-1.5">
+            <AlertTriangle className="h-4 w-4 text-[var(--color-status-warning)]" />
           </div>
           抵触日アラート設定
         </h2>
@@ -296,7 +296,7 @@ function SettingsPage() {
           <span className="text-xs text-muted-foreground">日前</span>
           <button
             onClick={() => applyConflictWarningDays(conflictWarningDays)}
-            className="btn-press rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+            className="btn-press rounded-lg bg-[var(--color-status-error)] px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-[var(--color-status-error)]/90"
           >
             保存
           </button>
@@ -338,14 +338,14 @@ function SettingsPage() {
           </button>
           {health && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+              <div className="h-1.5 w-1.5 rounded-full bg-[var(--color-status-ok)]" />
               DBオンライン
             </div>
           )}
         </div>
 
         <div className="mt-4 border-t border-border/40 pt-4">
-          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-red-700 dark:text-red-400">
+          <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-[var(--color-status-error)]">
             <Trash2 className="h-4 w-4" />
             危険操作
           </h3>
@@ -355,7 +355,7 @@ function SettingsPage() {
           <button
             onClick={() => setClearEmployeesOpen(true)}
             disabled={clearingEmployees}
-            className="btn-press inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-red-500 hover:shadow-md disabled:opacity-50"
+            className="btn-press inline-flex items-center gap-2 rounded-lg bg-[var(--color-status-error)] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[color-mix(in_srgb,var(--color-status-error)_85%,black)] hover:shadow-md disabled:opacity-50"
           >
             {clearingEmployees ? (
               <>
@@ -485,12 +485,12 @@ function SettingsPage() {
         </div>
 
         {/* Preview */}
-        <div className="mb-4 rounded-lg border border-amber-200/60 bg-amber-50/50 px-4 py-3 dark:border-amber-800/40 dark:bg-amber-950/30">
+        <div className="mb-4 rounded-lg border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_8%,transparent)] px-4 py-3">
           <div className="flex items-center gap-2 mb-1.5">
-            <Eye className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">プレビュー</span>
+            <Eye className="h-3.5 w-3.5 text-[var(--color-status-warning)]" />
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--color-status-warning)]">プレビュー</span>
           </div>
-          <p className="text-xs text-amber-800 dark:text-amber-200 font-mono leading-relaxed break-all">
+          <p className="text-xs text-[var(--color-status-warning)] font-mono leading-relaxed break-all">
             {calendarPreview}
           </p>
         </div>
@@ -500,7 +500,7 @@ function SettingsPage() {
           <button
             onClick={handleBulkCalendar}
             disabled={calendarUpdating}
-            className="btn-press inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-orange-500 hover:shadow-md disabled:opacity-50"
+            className="btn-press inline-flex items-center gap-2 rounded-lg bg-[var(--color-status-warning)] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[var(--color-status-warning)]/80 hover:shadow-md disabled:opacity-50"
           >
             {calendarUpdating ? (
               <>
@@ -570,8 +570,8 @@ function SettingsPage() {
       {/* System info */}
       <section className="rounded-xl border border-border/60 bg-card p-6 shadow-[var(--shadow-card)]">
         <h2 className="mb-4 flex items-center gap-2.5 text-sm font-semibold">
-          <div className="rounded-lg bg-emerald-50 p-1.5 dark:bg-emerald-900/30">
-            <Info className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="rounded-lg bg-[var(--color-status-ok-muted)] p-1.5">
+            <Info className="h-4 w-4 text-[var(--color-status-ok)]" />
           </div>
           システム情報
         </h2>
@@ -601,11 +601,11 @@ function SettingsPage() {
 
         {/* Health status */}
         {health && (
-          <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200/60 bg-green-50/50 px-3.5 py-3 dark:border-green-800/40 dark:bg-green-950/30">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
-            <p className="text-xs text-green-700 dark:text-green-400">
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_8%,transparent)] px-3.5 py-3">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-status-ok)]" />
+            <p className="text-xs text-[var(--color-status-ok)]">
               システム正常稼働中{" "}
-              <span className="font-mono text-[10px] text-green-600/70 dark:text-green-400/60">
+              <span className="font-mono text-[10px] text-[color-mix(in_srgb,var(--color-status-ok)_60%,transparent)]">
                 — {health.status}
               </span>
             </p>
@@ -617,7 +617,7 @@ function SettingsPage() {
         initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
         transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, delay: 0.2 }}
-        className="rounded-2xl border border-border bg-card p-6 space-y-4"
+        className="rounded-lg border border-border bg-card p-6 space-y-4"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10">
@@ -681,7 +681,7 @@ function SettingsPage() {
         transition={shouldReduceMotion ? undefined : { duration: 0.3, delay: 0.35 }}
         className="space-y-4"
       >
-        <div className="border border-destructive/30 rounded-2xl p-6 space-y-4">
+        <div className="border border-[var(--color-status-error)] rounded-lg p-6 space-y-4">
           {/* Header */}
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />

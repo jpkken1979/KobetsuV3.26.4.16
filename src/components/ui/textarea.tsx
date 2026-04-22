@@ -12,20 +12,31 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           className={cn(
-            "flex min-h-[96px] w-full rounded-[1rem] border border-input/80 bg-card/80 px-3 py-2",
-            "text-sm shadow-xs transition-all duration-200 backdrop-blur-sm",
+            "flex min-h-[96px] w-full rounded-md border bg-card/70 px-3 py-2.5 text-sm backdrop-blur-sm",
+            "transition-[border-color,box-shadow,background-color] duration-200",
             "placeholder:text-muted-foreground/55",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25 focus-visible:border-primary/45",
+            "focus-visible:outline-none",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "resize-y",
-            error && "border-destructive/50 focus-visible:ring-destructive/40",
+            error
+              ? cn(
+                  "border-[color-mix(in_srgb,var(--color-destructive)_60%,var(--color-border))]",
+                  "focus-visible:border-destructive",
+                  "focus-visible:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-destructive)_18%,transparent)]",
+                )
+              : cn(
+                  "border-border/70",
+                  "focus-visible:border-[color-mix(in_srgb,var(--color-primary)_55%,var(--color-border))]",
+                  "focus-visible:bg-card/90",
+                  "focus-visible:shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-primary)_18%,transparent)]",
+                ),
             className
           )}
           aria-invalid={error ? true : undefined}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-xs text-destructive">{error}</p>
+          <p className="mt-1.5 text-xs text-[var(--color-status-error)]">{error}</p>
         )}
       </div>
     );

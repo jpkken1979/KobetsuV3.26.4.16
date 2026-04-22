@@ -220,7 +220,7 @@ function BatchCreate() {
 
         {/* Created contracts */}
         {result.contracts?.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+          <div className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
             <div className="border-b border-border/60 bg-muted/30 px-4 py-3">
               <h3 className="text-sm font-semibold">作成された契約</h3>
             </div>
@@ -234,11 +234,9 @@ function BatchCreate() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <span className="text-xs text-muted-foreground">{c.endDate}</span>
-                    <span className="tabular-nums">¥{c.hourlyRate?.toLocaleString()}/h</span>
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30">
-                      {c.employees}名
-                    </span>
+                    <span className="text-xs text-muted-foreground mono-tabular">{c.endDate}</span>
+                    <span className="mono-tabular">¥{c.hourlyRate?.toLocaleString()}/h</span>
+                    <Badge variant="info" size="sm">{c.employees}名</Badge>
                   </div>
                 </div>
               ))}
@@ -381,16 +379,14 @@ function BatchCreate() {
                                 {line.hourlyRate && (
                                   <span className="tabular-nums">¥{line.hourlyRate.toLocaleString()}</span>
                                 )}
-                                <span className={cn(
-                                  "rounded-full px-1.5 py-0.5 ring-1 ring-inset",
-                                  empCount > 0
-                                    ? "bg-primary/10 text-primary ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30"
-                                    : "bg-muted text-muted-foreground ring-border"
-                                )}>
+                                <Badge
+                                  variant={empCount > 0 ? "info" : "secondary"}
+                                  size="sm"
+                                >
                                   {empCount}名
-                                </span>
+                                </Badge>
                                 {line.conflictDate && (
-                                  <span className="text-[10px] text-amber-500" title="抵触日">
+                                  <span className="text-[10px] text-[var(--color-status-warning)]" title="抵触日">
                                     ~{line.conflictDate}
                                   </span>
                                 )}
@@ -494,7 +490,7 @@ function BatchCreate() {
           {preview && preview.lines.length > 0 ? (
             <div className="sticky top-6 space-y-4">
               {/* Summary */}
-              <div className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
+              <div className="rounded-lg border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
                 <h3 className="mb-4 text-sm font-semibold">作成プレビュー</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <StatCard label="契約数" value={preview.totalContracts} icon={FileText} />
@@ -504,7 +500,7 @@ function BatchCreate() {
               </div>
 
               {/* Line detail */}
-              <div className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
+              <div className="rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
                 <div className="border-b border-border/60 px-4 py-3">
                   <h3 className="text-sm font-semibold">ライン別詳細</h3>
                 </div>
@@ -538,7 +534,7 @@ function BatchCreate() {
                           {line.rates.map((r: { rate: number; count: number }) => (
                             <div key={r.rate} className="hover-lift rounded-[var(--radius-lg)] border border-border bg-card p-3">
                               <div className="flex items-center justify-between">
-                                <span className="font-mono text-xs font-bold text-blue-400">¥{r.rate.toLocaleString()}/h</span>
+                                <span className="mono-tabular text-xs font-bold text-[var(--color-status-info)]">¥{r.rate.toLocaleString()}/h</span>
                                 <Badge variant="info">{r.count}名</Badge>
                               </div>
                             </div>
@@ -546,7 +542,7 @@ function BatchCreate() {
                         </div>
                       )}
                       {line.capped && (
-                        <p className="mt-0.5 text-[10px] text-amber-500">
+                        <p className="mt-0.5 text-[10px] text-[var(--color-status-warning)]">
                           抵触日 {line.conflictDate} で制限
                         </p>
                       )}
@@ -557,24 +553,20 @@ function BatchCreate() {
 
               {/* Conflict date warning */}
               {preview.lines.some((l) => l.capped) && (
-                <div className="flex items-start gap-2.5 rounded-xl border border-amber-200/60 bg-amber-50/50 p-3 dark:border-amber-800/40 dark:bg-amber-950/30">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                <div className="flex items-start gap-2.5 rounded-xl border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_8%,transparent)] p-3">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
+                  <p className="text-xs text-[var(--color-status-warning)]">
                     一部のラインは抵触日により終了日が制限されます
                   </p>
                 </div>
               )}
 
               {/* Submit button — opens confirmation modal */}
-              <button
+              <Button
+                variant="success"
+                className="w-full"
                 onClick={handlePreviewAndConfirm}
                 disabled={!canSubmit}
-                className={cn(
-                  "btn-press flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all",
-                  canSubmit
-                    ? "bg-green-600 text-white shadow-lg shadow-green-600/20 hover:bg-green-700 hover:shadow-xl"
-                    : "cursor-not-allowed bg-muted text-muted-foreground"
-                )}
               >
                 {batchPreview.isPending ? (
                   <>
@@ -584,18 +576,17 @@ function BatchCreate() {
                 ) : (
                   <>
                     <Zap className="h-4 w-4" />
-                    {preview.totalContracts}件の契約を一括作成
+                    <span className="mono-tabular">{preview.totalContracts}</span>件の契約を一括作成
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           ) : companyId ? (
-            <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-8 text-center">
-              <Zap className="mx-auto h-8 w-8 text-muted-foreground/20" />
-              <p className="mt-3 text-sm text-muted-foreground">
-                工場と開始日を選択するとプレビューが表示されます
-              </p>
-            </div>
+            <EmptyState
+              icon={Zap}
+              title="プレビュー待機中"
+              description="工場と開始日を選択するとプレビューが表示されます"
+            />
           ) : null}
         </div>
       </div>
@@ -603,7 +594,7 @@ function BatchCreate() {
       </TabsContent>
 
       <TabsContent value="mid" className="space-y-4">
-        <Card className="p-6">
+        <Card variant="default" className="p-6">
           <p className="text-muted-foreground mb-4">
             既に存在する契約期間中に途中入社した社員のために契約を作成します。
           </p>
@@ -614,7 +605,7 @@ function BatchCreate() {
       </TabsContent>
 
       <TabsContent value="new" className="space-y-4">
-        <Card className="p-6">
+        <Card variant="default" className="p-6">
           <p className="text-muted-foreground mb-4">
             新たに雇用した社員の契約を作成します。
           </p>
@@ -659,10 +650,10 @@ function BatchConfirmationModal({
     >
         {/* #5: Duplicate warnings */}
         {(preview.totalDuplicates ?? 0) > 0 && (
-          <div className="mb-4 rounded-xl border border-red-200/60 bg-red-50/50 p-3 dark:border-red-800/40 dark:bg-red-950/30">
+          <div className="mb-4 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_8%,transparent)] p-3">
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <span className="text-sm font-semibold text-red-700 dark:text-red-300">
+              <AlertTriangle className="h-4 w-4 text-[var(--color-status-error)]" />
+              <span className="text-sm font-semibold text-[var(--color-status-error)]">
                 既存契約との重複あり ({preview.totalDuplicates}件)
               </span>
             </div>
@@ -670,10 +661,10 @@ function BatchConfirmationModal({
               {preview.lines
                 ?.filter((l) => (l.duplicates?.length ?? 0) > 0)
                 .map((l) => (
-                  <div key={l.factoryId} className="text-xs text-red-600 dark:text-red-400">
+                  <div key={l.factoryId} className="text-xs text-[var(--color-status-error)]">
                     <span className="font-medium">{l.factoryName} {l.lineName}</span>
                     {l.duplicates!.map((d: BatchPreviewDuplicate) => (
-                      <div key={d.id} className="ml-3 text-red-500">
+                      <div key={d.id} className="ml-3 text-[var(--color-status-error)]">
                         {d.contractNumber} ({d.startDate} ~ {d.endDate}) {d.employeeCount}名
                       </div>
                     ))}
@@ -684,7 +675,7 @@ function BatchConfirmationModal({
         )}
 
         {/* Line details */}
-        <div className="mb-4 max-h-[200px] divide-y divide-border/40 overflow-y-auto rounded-lg border border-border/40">
+        <div className="mb-4 max-h-[200px] divide-y divide-border/40 overflow-y-auto rounded-md border border-border/40">
           {preview.lines?.map((l) => (
             <div key={l.factoryId} className="px-3 py-2">
               <div className="flex items-center justify-between">

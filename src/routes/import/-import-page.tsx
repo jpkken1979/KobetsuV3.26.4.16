@@ -311,11 +311,11 @@ export function ImportPage() {
                     <div className="space-y-1.5">
                       {COLUMN_MAPPINGS.map((m) => (
                         <div key={m.excel} className="flex items-start gap-2 text-xs">
-                          <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 font-mono font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                          <span className="shrink-0 rounded bg-[var(--color-status-warning-muted)] px-1.5 py-0.5 font-mono font-semibold text-[var(--color-status-warning)]">
                             {m.excel}
                           </span>
                           <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground/40" />
-                          <span className="shrink-0 rounded bg-blue-50 px-1.5 py-0.5 font-mono text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          <span className="shrink-0 rounded bg-[var(--color-status-info-muted)] px-1.5 py-0.5 font-mono text-[var(--color-status-info)]">
                             {m.db}
                           </span>
                           <span className="text-[10px] text-muted-foreground/60">{m.note}</span>
@@ -358,20 +358,20 @@ export function ImportPage() {
                 dragOver
                   ? "border-primary/30 bg-primary/5 dark:shadow-[0_0_30px_rgba(155,167,255,0.08)]"
                   : file
-                    ? "border-green-300/60 bg-green-50/30 dark:border-green-800/40 dark:bg-green-950/20"
+                    ? "border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[var(--color-status-ok-muted)]"
                     : "border-border hover:border-primary/40 hover:bg-primary/5",
               )}
             >
               {file ? (
                 <>
-                  <div className="rounded-2xl bg-green-100 p-4 dark:bg-green-900/30">
-                    <FileSpreadsheet className="h-9 w-9 text-green-600 dark:text-green-400" />
+                  <div className="rounded-2xl bg-[var(--color-status-ok-muted)] p-4">
+                    <FileSpreadsheet className="h-9 w-9 text-[var(--color-status-ok)]" />
                   </div>
-                  <p className="mt-3 font-semibold text-green-700 dark:text-green-400">{file.name}</p>
+                  <p className="mt-3 font-semibold text-[var(--color-status-ok)]">{file.name}</p>
                   <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
                     <span>{(file.size / 1024).toFixed(1)} KB</span>
                     <span>·</span>
-                    <span className="font-medium text-green-600 dark:text-green-400">
+                    <span className="font-medium text-[var(--color-status-ok)]">
                       {totalRows.toLocaleString()} 行読み込み済み
                     </span>
                   </div>
@@ -405,12 +405,12 @@ export function ImportPage() {
                     })}
                 role="alert"
                 aria-live="polite"
-                className="flex items-start gap-3 rounded-xl border border-red-200/60 bg-red-50/50 p-4 dark:border-red-800/40 dark:bg-red-950/30"
+                className="flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)] p-4"
               >
-                <div className="rounded-lg bg-red-100 p-1.5 dark:bg-red-900/50">
-                  <AlertCircle className="h-4 w-4 text-red-600" />
+                <div className="rounded-lg bg-[var(--color-status-error-muted)] p-1.5">
+                  <AlertCircle className="h-4 w-4 text-[var(--color-status-error)]" />
                 </div>
-                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+                <p className="text-sm text-[var(--color-status-error)]">{error}</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -518,8 +518,8 @@ export function ImportPage() {
                   <h2 className="mb-4 text-sm font-semibold">変更検出サマリー</h2>
                   <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                     {[
-                      { label: "新規追加", value: diffResult.inserts.length, color: "text-emerald-600 dark:text-emerald-400", border: "border-emerald-200 dark:border-emerald-800/40" },
-                      { label: "更新", value: diffResult.updates.length, color: "text-amber-600 dark:text-amber-400", border: "border-amber-200 dark:border-amber-800/40" },
+                      { label: "新規追加", value: diffResult.inserts.length, color: "text-[var(--color-status-ok)]", border: "border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]" },
+                      { label: "更新", value: diffResult.updates.length, color: "text-[var(--color-status-warning)]", border: "border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)]" },
                       { label: "変更なし", value: diffResult.unchanged, color: "text-muted-foreground", border: "border-border/60" },
                       { label: "スキップ", value: diffResult.skipped, color: "text-muted-foreground", border: "border-border/60" },
                     ].map((stat) => (
@@ -531,10 +531,10 @@ export function ImportPage() {
                   </div>
 
                   {diffResult.errors.length > 0 && (
-                    <div className="mt-3 rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                      <p className="mb-1 text-xs font-semibold text-red-700 dark:text-red-400">エラー ({diffResult.errors.length}件):</p>
+                    <div className="mt-3 rounded-lg bg-[var(--color-status-error-muted)] p-3">
+                      <p className="mb-1 text-xs font-semibold text-[var(--color-status-error)]">エラー ({diffResult.errors.length}件):</p>
                       {diffResult.errors.map((err, i) => (
-                        <p key={i} className="text-[11px] text-red-600 dark:text-red-400">{err}</p>
+                        <p key={i} className="text-[11px] text-[var(--color-status-error)]">{err}</p>
                       ))}
                     </div>
                   )}
@@ -554,15 +554,15 @@ export function ImportPage() {
                     }
                     if (companyMap.size === 0) return null;
                     return (
-                      <div className="mt-4 rounded-xl border border-blue-500/30 bg-blue-50/30 p-4 dark:border-blue-800/40 dark:bg-blue-950/20">
-                        <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold text-blue-700 dark:text-blue-400">
-                          <span className="rounded bg-blue-100 px-1.5 py-0.5 dark:bg-blue-900/50">{companyMap.size}</span>
+                      <div className="mt-4 rounded-xl border border-[color-mix(in_srgb,var(--color-status-info)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-info)_15%,transparent)] p-4">
+                        <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold text-[var(--color-status-info)]">
+                          <span className="rounded bg-[var(--color-status-info-muted)] px-1.5 py-0.5">{companyMap.size}</span>
                           派遣先（企業）がインポートに関与
                         </h3>
                         <div className="space-y-2">
                           {[...companyMap.entries()].sort((a, b) => b[1].count - a[1].count).map(([company, data]) => (
                             <div key={company} className="flex items-start gap-3">
-                              <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-400" />
+                              <Building2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--color-status-info)]" />
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-semibold text-foreground">{company}</p>
                                 <p className="text-[10px] text-muted-foreground">
@@ -579,14 +579,14 @@ export function ImportPage() {
                 </div>
 
                 {diffResult.inserts.length > 0 && (
-                  <details open className="rounded-xl border border-emerald-500/30 bg-card shadow-[var(--shadow-card)]">
-                    <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  <details open className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-card shadow-[var(--shadow-card)]">
+                    <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--color-status-ok)]">
                       新規追加 ({diffResult.inserts.length}名)
                     </summary>
-                    <div className="border-t border-emerald-500/20 p-1">
+                    <div className="border-t border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] p-1">
                       <table className="w-full text-xs">
                         <thead>
-                          <tr className="border-b border-border/40 bg-emerald-50/50 dark:bg-emerald-950/20">
+                          <tr className="border-b border-border/40 bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)]">
                             <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">社員№</th>
                             <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">氏名</th>
                             <th className="px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground">派遣先</th>
@@ -596,7 +596,7 @@ export function ImportPage() {
                         <tbody>
                           {diffResult.inserts.map((ins) => (
                             <tr key={ins.employeeNumber} className="border-b border-border/20 last:border-0">
-                              <td className="px-3 py-1.5 font-mono text-emerald-700 dark:text-emerald-400">{ins.employeeNumber}</td>
+                              <td className="px-3 py-1.5 font-mono text-[var(--color-status-ok)]">{ins.employeeNumber}</td>
                               <td className="px-3 py-1.5">{ins.fullName}</td>
                               <td className="px-3 py-1.5 text-muted-foreground">{ins.company ?? "—"}</td>
                               <td className="px-3 py-1.5 text-muted-foreground">{ins.factory ?? "—"}</td>
@@ -609,11 +609,11 @@ export function ImportPage() {
                 )}
 
                 {diffResult.updates.length > 0 && (
-                  <details open className="rounded-xl border border-amber-500/30 bg-card shadow-[var(--shadow-card)]">
-                    <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  <details open className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-card shadow-[var(--shadow-card)]">
+                    <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[var(--color-status-warning)]">
                       更新 ({diffResult.updates.length}名)
                     </summary>
-                    <div className="border-t border-amber-500/20">
+                    <div className="border-t border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)]">
                       {diffResult.updates.map((upd) => {
                         const isExpanded = expandedUpdates.has(upd.employeeNumber);
                         return (
@@ -628,24 +628,24 @@ export function ImportPage() {
                                   return next;
                                 })
                               }
-                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs transition-colors hover:bg-amber-50/50 dark:hover:bg-amber-950/20"
+                              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs transition-colors hover:bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)]"
                             >
-                              <ChevronRight className={cn("h-3.5 w-3.5 shrink-0 text-amber-500 transition-transform", isExpanded && "rotate-90")} />
-                              <span className="font-mono font-semibold text-amber-700 dark:text-amber-400">{upd.employeeNumber}</span>
+                              <ChevronRight className={cn("h-3.5 w-3.5 shrink-0 text-[var(--color-status-warning)] transition-transform", isExpanded && "rotate-90")} />
+                              <span className="font-mono font-semibold text-[var(--color-status-warning)]">{upd.employeeNumber}</span>
                               <span className="font-medium">{upd.fullName}</span>
-                              <span className="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">
+                              <span className="ml-auto rounded-full bg-[var(--color-status-warning-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-status-warning)]">
                                 {Object.keys(upd.changes).length}項目
                               </span>
                             </button>
                             {isExpanded && (
-                              <div className="bg-amber-50/30 px-4 pb-3 dark:bg-amber-950/10">
+                              <div className="bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)] px-4 pb-3">
                                 <div className="grid gap-1.5">
                                   {Object.entries(upd.changes).map(([field, change]) => (
                                     <div key={field} className="flex items-center gap-2 text-[11px]">
                                       <span className="w-28 shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-muted-foreground">{field}</span>
-                                      <span className="truncate text-red-600 line-through dark:text-red-400">{String(change.old ?? "—")}</span>
+                                      <span className="truncate text-[var(--color-status-error)] line-through">{String(change.old ?? "—")}</span>
                                       <ArrowRight className="h-3 w-3 shrink-0 text-muted-foreground/50" />
-                                      <span className="truncate font-medium text-emerald-700 dark:text-emerald-400">{String(change.new ?? "—")}</span>
+                                      <span className="truncate font-medium text-[var(--color-status-ok)]">{String(change.new ?? "—")}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -708,20 +708,20 @@ export function ImportPage() {
               <motion.div
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                 animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
-                className="rounded-xl border border-green-200/60 bg-green-50/50 p-4 dark:border-green-800/40 dark:bg-green-950/30"
+                className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)] p-4"
               >
                 <div className="mb-5 flex items-center gap-3">
-                  <div className="rounded-xl bg-green-100 p-2.5 dark:bg-green-900/50">
-                    <Check className="h-5 w-5 text-green-600" />
+                  <div className="rounded-xl bg-[var(--color-status-ok-muted)] p-2.5">
+                    <Check className="h-5 w-5 text-[var(--color-status-ok)]" />
                   </div>
                   <div>
-                    <h2 className="font-bold text-green-800 dark:text-green-300">インポート完了</h2>
-                    <p className="text-xs text-green-700/60 dark:text-green-400/60">処理が正常に完了しました</p>
+                    <h2 className="font-bold text-[var(--color-status-ok)]">インポート完了</h2>
+                    <p className="text-xs text-[var(--color-status-ok)]/60">処理が正常に完了しました</p>
                   </div>
                   <button
                     onClick={resetFile}
                     aria-label="新規インポート"
-                    className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-green-100 px-3 py-1.5 text-xs font-medium text-green-700 transition-colors hover:bg-green-200 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-900"
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-status-ok-muted)] px-3 py-1.5 text-xs font-medium text-[var(--color-status-ok)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]"
                   >
                     <RefreshCw className="h-3 w-3" />
                     新規インポート
@@ -731,10 +731,10 @@ export function ImportPage() {
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                   {[
                     { label: "合計", value: result.summary.total, color: "text-foreground", bg: "bg-white dark:bg-card" },
-                    { label: "新規追加", value: result.summary.inserted, color: "text-green-600", bg: "bg-white dark:bg-card" },
-                    { label: "更新", value: result.summary.updated, color: "text-blue-600", bg: "bg-white dark:bg-card" },
+                    { label: "新規追加", value: result.summary.inserted, color: "text-[var(--color-status-ok)]", bg: "bg-white dark:bg-card" },
+                    { label: "更新", value: result.summary.updated, color: "text-[var(--color-status-info)]", bg: "bg-white dark:bg-card" },
                     { label: "スキップ", value: result.summary.skipped, color: "text-muted-foreground", bg: "bg-white dark:bg-card" },
-                    { label: "エラー", value: result.summary.errors, color: result.summary.errors > 0 ? "text-red-600" : "text-muted-foreground", bg: "bg-white dark:bg-card" },
+                    { label: "エラー", value: result.summary.errors, color: result.summary.errors > 0 ? "text-[var(--color-status-error)]" : "text-muted-foreground", bg: "bg-white dark:bg-card" },
                   ].map((stat) => (
                     <div key={stat.label} className={cn("rounded-xl p-3.5 text-center shadow-xs", stat.bg)}>
                       <p className={cn("text-2xl font-bold tabular-nums leading-none", stat.color)}>{stat.value}</p>
@@ -744,10 +744,10 @@ export function ImportPage() {
                 </div>
 
                 {result.errors.length > 0 && (
-                  <div className="mt-4 max-h-40 overflow-y-auto rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
-                    <p className="mb-2 text-xs font-semibold text-red-700">エラー詳細:</p>
+                  <div className="mt-4 max-h-40 overflow-y-auto rounded-lg bg-[var(--color-status-error-muted)] p-3">
+                    <p className="mb-2 text-xs font-semibold text-[var(--color-status-error)]">エラー詳細:</p>
                     {result.errors.map((err, i) => (
-                      <p key={i} className="text-[11px] text-red-600">{err}</p>
+                      <p key={i} className="text-[11px] text-[var(--color-status-error)]">{err}</p>
                     ))}
                   </div>
                 )}

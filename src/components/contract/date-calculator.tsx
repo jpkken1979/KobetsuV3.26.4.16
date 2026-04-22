@@ -227,7 +227,7 @@ export function DateCalculator() {
               className={cn(
                 "w-full rounded-lg border bg-background px-3 py-2.5 pr-10 text-sm shadow-xs transition-all focus:shadow-sm focus:outline-none focus:ring-2",
                 exceedsConflictDate
-                  ? "border-red-400 focus:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
+                  ? "border-[var(--color-status-error)] focus:border-[var(--color-status-error)] focus:ring-[color-mix(in_srgb,var(--color-status-error)_20%,transparent)]"
                   : "border-input/80 focus:border-primary/30 focus:ring-primary/10"
               )}
             />
@@ -238,12 +238,12 @@ export function DateCalculator() {
 
       {/* Factory contract settings info */}
       {(conflictDate || contractPeriod) && (
-        <div className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
-          <div className="flex items-center gap-2 text-sm font-semibold text-amber-800 dark:text-amber-300">
+        <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-info)_25%,transparent)] bg-[var(--color-status-info-muted)] p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-status-info)]">
             <Info className="h-4 w-4" />
             工場の契約設定
           </div>
-          <div className="mt-2 flex flex-wrap gap-4 text-xs text-amber-700 dark:text-amber-400/80">
+          <div className="mt-2 flex flex-wrap gap-4 text-xs text-[var(--color-status-info)]">
             {conflictDate && <span>抵触日: {conflictDate}</span>}
             {contractPeriod && <span>契約期間: {PERIOD_LABELS[contractPeriod] || contractPeriod}</span>}
           </div>
@@ -252,9 +252,9 @@ export function DateCalculator() {
 
       {/* Auto-calculated dates */}
       {data.startDate && (
-        <div className="rounded-xl border border-primary/20 bg-primary/[0.06] p-4 dark:bg-primary/[0.08]">
+        <div className="rounded-lg border border-primary/20 bg-primary/[0.06] p-4 dark:bg-primary/[0.08]">
           <div className="mb-4 flex items-center gap-2.5">
-            <div className="rounded-lg bg-primary/10 p-1.5">
+            <div className="rounded-md bg-primary/10 p-1.5">
               <Info className="h-4 w-4 text-primary" />
             </div>
             <span className="text-sm font-semibold text-foreground">
@@ -263,14 +263,14 @@ export function DateCalculator() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-xl bg-white p-4 shadow-xs dark:bg-card">
+            <div className="rounded-lg bg-white p-4 shadow-xs dark:bg-card">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground/60" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   契約締結日
                 </span>
               </div>
-              <p className="mt-2 font-mono text-sm font-semibold text-cyan-400 tabular-nums">
+              <p className="mono-tabular mt-2 text-sm font-semibold text-primary">
                 {data.contractDate}
               </p>
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -278,14 +278,14 @@ export function DateCalculator() {
               </p>
             </div>
 
-            <div className="rounded-xl bg-white p-4 shadow-xs dark:bg-card">
+            <div className="rounded-lg bg-white p-4 shadow-xs dark:bg-card">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground/60" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   通知日
                 </span>
               </div>
-              <p className="mt-2 font-mono text-sm font-semibold text-cyan-400 tabular-nums">
+              <p className="mono-tabular mt-2 text-sm font-semibold text-primary">
                 {data.notificationDate}
               </p>
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -293,14 +293,14 @@ export function DateCalculator() {
               </p>
             </div>
 
-            <div className="rounded-xl bg-white p-4 shadow-xs dark:bg-card">
+            <div className="rounded-lg bg-white p-4 shadow-xs dark:bg-card">
               <div className="flex items-center gap-2">
                 <ArrowRight className="h-4 w-4 text-muted-foreground/60" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   契約期間
                 </span>
               </div>
-              <p className="mt-2 font-mono text-sm font-semibold text-cyan-400 tabular-nums">
+              <p className="mono-tabular mt-2 text-sm font-semibold text-primary">
                 {data.endDate
                   ? `${Math.ceil(
                       (new Date(data.endDate).getTime() -
@@ -309,7 +309,7 @@ export function DateCalculator() {
                     )}日間`
                   : "--"}
               </p>
-              <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+              <p className="mono-tabular mt-1 text-[11px] text-muted-foreground">
                 {data.startDate} ~ {data.endDate}
               </p>
             </div>
@@ -319,14 +319,16 @@ export function DateCalculator() {
 
       {/* Warning: endDate exceeds conflictDate */}
       {exceedsConflictDate && (
-        <div id="end-date-error" role="alert" aria-live="polite" className="rounded-xl border border-red-200/60 bg-red-50/50 p-4 dark:border-red-800/40 dark:bg-red-950/30">
-          <div className="flex items-center gap-2 text-sm font-semibold text-red-800 dark:text-red-300">
-            <AlertTriangle className="h-4 w-4" />
-            終了日が抵触日（{conflictDate}）を超えています
+        <div id="end-date-error" role="alert" aria-live="polite" className="rounded-md border border-[color-mix(in_srgb,var(--color-status-error)_25%,transparent)] bg-[var(--color-status-error-muted)] p-3">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-error)]" />
+            <div className="flex-1 text-sm">
+              <p className="font-semibold text-[var(--color-status-error)]">終了日が抵触日（{conflictDate}）を超えています</p>
+              <p className="mt-0.5 text-[0.6875rem] text-foreground/70">
+                派遣法により、抵触日を超える契約は締結できません。終了日を修正してください。
+              </p>
+            </div>
           </div>
-          <p className="mt-1 text-xs text-red-700 dark:text-red-400/80">
-            派遣法により、抵触日を超える契約は締結できません。終了日を修正してください。
-          </p>
         </div>
       )}
 

@@ -148,7 +148,7 @@ function AuditPage() {
               <option value="factory">工場</option>
             </Select>
 
-            <span className="rounded-full bg-muted/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            <span className="rounded-md bg-muted/80 px-2.5 py-1 text-xs font-medium text-muted-foreground">
               {filteredLogs.length}件
             </span>
           </div>

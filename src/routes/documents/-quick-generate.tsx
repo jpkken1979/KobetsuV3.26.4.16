@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { type UseMutationResult } from "@tanstack/react-query";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -118,29 +117,26 @@ export function QuickGenerate({
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? undefined : { opacity: 0, y: -8 }}
-            className="mt-4 flex items-center gap-3 rounded-xl border border-green-200/60 bg-green-50/50 p-3.5 dark:border-green-800/40 dark:bg-green-950/30"
+            className="mt-4 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_8%,transparent)] p-3.5"
           >
-            <div className="rounded-lg bg-green-100 p-1.5 dark:bg-green-900/50">
-              <Check className="h-4 w-4 text-green-600" />
+            <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)] p-1.5">
+              <Check className="h-4 w-4 text-[var(--color-status-ok)]" />
             </div>
             <div className="flex-1 text-sm">
-              <p className="font-semibold text-green-800 dark:text-green-300">
+              <p className="font-semibold text-[var(--color-status-ok)]">
                 {keiyakushoMutation.data.employeeName}（{keiyakushoMutation.data.employeeNumber}）
               </p>
-              <p className="text-xs text-green-700 dark:text-green-400/80">
+              <p className="text-xs text-[color-mix(in_srgb,var(--color-status-ok)_70%,transparent)]">
                 {keiyakushoMutation.data.company} → {keiyakushoMutation.data.factory}
               </p>
             </div>
             <div className="flex items-center gap-2">
               {keiyakushoMutation.data.files.map((file) => (
-                <div key={file.path} className="flex items-center gap-1 rounded-lg border border-green-200/70 bg-green-100/40 px-2 py-1 dark:border-green-800/40 dark:bg-green-900/20">
-                  <span className="text-[10px] font-semibold text-green-800 dark:text-green-300">{file.label}</span>
+                <div key={file.path} className="flex items-center gap-1 rounded-lg border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_12%,transparent)] px-2 py-1">
+                  <span className="text-[10px] font-semibold text-[var(--color-status-ok)]">{file.label}</span>
                   <button
                     onClick={() => onPreview(file.path)}
-                    className={cn(
-                      "btn-press rounded-md p-1 text-green-700 transition-colors hover:bg-green-100",
-                      "dark:text-green-400 dark:hover:bg-green-800/50"
-                    )}
+                    className="btn-press rounded-md p-1 text-[var(--color-status-ok)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)]"
                     aria-label={`${file.label} プレビュー`}
                   >
                     <Eye className="h-3.5 w-3.5" aria-hidden="true" />
@@ -148,10 +144,7 @@ export function QuickGenerate({
                   <a
                     href={file.path}
                     download={file.filename}
-                    className={cn(
-                      "btn-press rounded-md p-1 text-green-700 transition-colors hover:bg-green-100",
-                      "dark:text-green-400 dark:hover:bg-green-800/50"
-                    )}
+                    className="btn-press rounded-md p-1 text-[var(--color-status-ok)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)]"
                     aria-label={`${file.label} ダウンロード`}
                   >
                     <Download className="h-3.5 w-3.5" aria-hidden="true" />
@@ -166,12 +159,12 @@ export function QuickGenerate({
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
             exit={shouldReduceMotion ? undefined : { opacity: 0 }}
-            className="mt-4 flex items-start gap-3 rounded-xl border border-red-200/60 bg-red-50/50 p-3.5 dark:border-red-800/40 dark:bg-red-950/30"
+            className="mt-4 flex items-start gap-3 rounded-xl border border-[color-mix(in_srgb,var(--color-status-error)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-error)_8%,transparent)] p-3.5"
           >
-            <div className="mt-0.5 rounded-lg bg-red-100 p-1.5 dark:bg-red-900/50">
-              <AlertCircle className="h-4 w-4 text-red-600" />
+            <div className="mt-0.5 rounded-lg bg-[color-mix(in_srgb,var(--color-status-error)_15%,transparent)] p-1.5">
+              <AlertCircle className="h-4 w-4 text-[var(--color-status-error)]" />
             </div>
-            <p className="text-sm text-red-700 dark:text-red-400">
+            <p className="text-sm text-[var(--color-status-error)]">
               {(keiyakushoMutation.error as Error).message}
             </p>
           </motion.div>

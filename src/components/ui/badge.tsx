@@ -1,47 +1,71 @@
 import { cn } from "@/lib/utils";
 
+export type BadgeVariant =
+  | "default"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "destructive"
+  | "outline"
+  | "active"
+  | "alert"
+  | "info"
+  | "pending";
+
+export type BadgeSize = "sm" | "md";
+
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "secondary" | "success" | "warning" | "destructive" | "outline" | "active" | "alert" | "info";
+  variant?: BadgeVariant;
+  size?: BadgeSize;
   dot?: boolean;
   dotColor?: string;
   pulse?: boolean;
 }
 
-const variantStyles: Record<string, string> = {
+const variantStyles: Record<BadgeVariant, string> = {
   default:
-    "bg-primary/10 text-primary ring-primary/20",
+    "bg-[color-mix(in_srgb,var(--color-primary)_12%,transparent)] text-primary border border-[color-mix(in_srgb,var(--color-primary)_28%,transparent)]",
   secondary:
-    "bg-muted/80 text-muted-foreground ring-border/70",
+    "bg-muted/70 text-muted-foreground border border-border/60",
   success:
-    "bg-success-muted text-success-foreground border border-success/20",
+    "bg-[var(--color-status-ok-muted)] text-[var(--color-status-ok)] border border-[color-mix(in_srgb,var(--color-status-ok)_28%,transparent)]",
   warning:
-    "bg-warning-muted text-warning-foreground border border-warning/20",
+    "bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning)] border border-[color-mix(in_srgb,var(--color-status-warning)_28%,transparent)]",
   destructive:
-    "bg-destructive/10 text-destructive ring-destructive/20",
+    "bg-[var(--color-status-error-muted)] text-[var(--color-status-error)] border border-[color-mix(in_srgb,var(--color-status-error)_28%,transparent)]",
   outline:
-    "border border-border/70 text-muted-foreground bg-transparent ring-0",
+    "border border-border/70 text-muted-foreground bg-transparent",
   active:
-    "bg-success-muted text-success-foreground border border-success/20",
+    "bg-[var(--color-status-ok-muted)] text-[var(--color-status-ok)] border border-[color-mix(in_srgb,var(--color-status-ok)_32%,transparent)]",
   alert:
-    "bg-alert-muted text-alert-foreground border border-alert/20",
+    "bg-[var(--color-status-error-muted)] text-[var(--color-status-error)] border border-[color-mix(in_srgb,var(--color-status-error)_32%,transparent)]",
   info:
-    "bg-info-muted text-info-foreground border border-info/20",
+    "bg-[var(--color-status-info-muted)] text-[var(--color-status-info)] border border-[color-mix(in_srgb,var(--color-status-info)_28%,transparent)]",
+  pending:
+    "bg-[var(--color-status-pending-muted)] text-[var(--color-status-pending)] border border-[color-mix(in_srgb,var(--color-status-pending)_28%,transparent)]",
 };
 
-const dotColors: Record<string, string> = {
+const dotColors: Record<BadgeVariant, string> = {
   default: "bg-primary",
   secondary: "bg-muted-foreground",
-  success: "bg-success",
-  warning: "bg-warning-foreground",
-  destructive: "bg-destructive",
+  success: "bg-[var(--color-status-ok)]",
+  warning: "bg-[var(--color-status-warning)]",
+  destructive: "bg-[var(--color-status-error)]",
   outline: "bg-muted-foreground",
-  active: "bg-success",
-  alert: "bg-alert-foreground",
-  info: "bg-info-foreground",
+  active: "bg-[var(--color-status-ok)]",
+  alert: "bg-[var(--color-status-error)]",
+  info: "bg-[var(--color-status-info)]",
+  pending: "bg-[var(--color-status-pending)]",
+};
+
+const sizeStyles: Record<BadgeSize, string> = {
+  sm: "px-1.5 py-0.5 text-[0.6875rem] gap-1 rounded-xs",
+  md: "px-2.5 py-1 text-xs gap-1.5 rounded-md",
 };
 
 export function Badge({
   variant = "default",
+  size = "md",
   dot = false,
   dotColor,
   pulse = false,
@@ -53,7 +77,8 @@ export function Badge({
     <span
       role={pulse ? "status" : undefined}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset",
+        "mono-tabular inline-flex items-center font-semibold tracking-[0.01em]",
+        sizeStyles[size],
         variantStyles[variant],
         className,
       )}
@@ -62,10 +87,11 @@ export function Badge({
       {dot && (
         <span
           className={cn(
-            "h-1.5 w-1.5 rounded-full",
+            "relative inline-block h-1.5 w-1.5 rounded-full",
             dotColor || dotColors[variant],
-            pulse && "animate-pulse",
+            pulse && "live-dot",
           )}
+          style={pulse ? { color: "currentColor" } : undefined}
         />
       )}
       {children}

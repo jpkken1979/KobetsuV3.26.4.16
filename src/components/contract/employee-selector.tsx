@@ -133,7 +133,7 @@ export function EmployeeSelector() {
     label: string;
     color: string;
   } {
-    if (!hireDate) return { label: "不明", color: "bg-gray-50 text-gray-600 ring-gray-200 dark:bg-gray-900/50 dark:text-gray-400 dark:ring-gray-700" };
+    if (!hireDate) return { label: "不明", color: "bg-muted text-muted-foreground ring-border" };
     const years =
       (Date.now() - new Date(hireDate).getTime()) /
       (365.25 * 24 * 60 * 60 * 1000);
@@ -144,7 +144,7 @@ export function EmployeeSelector() {
       };
     return {
       label: "有期雇用",
-      color: "bg-orange-50 text-orange-700 ring-orange-200 dark:bg-orange-900/50 dark:text-orange-400 dark:ring-orange-700",
+      color: "bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning)] ring-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)]",
     };
   }
 
@@ -238,7 +238,7 @@ export function EmployeeSelector() {
             aria-label="社員検索"
             className="w-full rounded-lg border border-border/80 bg-background px-3 py-2.5 pl-10 text-sm shadow-xs transition-all placeholder:text-muted-foreground/60 focus:border-primary/30 focus:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
             {selectedEmployees.length} 名
           </span>
         </div>
@@ -256,7 +256,7 @@ export function EmployeeSelector() {
       </div>
 
       {/* Employee list */}
-      <div className="max-h-80 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-[var(--shadow-card)]">
+      <div className="max-h-80 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-[var(--shadow-card)]">
         {isEmployeesLoading && (
           <div className="flex flex-col items-center py-10 text-center">
             <Loader2 className="mb-2 h-7 w-7 animate-spin text-muted-foreground/40" />
@@ -366,12 +366,12 @@ export function EmployeeSelector() {
 
       {/* Contract split preview */}
       {selectedByRate.size > 1 && (
-        <div role="alert" aria-live="polite" className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-800/40 dark:bg-amber-950/30">
+        <div role="alert" aria-live="polite" className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_8%,transparent)] p-4">
           <div className="mb-3 flex items-center gap-2.5">
-            <div className="rounded-lg bg-amber-100 p-1.5 dark:bg-amber-900/50">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)] p-1.5">
+              <AlertTriangle className="h-4 w-4 text-[var(--color-status-warning)]" />
             </div>
-            <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+            <span className="text-sm font-semibold text-[var(--color-status-warning)]">
               単価が異なるため {selectedByRate.size} 件の契約書に分割されます
             </span>
           </div>
@@ -427,7 +427,7 @@ export function EmployeeSelector() {
           disabled={selectedEmployees.length === 0 || createContract.isPending}
           className={cn(
             selectedEmployees.length > 0 && !createContract.isPending
-              ? "bg-green-600 text-white hover:bg-green-700 shadow-sm shadow-green-600/20"
+              ? "bg-[var(--color-status-ok)] text-white hover:bg-[color-mix(in_srgb,var(--color-status-ok)_85%,black)] shadow-sm shadow-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)]"
               : ""
           )}
         >
@@ -513,7 +513,7 @@ function EmployeeRow({
             {employee.employeeNumber}
           </span>
           {isRetired && (
-            <span className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 ring-1 ring-inset ring-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:ring-amber-800">
+            <span className="rounded-full bg-[var(--color-status-warning-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-status-warning)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)]">
               退職済み
             </span>
           )}
@@ -535,14 +535,14 @@ function EmployeeRow({
       <div className="text-right">
         <span
           className={cn(
-            "text-sm font-semibold tabular-nums",
-            isDifferentRate ? "text-amber-600" : ""
+            "mono-tabular text-sm font-semibold",
+            isDifferentRate ? "text-[var(--color-status-warning)]" : ""
           )}
         >
           ¥{empRate?.toLocaleString()}
         </span>
         {isDifferentRate && (
-          <p className="text-[10px] text-amber-500">契約と異なる単価</p>
+          <p className="text-[10px] text-[var(--color-status-warning)]">契約と異なる単価</p>
         )}
       </div>
     </button>

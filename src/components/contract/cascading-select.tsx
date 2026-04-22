@@ -180,7 +180,7 @@ export function CascadingSelect() {
           {data.factoryId && (
             <>
               <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-              <span className="rounded-md bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-200 dark:bg-green-900/30 dark:text-green-400 dark:ring-green-700">
+              <span className="rounded-md bg-[var(--color-status-ok-muted)] px-2.5 py-1 text-xs font-medium text-[var(--color-status-ok)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]">
                 {lines.find((l) => l.id === data.factoryId)?.lineName ??
                   "選択済"}
               </span>
@@ -196,7 +196,7 @@ export function CascadingSelect() {
             <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
             派遣先企業
           </div>
-          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="企業一覧">
+          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="企業一覧">
             {companies?.map((company) => (
               <button
                 key={company.id}
@@ -224,7 +224,7 @@ export function CascadingSelect() {
             <FactoryIcon className="h-3.5 w-3.5" aria-hidden="true" />
             工場名
           </div>
-          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="工場一覧">
+          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="工場一覧">
             {data.companyId && isCascadeLoading ? (
               <CascadeSkeleton />
             ) : factoryNames.length > 0 ? (
@@ -260,7 +260,7 @@ export function CascadingSelect() {
             <Layers className="h-3.5 w-3.5" aria-hidden="true" />
             配属先
           </div>
-          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="配属先一覧">
+          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="配属先一覧">
             {departments.length > 0 ? (
               departments.map((dept) => (
                 <button
@@ -296,7 +296,7 @@ export function CascadingSelect() {
             <Layers className="h-3.5 w-3.5" aria-hidden="true" />
             ライン
           </div>
-          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-border/60 p-2 shadow-xs" aria-label="ライン一覧">
+          <div className="max-h-64 space-y-0.5 overflow-y-auto rounded-lg border border-border/60 p-2 shadow-xs" aria-label="ライン一覧">
             {lines.length > 0 ? (
               lines.map((line) => (
                 <button
@@ -334,11 +334,11 @@ export function CascadingSelect() {
 
       {/* Auto-fill confirmation */}
       {data.factoryId && (
-        <div className="rounded-xl border border-green-200/60 bg-green-50/50 p-4 dark:border-green-800/40 dark:bg-green-950/30">
-          <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+        <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)] bg-[var(--color-status-ok-muted)] p-4">
+          <p className="text-sm font-semibold text-[var(--color-status-ok)]">
             工場データから自動入力しました
           </p>
-          <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-green-700 dark:text-green-400/80">
+          <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-[var(--color-status-ok)]">
             <span>時給: ¥{data.hourlyRate}/h</span>
             <span>残業: ¥{data.overtimeRate}/h</span>
             <span>指揮命令者: {data.supervisorName || "未設定"}</span>

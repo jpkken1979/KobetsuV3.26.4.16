@@ -139,7 +139,7 @@ function DataCheckPage() {
             key={level}
             onClick={() => setFilter(filter === level ? "all" : level)}
             className={cn(
-              "rounded-xl border p-3 text-center transition-all cursor-pointer",
+              "rounded-lg border p-3 text-center transition-all cursor-pointer",
               filter === level
                 ? "ring-2 ring-primary"
                 : "border-border/60 hover:border-border",
