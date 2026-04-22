@@ -156,7 +156,6 @@ src/
 │   ├── mutation-helpers.ts # Shared toast helpers for mutations
 │   ├── query-keys.ts       # Centralized React Query key factory
 │   ├── shift-utils.ts      # Shift/break time calculations
-│   ├── teiji-utils.ts      # Utilidades de 定時 (horario estándar)
 │   ├── utils.ts            # `cn()` y helpers misc
 │   └── hooks/              # React Query CRUD hooks (see table below)
 ├── stores/
