@@ -5,7 +5,7 @@
  *   - 労働者派遣個別契約書 sheet: work conditions (就業時間, 休憩, 時間外, 就業日)
  */
 
-import type { KoritsuParsedFactory } from "./koritsu-pdf-parser.js";
+import type { KoritsuParsedFactory } from "./koritsu-types.js";
 
 // ─── Column indices (1-based) in 派遣先責任者 指揮命令者 ─────────────────────
 
