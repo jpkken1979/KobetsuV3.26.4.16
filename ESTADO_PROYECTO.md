@@ -1,6 +1,22 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-22 (sesión rediseño UI/UX Hypercar Aurora)
+> Última actualización: 2026-04-22 (sesión tarde: wizard fix + appendTeiji + PDF traceability)
+
+## Sesión 2026-04-22c — Wizard fix + appendTeiji + PDF traceability
+
+**4 fixes + 1 feature:**
+
+- **Fix `/contracts/new` wizard**: POST fallaba con "Invalid input: expected number, received undefined" — faltaban `companyId`, `contractDate`, `notificationDate` en el payload. Solucionado en `src/routes/contracts/new.tsx` usando `calculateContractDates()`.
+- **Feature PDF traceability**: columna `最終PDF生成` en lista `/contracts` + sección `PDF生成履歴` en detalle de contrato. Backend inyecta `lastKobetsuAt` via LEFT JOIN con `pdf_versions` en `GET /api/contracts`. Frontend: `usePdfVersions` hook + `LastKobetsuAt` component + `PdfHistorySection`.
+- **Fix `(N)` calculation en PDFs**: removida la llamada a `appendTeiji()` de todos los call sites (kobetsu-pdf, hakenmotokanridaicho-pdf, flat-view, table-config). Función eliminada completamente de `server/pdf/helpers.ts` (99 líneas) y `src/lib/teiji-utils.ts` (archivo borrado).
+- **5 contratos 川原鉄工所** (KOB-202604-0013 a 0017): billingRate 1750, endDate 2026-11-20.
+- **DB reset + test**: contratos 63/64 (test) cancelados post-validación.
+
+**Commits**: d71f1da..4c58ae5 · typecheck ✓ · lint ✓ · 762/762 tests ✓
+
+**Detalle técnico**: `.claude/memory/session_2026-04-22b.md`
+
+---
 
 ## Sesión 2026-04-22b — Fix transaction bug + timestamp filenames + Kawahara PDFs
 
