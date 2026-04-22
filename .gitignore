@@ -48,3 +48,4 @@ tsc_output.txt
 typecheck_output.txt
 push_output.txt
 sqlite.db
+.mcp.json.bak
