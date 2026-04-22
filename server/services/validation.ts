@@ -39,6 +39,11 @@ interface EmployeeLike {
   hourlyRate: number | null;
 }
 
+/**
+ * Validate factory + employee data completeness before PDF generation.
+ * Used by unit tests in `server/__tests__/validation.test.ts`.
+ * Production PDF handlers read field-by-field and surface friendly errors directly.
+ */
 export function validateForPdf(
   factory: FactoryLike | null,
   employees: EmployeeLike[],
