@@ -4,4 +4,5 @@
 - [Plan A+B 2026-04-15 — Settings/Admin fixes + Database Reset](project_plan_a_b_2026_04_15.md) — 5 bug fixes + endpoint reset-all + Danger Zone UI; 762 tests; commits e478785..fe0ed21
 - [Sesion 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes](session_2026-04-15b.md) — tsx no cargaba .env; bypass localhost en adminGuardMiddleware; --env-file .env en dev scripts; commit ecd281c
 - [Sesion 2026-04-15c — factory/company yearly config + table UX](session_2026-04-15c.md) — inkan 朱肉; MSGothic font; factory_yearly_config + company_yearly_config cascade; 年度 button tabla; light mode fix
+- [Sesion 2026-04-22b — Kawahara contracts + PDF fixes + trazabilidad](session_2026-04-22b.md) — 5 contratos creados; remover calc (N) en PDFs; fix wizard /contracts/new; feature lastKobetsuAt + PDF history UI
 - [GitHub repo KobetsuV3](reference_github.md) — https://github.com/jpkken1979/KobetsuV3.26.4.16
