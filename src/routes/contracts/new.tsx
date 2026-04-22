@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useContractWizard, calculateEndDate } from "@/lib/hooks/use-contract-wizard";
+import { calculateContractDates } from "@/lib/contract-dates";
 import { useEmployeesByFactory } from "@/lib/hooks/use-employees";
 import { useFactoryCascade } from "@/lib/hooks/use-factories";
 import { useCompanies } from "@/lib/hooks/use-companies";
@@ -139,19 +140,33 @@ function NewContractWizard() {
   }, [employees]);
 
   const handleSubmit = useCallback(async () => {
-    if (!state.factoryId || !state.startDate || !state.endDate || state.employeeIds.length === 0) {
+    if (
+      !state.companyId ||
+      !state.factoryId ||
+      !state.startDate ||
+      !state.endDate ||
+      state.employeeIds.length === 0
+    ) {
       toast.error("すべての項目を入力してください");
       return;
     }
     try {
-      // Create one contract per rate group
+      const selectedSet = new Set(state.employeeIds);
+      const dates = calculateContractDates(state.startDate);
+      // Only create one contract per rate group that contains at least one selected employee,
+      // and only include employees actually checked in that group.
       for (const [rate, emps] of employeesByRate) {
+        const selectedEmps = emps.filter((e) => selectedSet.has(e.id));
+        if (selectedEmps.length === 0) continue;
         await create.mutateAsync({
-          factoryId: state.factoryId!,
+          companyId: state.companyId,
+          factoryId: state.factoryId,
           startDate: state.startDate,
           endDate: state.endDate,
+          contractDate: dates.contractDate,
+          notificationDate: dates.notificationDate,
           conflictDateOverride: state.useConflictDateOverride ? state.conflictDateOverride : null,
-          employeeAssignments: emps.map((e) => ({ employeeId: e.id, hourlyRate: rate })),
+          employeeAssignments: selectedEmps.map((e) => ({ employeeId: e.id, hourlyRate: rate })),
         });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll });
@@ -539,16 +554,23 @@ function NewContractWizard() {
             )}
           </Card>
 
-          {employeesByRate.length > 1 && (
-            <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
-                <p className="text-sm font-semibold text-[var(--color-status-warning)]">
-                  複数の単価が選択されています — {employeesByRate.length}件の契約が作成されます
-                </p>
+          {(() => {
+            const selectedSet = new Set(state.employeeIds);
+            const activeGroupCount = employeesByRate.filter(([, emps]) =>
+              emps.some((e) => selectedSet.has(e.id))
+            ).length;
+            if (activeGroupCount <= 1) return null;
+            return (
+              <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
+                  <p className="text-sm font-semibold text-[var(--color-status-warning)]">
+                    複数の単価が選択されています — {activeGroupCount}件の契約が作成されます
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => wizard.setStep(1)}>
