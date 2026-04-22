@@ -13,7 +13,7 @@ import { generateShugyoJokenMeijishoPDF } from "../pdf/shugyojoken-pdf.js";
 import { generateKoritsuKobetsuPDF } from "../pdf/koritsu-kobetsu-pdf.js";
 import { generateKoritsuDaichoPDF } from "../pdf/koritsu-hakensakidaicho-pdf.js";
 import { generateKoritsuTsuchishoPDF } from "../pdf/koritsu-tsuchisho-pdf.js";
-import { toLocalDateStr } from "../services/contract-dates.js";
+import { toLocalDateTimeStr } from "../services/contract-dates.js";
 import { mapContractEmployeesToPDF } from "../services/employee-mapper.js";
 import { sanitizeFilename } from "../services/document-files.js";
 import {
@@ -61,8 +61,8 @@ export async function handleGenerateSingle(c: Context) {
   }
 
   const common = await buildCommonDataForPDF(contract);
-  const timestamp = toLocalDateStr(new Date());
-  const prefix = sanitizeFilename(`${common.companyName}_${common.lineName || common.department}_${timestamp}`);
+  const timestamp = toLocalDateTimeStr(new Date());
+  const prefix = sanitizeFilename(`${common.companyName}_${common.lineName || common.department}_${contract.contractNumber}_${timestamp}`);
   const isKoritsu = common.companyName.includes("コーリツ");
   const outputDir = isKoritsu ? KORITSU_OUTPUT_DIR : KOBETSU_OUTPUT_DIR;
 

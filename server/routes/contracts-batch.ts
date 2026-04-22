@@ -11,6 +11,7 @@ import {
   executeBatchCreate,
   executeNewHiresCreate,
   executeMidHiresCreate,
+  executeIndividualBatchCreate,
 } from "../services/batch-contracts.js";
 
 // Re-export types used by other route files (documents-generate.ts)
@@ -61,6 +62,16 @@ const previewByIdsSchema = z.object({
   idType: z.enum(["hakensaki", "hakenmoto"]),
   contractStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "contractStart must be YYYY-MM-DD"),
   contractEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "contractEnd must be YYYY-MM-DD"),
+});
+
+const individualBatchSchema = z.object({
+  companyId: z.number().int().positive(),
+  factoryId: z.number().int().positive(),
+  employeeIds: z.array(z.number().int().positive()).min(1, "At least 1 employee required"),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  billingRate: z.number().int().positive().optional(),
+  generateDocs: z.boolean().optional(),
 });
 
 // ── POST /api/contracts/batch/preview ───────────────────────────────
@@ -342,6 +353,30 @@ contractsBatchRouter.post("/preview-by-ids", async (c) => {
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Preview failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// ── POST /api/contracts/batch/individual ──────────────────────────────
+// Creates 1 contract PER selected employee — no rate grouping.
+
+contractsBatchRouter.post("/batch/individual", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = individualBatchSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+
+    const { companyId, factoryId, employeeIds, startDate, endDate, billingRate, generateDocs } = parsed.data;
+    const result = executeIndividualBatchCreate({ companyId, factoryId, employeeIds, startDate, endDate, billingRate });
+
+    return c.json({
+      created: result.length,
+      contracts: result,
+      contractIds: result.map((r) => r.id),
+      generateDocs: generateDocs || false,
+    }, 201);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Individual batch creation failed";
     return c.json({ error: message }, 500);
   }
 });

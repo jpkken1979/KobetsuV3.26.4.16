@@ -719,7 +719,7 @@ export function executeMidHiresCreate(
   const operationId = crypto.randomUUID();
 
   return sqlite.transaction(() => {
-    const results: HiresCreateResult[] = [];
+    const res: HiresCreateResult[] = [];
 
     for (const line of lines) {
       const factory = line.factory;
@@ -785,7 +785,7 @@ export function executeMidHiresCreate(
           operationId,
         }).run();
 
-        results.push({
+        res.push({
           id: contract.id,
           contractNumber: contract.contractNumber,
           factoryName: factory.factoryName,
@@ -808,11 +808,162 @@ export function executeMidHiresCreate(
       action: "create",
       entityType: "contract",
       entityId: 0,
-      detail: `途中入社一括作成完了: ${results.length}件 (会社ID: ${companyId})`,
+      detail: `途中入社一括作成完了: ${res.length}件 (会社ID: ${companyId})`,
+      userName: "system",
+      operationId,
+    }).run();
+
+    return res;
+  })();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Individual batch — 1 contract PER employee (no rate grouping)
+// ═══════════════════════════════════════════════════════════════════════
+
+export interface IndividualBatchParams {
+  companyId: number;
+  factoryId: number;
+  employeeIds: number[];
+  startDate: string;
+  endDate: string;
+  billingRate?: number;
+}
+
+/** Creates exactly 1 contract per employee in employeeIds */
+export function executeIndividualBatchCreate(
+  params: IndividualBatchParams,
+): HiresCreateResult[] {
+  const { companyId, factoryId, employeeIds, startDate, endDate, billingRate } = params;
+
+  if (employeeIds.length === 0) return [];
+
+  const contractDate = calculateContractDate(startDate);
+  const notificationDate = calculateNotificationDate(startDate);
+  const operationId = crypto.randomUUID();
+
+  return sqlite.transaction(() => {
+    const results: HiresCreateResult[] = [];
+
+    const factory = db
+      .select()
+      .from(factories)
+      .where(eq(factories.id, factoryId))
+      .get();
+
+    if (!factory) throw new Error(`Factory ${factoryId} not found`);
+
+    const emps = db
+      .select()
+      .from(employees)
+      .where(inArray(employees.id, employeeIds))
+      .all();
+
+    const empMap = new Map(emps.map((e) => [e.id, e]));
+
+    for (const empId of employeeIds) {
+      const emp = empMap.get(empId);
+      if (!emp) {
+        db.insert(auditLog).values({
+          action: "create",
+          entityType: "contract",
+          entityId: 0,
+          detail: `個別batch: employee ${empId} not found — skipped`,
+          userName: "system",
+          operationId,
+        }).run();
+        continue;
+      }
+
+      const effectiveRate = billingRate ?? emp.billingRate ?? emp.hourlyRate ?? factory.hourlyRate ?? 0;
+      if (!effectiveRate) {
+        db.insert(auditLog).values({
+          action: "create",
+          entityType: "contract",
+          entityId: 0,
+          detail: `個別batch: employee ${empId} has no billingRate — skipped`,
+          userName: "system",
+          operationId,
+        }).run();
+        continue;
+      }
+
+      const contractNumber = generateContractNumber(startDate);
+
+      const contract = db.insert(contracts).values({
+        contractNumber,
+        status: "active",
+        companyId,
+        factoryId,
+        startDate,
+        endDate,
+        contractDate,
+        notificationDate,
+        workDays: factory.workDays || "",
+        workStartTime: null,
+        workEndTime: null,
+        breakMinutes: factory.breakTime || 60,
+        supervisorName: factory.supervisorName || "",
+        supervisorDept: factory.supervisorDept || "",
+        supervisorPhone: factory.supervisorPhone || "",
+        complaintHandlerClient: factory.complaintClientName || "",
+        complaintHandlerUns: factory.complaintUnsName || "",
+        hakenmotoManager: factory.managerUnsName || "",
+        safetyMeasures: "派遣先責任者の指示に従い安全衛生に関する法令を遵守する",
+        terminationMeasures: "契約期間中に契約を解除する場合は、30日以上前に予告する",
+        jobDescription: factory.jobDescription || "",
+        responsibilityLevel: "指示を受けて行う",
+        overtimeMax: factory.overtimeHours || "",
+        welfare: "派遣先の福利厚生施設の利用可",
+        isKyoteiTaisho: true,
+        hourlyRate: effectiveRate,
+        overtimeRate: null,
+        nightShiftRate: null,
+        holidayRate: null,
+        notes: `個別batch作成 (employeeIds: ${employeeIds.length}名)`,
+      }).returning().get();
+
+      db.insert(contractEmployees).values({
+        contractId: contract.id,
+        employeeId: empId,
+        hourlyRate: effectiveRate,
+        individualStartDate: startDate,
+        individualEndDate: endDate,
+        isIndefinite: false,
+      }).run();
+
+      db.insert(auditLog).values({
+        action: "create",
+        entityType: "contract",
+        entityId: contract.id,
+        detail: `個別batch: ${contractNumber} (${factory.factoryName}, ${emp.fullName}, ¥${effectiveRate}/h)`,
+        userName: "system",
+        operationId,
+      }).run();
+
+      results.push({
+        id: contract.id,
+        contractNumber: contract.contractNumber,
+        factoryName: factory.factoryName,
+        department: factory.department,
+        lineName: factory.lineName,
+        hourlyRate: effectiveRate,
+        startDate,
+        endDate,
+        employees: [{ id: empId, fullName: emp.fullName, individualStartDate: startDate }],
+        employeeCount: 1,
+      });
+    }
+
+    db.insert(auditLog).values({
+      action: "create",
+      entityType: "contract",
+      entityId: 0,
+      detail: `個別batch作成完了: ${results.length}件 (会社ID: ${companyId}, 社員IDs: ${employeeIds.length}名)`,
       userName: "system",
       operationId,
     }).run();
 
     return results;
-  })();
+  })() as unknown as HiresCreateResult[];
 }

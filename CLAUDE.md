@@ -259,6 +259,18 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 4. Connect in `server/routes/documents-generate.ts`
 5. For details on PDF rules: see `.claude/rules/pdf-rules.md` (auto-injected)
 
+### Adding New Features (Complex Tasks)
+
+For tasks that touch 3+ files, new features, or architectural changes, use the **SDD workflow** (Spec-Driven Development):
+
+| Command | Phase |
+|---------|-------|
+| `/sdd` | Full 9-phase orchestration |
+| `/sdd-explore` | Phase 1 only (exploration) |
+| `/sdd-propose` | Phase 2 only (proposal) |
+
+SDD is defined in `WORKFLOW_RULES.md` and follows 9 phases: Explore → Propose → Spec → Plan → Implement → Test → Review → Document → Finalize.
+
 ## Database (11 Tables)
 
 | Table | Purpose | Key relationships |
@@ -349,6 +361,10 @@ POST/PUT `/api/contracts` accepts:
 
 `contractDate` = startDate - 2 business days, `notificationDate` = startDate - 3 business days. Weekends excluded.
 
+### Dashboard Warning Window
+
+`warningDays` (not `conflictWarningDays`) is the parameter that controls the "contracts expiring soon" alert window in the dashboard. Clamped 1–365, default 30. Stored in `dashboard.ts` route logic.
+
 ### Koritsu PDF Variant (コーリツ)
 
 Different format from all other companies — 3 separate generators in `server/pdf/koritsu-*.ts`:
@@ -399,7 +415,7 @@ Different format from all other companies — 3 separate generators in `server/p
 - **Coverage thresholds:** globals 50/50/50/50 (lines/functions/statements/branches), per-file raised: `contract-dates.ts` 95, `batch-helpers.ts` 85, `koritsu-pdf-parser.ts` 80. Coverage include list is scoped to `server/services/**` + `src/routes/companies/-table-*.tsx`
 - **Server tests:** `server/__tests__/` (unit + integration with real SQLite)
 - **Frontend tests:** colocated with components
-- **Drift guard:** `server/__tests__/claude-md-drift.test.ts` re-verifica los conteos de `Route files (N` y `Service modules (N` contra `server/routes/` y `server/services/`. Si tocás ese árbol, actualizá este archivo o el test falla.
+- **Drift guard:** `server/__tests__/claude-md-drift.test.ts` counts `.ts` files in `server/routes/` and `server/services/`, then asserts the numbers match the `Route files (N` and `Service modules (N` counts declared in this file. If either count drifts, the test fails — forcing a doc update alongside any code change that adds/removes routes or services.
 - **CI Pipeline:** `.github/workflows/ci.yml` — verify locally with `npm run lint && npm run typecheck && npm run build && npm run test:run`
 - **PDF smoke tests:** standalone scripts in project root (see PDF Test Scripts above). Regenerate golden snapshots with `npm run test:pdf-snapshots:update` after changing any generator
 - Mocks only for external dependencies — prefer real SQLite for integration tests
@@ -438,6 +454,14 @@ These rules are injected into every session automatically. When they conflict wi
 | `ESTADO_PROYECTO.md` | Project state document (Spanish) |
 | `Koritsu/` | コーリツ Excel template + 指揮命令者 PDF reference |
 | `design-system/jp-kobetsu/MASTER.md` | Design system spec (colores, spacing, componentes) |
+
+### Active Pending Items
+
+These items are tracked in `ESTADO_PROYECTO.md` and awaiting user decision:
+
+| Item | Status | Note |
+|------|--------|------|
+| Backup remoto (Litestream o `cp` con rotación) | ⏳ Pending | Requires user decision — not blocking |
 
 ## Files NOT to Commit
 

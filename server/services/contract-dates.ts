@@ -26,6 +26,15 @@ export function toLocalDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+export function toLocalDateTimeStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${day}_${h}-${min}`;
+}
+
 function isWeekend(date: Date): boolean {
   const day = date.getDay();
   return day === 0 || day === 6;

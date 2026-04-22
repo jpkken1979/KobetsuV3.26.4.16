@@ -2,6 +2,23 @@
 
 > Última actualización: 2026-04-22 (sesión rediseño UI/UX Hypercar Aurora)
 
+## Sesión 2026-04-22b — Fix transaction bug + timestamp filenames + Kawahara PDFs
+
+**3 fixes + 1 feature + regeneracion de PDFs:**
+
+- **Bug fix `executeIndividualBatchCreate`** (`server/services/batch-contracts.ts`): `sqlite.transaction()` devolvía función wrapper en vez de resultado. Mismo fix que `executeMidHiresCreate`: agregar `()` para invocar. Transaction ahora retorna correctamente el array de resultados.
+- **`toLocalDateTimeStr`** (`server/services/contract-dates.ts`): nueva función con formato `YYYY-MM-DD_HH-mm` para timestamp con hora/minuto.
+- **Fix filename prefix** (`server/routes/documents-generate-single.ts`): ahora incluye `contract.contractNumber` en el prefix — múltiples contratos del mismo día/company/line generaban nombres idénticos.
+- **Endpoint `/preview-by-ids`** (`server/routes/contracts-batch.ts`): nuevo endpoint para preview por IDs de empleados.
+- **Regeneración PDFs 川原鉄工所**: 8 contratos (IDs 50-57, KOB-202604-0010 a 0012 + renew IDs 53-57), billing_rate=1750, 32 archivos generados con timestamp `_2026-04-22_18-23`.
+- **Lint warning fix**: import no usado `toLocalDateStr` removido de documents-generate-single.ts.
+
+**Verificación**: typecheck clean · lint clean · 762/762 tests · 0 errores
+
+**Detalle técnico**: `.claude/memory/session_2026-04-22.md`
+
+---
+
 ## Sesión 2026-04-22 — Rediseño UI/UX Path B "Hypercar Aurora"
 
 **8 fases completadas sobre 72 archivos (+2944 -1807 líneas):**
