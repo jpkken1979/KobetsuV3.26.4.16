@@ -149,10 +149,25 @@ export interface Contract {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  // Latest kobetsu PDF generation timestamp (SQLite UTC, "YYYY-MM-DD HH:MM:SS") — populated by GET /api/contracts
+  lastKobetsuAt?: string | null;
   // Relations (populated by API joins)
   company?: Company;
   factory?: Factory;
   employees?: (Employee | ContractEmployee)[];
+}
+
+export interface PdfVersion {
+  id: number;
+  pdfType: string;
+  contractId: number | null;
+  factoryId: number | null;
+  sha256: string;
+  byteLength: number;
+  generatedAt: string;
+  generatedBy: string | null;
+  regeneratedFrom: number | null;
+  metadata: string | null;
 }
 
 export interface ContractEmployee {

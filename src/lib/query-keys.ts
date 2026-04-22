@@ -35,6 +35,10 @@ export const queryKeys = {
     all: ["documents"] as const,
     forContract: (contractId: number | null) => ["documents", contractId] as const,
   },
+  pdfVersions: {
+    byContract: (contractId: number) => ["pdfVersions", "byContract", contractId] as const,
+    invalidateAll: ["pdfVersions"] as const,
+  },
   dashboard: {
     stats: (days?: number) => ["dashboard", "stats", days] as const,
     expiring: (days?: number) => ["dashboard", "expiring", days] as const,

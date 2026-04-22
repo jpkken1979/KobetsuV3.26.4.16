@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db, sqlite } from "../db/index.js";
-import { contracts, contractEmployees, auditLog, employees, factories } from "../db/schema.js";
-import { eq, and, not, desc, inArray, type SQL } from "drizzle-orm";
+import { contracts, contractEmployees, auditLog, employees, factories, pdfVersions } from "../db/schema.js";
+import { eq, and, not, desc, inArray, max, type SQL } from "drizzle-orm";
 import { generateContractNumber } from "../services/contract-number.js";
 import { cleanupPurgedContractDocuments } from "../services/document-index.js";
 import { createContractSchema, updateContractSchema } from "../validation.js";
@@ -105,7 +105,26 @@ contractsRouter.get("/", async (c) => {
       limit,
       ...(offset ? { offset } : {}),
     });
-    return c.json(results);
+
+    // Enrich each contract with the timestamp of its latest kobetsu PDF generation
+    // (for trazabilidad legal — 派遣法第26条 compliance).
+    const lastByContract = new Map<number, string>();
+    if (results.length > 0) {
+      const ids = results.map((r) => r.id);
+      const rows = await db
+        .select({
+          contractId: pdfVersions.contractId,
+          lastAt: max(pdfVersions.generatedAt),
+        })
+        .from(pdfVersions)
+        .where(and(eq(pdfVersions.pdfType, "kobetsu"), inArray(pdfVersions.contractId, ids)))
+        .groupBy(pdfVersions.contractId);
+      for (const r of rows) {
+        if (r.contractId != null && r.lastAt != null) lastByContract.set(r.contractId, r.lastAt);
+      }
+    }
+    const enriched = results.map((r) => ({ ...r, lastKobetsuAt: lastByContract.get(r.id) ?? null }));
+    return c.json(enriched);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Operation failed";
     return c.json({ error: message }, 500);

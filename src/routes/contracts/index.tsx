@@ -54,7 +54,7 @@ import { Fragment, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { TableSkeleton } from "./-contracts-skeleton";
 import { contractColumns } from "./-contracts-columns";
-import { ExpiryDateDisplay, EmployeeNames } from "./-contracts-helpers";
+import { ExpiryDateDisplay, EmployeeNames, LastKobetsuAt } from "./-contracts-helpers";
 import { SetOptionsModal, type SetOptions } from "./-set-options-modal";
 
 // Row entrance — usado en motion.tr individual (parent variants + Fragment + tbody es incompatible en React 19)
@@ -526,6 +526,9 @@ function ContractsList() {
                       </button>
                     </th>
                     <th scope="col" className="px-4 py-2.5 text-left text-[0.625rem] font-bold uppercase tracking-[0.15em] text-muted-foreground">
+                      最終PDF生成
+                    </th>
+                    <th scope="col" className="px-4 py-2.5 text-left text-[0.625rem] font-bold uppercase tracking-[0.15em] text-muted-foreground">
                       操作
                     </th>
                   </tr>
@@ -562,7 +565,7 @@ function ContractsList() {
                               className="h-4 w-4 cursor-pointer accent-primary"
                             />
                           </td>
-                          <td colSpan={5} className="px-4 py-2.5">
+                          <td colSpan={6} className="px-4 py-2.5">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <ChevronRight
@@ -654,6 +657,9 @@ function ContractsList() {
                               </td>
                               <td className="px-4 py-3 text-sm">
                                 <ExpiryDateDisplay startDate={c.startDate} endDate={c.endDate} />
+                              </td>
+                              <td className="mono-tabular px-4 py-3 text-[11px] text-muted-foreground/80">
+                                <LastKobetsuAt value={c.lastKobetsuAt} />
                               </td>
                               <td className="px-4 py-3">
                                 <TooltipProvider>

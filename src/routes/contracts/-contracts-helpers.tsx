@@ -2,6 +2,42 @@ import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Contract } from "@/lib/api";
 
+/* ── Last kobetsu PDF generation timestamp (SQLite UTC → Tokyo local) ── */
+const JST_SHORT = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+const JST_FULL = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
+export function LastKobetsuAt({ value }: { value?: string | null }) {
+  if (!value) return <span className="text-muted-foreground/30">—</span>;
+  // SQLite stores "YYYY-MM-DD HH:MM:SS" in UTC (via datetime('now'))
+  const utc = new Date(value.replace(" ", "T") + "Z");
+  if (Number.isNaN(utc.getTime())) return <span className="text-muted-foreground/30">—</span>;
+  return (
+    <time
+      dateTime={utc.toISOString()}
+      title={JST_FULL.format(utc) + " (日本時間)"}
+      className="text-muted-foreground/80"
+    >
+      {JST_SHORT.format(utc)}
+    </time>
+  );
+}
+
 /* ── Expiry date display with urgency coloring ── */
 export function ExpiryDateDisplay({ startDate, endDate }: { startDate?: string; endDate?: string }) {
   if (!startDate || !endDate) return <span className="text-muted-foreground/30">--</span>;

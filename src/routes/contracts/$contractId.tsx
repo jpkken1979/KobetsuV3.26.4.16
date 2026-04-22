@@ -2,8 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import type { ContractEmployee, Employee } from "@/lib/api-types";
+import type { ContractEmployee, Employee, PdfVersion } from "@/lib/api-types";
 import { queryKeys } from "@/lib/query-keys";
+import { usePdfVersions } from "@/lib/hooks/use-pdf-versions";
 import { AnimatedPage, GradientText } from "@/components/ui/animated";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,86 @@ const STATUS_LABELS: Record<string, string> = {
 function fmtRate(rate: number | null | undefined): string {
   if (rate == null) return "--";
   return `¥${rate.toLocaleString()}`;
+}
+
+/* ── PDF 生成履歴 (trazabilidad legal — 派遣法第26条) ── */
+const PDF_TYPE_LABELS: Record<string, string> = {
+  kobetsu: "個別契約書",
+  tsuchisho: "通知書",
+  keiyakusho: "労働契約書",
+  shugyojoken: "就業条件明示書",
+  hakensakikanridaicho: "派遣先管理台帳",
+  hakenmotokanridaicho: "派遣元管理台帳",
+  koritsu_kobetsu: "コーリツ個別契約書",
+  koritsu_tsuchisho: "コーリツ通知書",
+  koritsu_hakensakidaicho: "コーリツ派遣先管理台帳",
+};
+
+const JST_DT = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+});
+
+function fmtSqliteUtc(value: string): string {
+  const utc = new Date(value.replace(" ", "T") + "Z");
+  if (Number.isNaN(utc.getTime())) return value;
+  return JST_DT.format(utc);
+}
+
+function fmtBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function PdfHistorySection({ contractId }: { contractId: number }) {
+  const { data, isLoading } = usePdfVersions(contractId);
+  const versions: PdfVersion[] = data ?? [];
+  return (
+    <Section title="PDF生成履歴">
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground/50">読み込み中...</p>
+      ) : versions.length === 0 ? (
+        <p className="text-xs text-muted-foreground/50">まだ生成されていません</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border/40 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+                <th className="py-2 pr-2">生成日時 (日本時間)</th>
+                <th className="py-2 pr-2">種類</th>
+                <th className="py-2 pr-2">SHA256</th>
+                <th className="py-2 text-right">サイズ</th>
+              </tr>
+            </thead>
+            <tbody className="mono-tabular">
+              {versions.map((v) => (
+                <tr key={v.id} className="border-b border-border/20 last:border-0">
+                  <td className="py-2 pr-2">{fmtSqliteUtc(v.generatedAt)}</td>
+                  <td className="py-2 pr-2">{PDF_TYPE_LABELS[v.pdfType] ?? v.pdfType}</td>
+                  <td
+                    className="py-2 pr-2 text-muted-foreground/60"
+                    title={v.sha256}
+                  >
+                    {v.sha256.slice(0, 12)}…
+                  </td>
+                  <td className="py-2 text-right text-muted-foreground/70">
+                    {fmtBytes(v.byteLength)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Section>
+  );
 }
 
 /* ── Main Component ── */
@@ -528,6 +609,11 @@ function ContractDetail() {
                 <DetailRow label="派遣元責任者" value={contract.hakenmotoManager} />
               </div>
             </Section>
+          </div>
+
+          {/* PDF generation history */}
+          <div className="hover-lift rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
+            <PdfHistorySection contractId={id} />
           </div>
         </motion.div>
       </div>
