@@ -1,6 +1,22 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-21b (sesión pulido visual PDFs — balance tipográfico kobetsu + relleno tsuchisho)
+> Última actualización: 2026-04-22 (sesión rediseño UI/UX Hypercar Aurora)
+
+## Sesión 2026-04-22 — Rediseño UI/UX Path B "Hypercar Aurora"
+
+**8 fases completadas sobre 72 archivos (+2944 -1807 líneas):**
+
+- **Fase 1-2**: Tokens CSS base (status ok/warning/error/info/pending/neutral + muted) + 9 primitives UI (button, card, badge, input, select, dialog, skeleton, empty-state, page-header) + premium utilities (aurora-border, shine-hover, spotlight, live-dot, text-display, mono-tabular, sep-fade)
+- **Fase 3**: Dashboard + charts — hero card aurora-border, stat cards elevated+spotlight, live-dots per status
+- **Fase 4**: /contracts + /employees — motion.tbody bug fix (React 19), useMemo deps fix, badge status tokens
+- **Fase 5**: Contract wizard (new stepper) + 8 componentes contract
+- **Fase 6**: Batch routes (contracts/batch, new-hires, mid-hires) + shouheisha
+- **Fase 7**: /companies (32 archivos) + /documents (6 archivos)
+- **Fase 8**: Lote 3 primitives (tabs, table, tooltip, switch, alert, error-boundary) + rutas verdes (admin, settings, import, data-check, history, audit)
+
+**Verificación**: typecheck ✓ · lint 1 error pre-existente · 762/762 tests ✓ · 0 vulnerabilidades npm
+
+**Tokens migrados**: 426 raw Tailwind colors → ~228 status tokens (46% reducción)
 
 ## Sesión 2026-04-21b — Balance tipográfico kobetsu + relleno tsuchisho
 
