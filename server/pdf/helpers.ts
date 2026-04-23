@@ -419,7 +419,10 @@ export function adjustToBusinessDay(year: number, month: number, day: number): D
 // "7時00分～15時30分" → "7:00～15:30" — saves ~30% horizontal space
 
 export function compactTimeFormat(text: string): string {
-  return text.replace(/(\d{1,2})時(\d{2})分?/g, "$1:$2");
+  return text
+    .replace(/(\d{1,2})時(\d{2})分?/g, "$1:$2")
+    .replace(/\s*合計\d+分$/, "")
+    .replace(/~/g, "~");
 }
 
 // ─── Format currency ────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import {
   composeFullBreakText,
   primaryBreakMins,
   parseExistingShifts,
+  sortShiftEntries,
   uid,
   type ShiftEntry,
 } from "../shift-utils";
@@ -293,5 +294,84 @@ describe("parseExistingShifts", () => {
     expect(shifts[0].breaks).toHaveLength(1);
     expect(shifts[0].breaks[0].startTime).toBe("12:00");
     expect(shifts[0].breaks[0].endTime).toBe("12:45");
+  });
+});
+
+// ─── sortShiftEntries ─────────────────────────────────────────────
+//
+// Orden canonico: 日勤 → 昼勤 → 夕勤 → 夜勤 → 深夜 → kanji numerados →
+// letras latinas (A-Z) → otros kanji. Dentro de cada nombre, por ①②③ o
+// numero trailing.
+
+describe("sortShiftEntries", () => {
+  const names = <T extends { name: string }>(arr: T[]) => arr.map((s) => s.name);
+
+  it("orders mixed kanji + letter + numbered shifts canonically", () => {
+    const input = [
+      { name: "深夜" },
+      { name: "A勤務" },
+      { name: "C勤務" },
+      { name: "昼勤①" },
+      { name: "昼勤②" },
+      { name: "B勤務" },
+    ];
+    expect(names(sortShiftEntries(input))).toEqual([
+      "昼勤①",
+      "昼勤②",
+      "深夜",
+      "A勤務",
+      "B勤務",
+      "C勤務",
+    ]);
+  });
+
+  it("keeps Takao A-I shifts in alphabetic order", () => {
+    const input = ["I勤務", "A勤務", "E勤務", "C勤務", "B勤務", "H勤務", "G勤務", "F勤務", "D勤務"].map((n) => ({ name: n }));
+    expect(names(sortShiftEntries(input))).toEqual([
+      "A勤務", "B勤務", "C勤務", "D勤務", "E勤務", "F勤務", "G勤務", "H勤務", "I勤務",
+    ]);
+  });
+
+  it("orders kanji time names by day→night priority", () => {
+    const input = [{ name: "深夜" }, { name: "日勤" }, { name: "夜勤" }, { name: "夕勤" }, { name: "昼勤" }];
+    expect(names(sortShiftEntries(input))).toEqual(["日勤", "昼勤", "夕勤", "夜勤", "深夜"]);
+  });
+
+  it("orders numbered 直 shifts by number", () => {
+    const input = [{ name: "3直" }, { name: "1直" }, { name: "2直" }];
+    expect(names(sortShiftEntries(input))).toEqual(["1直", "2直", "3直"]);
+  });
+
+  it("orders シフト1, シフト2 by number", () => {
+    const input = [{ name: "シフト2" }, { name: "シフト1" }];
+    expect(names(sortShiftEntries(input))).toEqual(["シフト1", "シフト2"]);
+  });
+
+  it("places kanji group before latin group", () => {
+    const input = [{ name: "A勤務" }, { name: "昼勤" }, { name: "Z勤務" }, { name: "深夜" }];
+    expect(names(sortShiftEntries(input))).toEqual(["昼勤", "深夜", "A勤務", "Z勤務"]);
+  });
+
+  it("does not mutate the input array", () => {
+    const input = [{ name: "B勤務" }, { name: "A勤務" }];
+    sortShiftEntries(input);
+    expect(names(input)).toEqual(["B勤務", "A勤務"]);
+  });
+});
+
+// ─── composeWorkHoursText normalizes ordering on save ────────────
+
+describe("composeWorkHoursText with canonical order", () => {
+  it("outputs shifts in canonical order even when input is bara-bara", () => {
+    const shifts: ShiftEntry[] = [
+      { id: "_1", name: "深夜", startTime: "19:00", endTime: "03:30", breaks: [] },
+      { id: "_2", name: "A勤務", startTime: "07:00", endTime: "15:30", breaks: [] },
+      { id: "_3", name: "昼勤①", startTime: "07:00", endTime: "15:30", breaks: [] },
+      { id: "_4", name: "B勤務", startTime: "15:00", endTime: "23:30", breaks: [] },
+    ];
+    const out = composeWorkHoursText(shifts);
+    expect(out).toBe(
+      "昼勤①：7時00分～15時30分　深夜：19時00分～3時30分　A勤務：7時00分～15時30分　B勤務：15時00分～23時30分",
+    );
   });
 });

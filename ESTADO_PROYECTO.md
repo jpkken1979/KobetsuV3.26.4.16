@@ -1,6 +1,25 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-23 (sesión refactor completo + cleanup dead code)
+> Última actualización: 2026-04-23 (sesión b — orden canonico de turnos + split PDF multicolumna)
+
+## Sesión 2026-04-23b — Orden canónico de turnos + fix render multicolumna
+
+**3 features + 2 bugs + 1 reconciliacion:**
+
+- **Orden canónico en UI/DB/PDF**: `sortShiftEntries` en `src/lib/shift-utils.ts` — `日勤 → 昼勤 → 夕勤 → 夜勤 → 深夜` → kanji numerados → letras A-Z. Aplicado en `composeWorkHoursText`, `composeFullBreakText`, `parseExistingShifts`.
+- **Normalizer server-side**: `server/services/shift-sort.ts` conservador — preserva original si ya esta ordenado o tiene texto extra (`(実働 7時間40分）`).
+- **Split multicolumna secuencial (opción B)**: `tryColumnLayout` en `server/pdf/kobetsu-pdf.ts` preserva orden canónico en lugar de reordenar por ancho de píxeles. Takao 9 shifts: col1 A-B-C, col2 D-E-F, col3 G-H-I.
+- **Fix bug regex nombre shift**: antes NO matcheaba `昼勤①`, `昼勤②`, `深夜`, `早番`, `遅番`. Nuevo pattern: `[A-Za-z一-鿿\d]+[勤直務夜番][①-⑩\d０-９]*|シフト\d?`.
+- **Fix render workHours apelmazado**: `renderMultiShift` spliteaba solo por `\n` pero `workHours` usa `　` — caía en path ≤2 shifts cortando `D勤務：15時00分～23` a mitad. Ahora split por `\n` o `　` con lookahead que preserva `　合計60分` interno.
+- **Reconciliación `compactTimeFormat`**: helper expandido en `server/pdf/helpers.ts` (strip `合計XX分` + reemplazo `~→~`) consumido desde `kobetsu-pdf.ts`.
+
+**Script migración**: `scripts/normalize-shifts.ts` dry-run default + backup timestamp. DB actual → 0 cambios (todas canónicas).
+
+**Tests**: +7 unitarios en `shift-utils.test.ts`. Total 770/770 · typecheck ✓
+
+**Detalle técnico**: `.claude/memory/session_2026-04-23b.md`
+
+---
 
 ## Sesión 2026-04-23 — Refactor completo KobetsuV3
 

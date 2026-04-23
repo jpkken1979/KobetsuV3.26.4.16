@@ -268,7 +268,11 @@ function stripPostalCode(addr: string): string {
 // Strategy: try simplest layout first, progressively degrade until it fits.
 
 function renderMultiShift(doc: Doc, text: string, r1: number, r2: number) {
-  const lines = text.split("\n").filter(Boolean);
+  // Split by \n (breakTime uses it) OR by 　 that precedes a shift name
+  // (workHours uses 　 between shifts but also inside lines like "… 　合計60分").
+  // The lookahead keeps that internal 　 intact.
+  const shiftBoundary = /(?:\n|　(?=[A-Za-z一-鿿\d]+[勤直務夜番][①-⑩\d０-９]*：))/;
+  const lines = text.split(shiftBoundary).map((l) => l.trim()).filter(Boolean);
   if (lines.length === 0) {
     cell(doc, r1, 7, r2, 26, "", 8);
     return;
@@ -282,32 +286,27 @@ function renderMultiShift(doc: Doc, text: string, r1: number, r2: number) {
 
   // 3+ shifts: try progressively denser layouts until one fits
   const x = cx(7), y = ry(r1), w = cw(7, 26), h = rh(r1, r2);
-  // Compact times: "7時00分" → "7:00"
-  const compactLines = lines.map(l => compactTimeFormat(l));
-  // Strip redundant "　合計XX分" suffix (the parenthetical duration is kept)
-  const trimmedLines = compactLines.map(l => l.replace(/\s*合計\d+分$/, ""));
 
-  // Layout attempts: keep full detail, just shrink font progressively
-  // For 7+ shifts, skip 2-col (looks unbalanced) — go straight to 3-col
+  const compactLines = lines.map(compactTimeFormat);
   const use3col = lines.length >= 7;
+
+  // Layout attempts: compacted first, then shrink font progressively
   const attempts: { lines: string[]; cols: number; fs: number }[] = use3col ? [
-    { lines: trimmedLines, cols: 3, fs: 6.5 },
-    { lines: trimmedLines, cols: 3, fs: 6 },
-    { lines: trimmedLines, cols: 3, fs: 5.5 },
-    { lines: trimmedLines, cols: 3, fs: 5 },
-    { lines: trimmedLines, cols: 3, fs: 4.5 },
-    { lines: trimmedLines, cols: 3, fs: 4 },
+    { lines: compactLines, cols: 3, fs: 6.5 },
+    { lines: compactLines, cols: 3, fs: 6 },
+    { lines: compactLines, cols: 3, fs: 5.5 },
+    { lines: compactLines, cols: 3, fs: 5 },
+    { lines: compactLines, cols: 3, fs: 4.5 },
+    { lines: compactLines, cols: 3, fs: 4 },
   ] : [
-    { lines, cols: 2, fs: 7.5 },
     { lines: compactLines, cols: 2, fs: 7.5 },
-    { lines: trimmedLines, cols: 2, fs: 7.5 },
-    { lines: trimmedLines, cols: 3, fs: 7 },
-    { lines: trimmedLines, cols: 2, fs: 6.5 },
-    { lines: trimmedLines, cols: 3, fs: 6.5 },
-    { lines: trimmedLines, cols: 3, fs: 6 },
-    { lines: trimmedLines, cols: 3, fs: 5.5 },
-    { lines: trimmedLines, cols: 3, fs: 5 },
-    { lines: trimmedLines, cols: 3, fs: 4.5 },
+    { lines: compactLines, cols: 2, fs: 7 },
+    { lines: compactLines, cols: 3, fs: 7 },
+    { lines: compactLines, cols: 3, fs: 6.5 },
+    { lines: compactLines, cols: 3, fs: 6 },
+    { lines: compactLines, cols: 3, fs: 5.5 },
+    { lines: compactLines, cols: 3, fs: 5 },
+    { lines: compactLines, cols: 3, fs: 4.5 },
   ];
 
   for (const attempt of attempts) {
@@ -315,20 +314,21 @@ function renderMultiShift(doc: Doc, text: string, r1: number, r2: number) {
   }
 
   // Final fallback: 3-col forced at 4pt
-  tryColumnLayout(doc, trimmedLines, x, y, w, h, 3, 4, true);
+  tryColumnLayout(doc, compactLines, x, y, w, h, 3, 4, true);
 }
 
 /** Try rendering lines in N columns. Returns true if text fits without overflow.
- *  Uses balanced distribution: splits lines so columns have equal or near-equal
- *  counts, with the first column(s) getting fewer items (shorter lines first). */
+ *  Preserves the canonical shift order by splitting the list sequentially:
+ *  first batch → col 1, next batch → col 2, … The last (cols-extra) columns
+ *  carry base items, the last `extra` columns carry base+1, so heights stay
+ *  close while shifts read top-to-bottom, left-to-right. */
 function tryColumnLayout(
   doc: Doc, lines: string[],
   x: number, y: number, totalW: number, totalH: number,
   cols: number, fontSize: number, force = false
 ): boolean {
   const pad = 2;
-  // Balanced distribution: first columns get floor, last get ceil
-  // e.g. 9 lines / 2 cols → [4, 5] instead of [5, 4]
+  doc.fontSize(fontSize);
   const base = Math.floor(lines.length / cols);
   const extra = lines.length % cols;
   const colSizes: number[] = [];
@@ -336,7 +336,7 @@ function tryColumnLayout(
     colSizes.push(base + (c >= cols - extra ? 1 : 0));
   }
 
-  // Build column slices
+  // Sequential split — preserves canonical order across columns
   const colSlices: string[][] = [];
   let offset = 0;
   for (let c = 0; c < cols; c++) {

@@ -64,6 +64,87 @@ export function uid(): string {
   return `_${++_idCounter}`;
 }
 
+// ─── Canonical Shift Sort ───────────────────────────────────────────
+// Orden: 日勤→昼勤→夕勤→夜勤→深夜 (kanji fijo) → kanji numerados
+// (1直, シフト1…) → letras latinas (A-Z) → otros kanji → resto.
+// Dentro de cada grupo se ordena por sufijo ①②③ / número trailing.
+
+const CIRCLED_DIGITS: Record<string, number> = {
+  "①": 1, "②": 2, "③": 3, "④": 4, "⑤": 5,
+  "⑥": 6, "⑦": 7, "⑧": 8, "⑨": 9, "⑩": 10,
+};
+
+const KANJI_TIME_RANK: Record<string, number> = {
+  "日勤": 0,
+  "通常勤務": 0,
+  "昼勤": 1,
+  "早番": 1,
+  "夕勤": 2,
+  "準夜": 2,
+  "遅番": 2,
+  "夜勤": 3,
+  "交替勤務": 3,
+  "深夜": 4,
+};
+
+function stripSuffix(name: string): string {
+  return name.replace(/[①②③④⑤⑥⑦⑧⑨⑩0-9０-９]+$/u, "").trim();
+}
+
+function toAsciiDigits(s: string): string {
+  return s.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xff10 + 0x30));
+}
+
+function suffixNumber(name: string): number {
+  for (const [c, v] of Object.entries(CIRCLED_DIGITS)) {
+    if (name.includes(c)) return v;
+  }
+  const m = name.match(/([0-9０-９]+)\s*$/);
+  if (m) return parseInt(toAsciiDigits(m[1]), 10) || 0;
+  return 0;
+}
+
+function shiftGroup(rawName: string): number {
+  const name = rawName.trim();
+  const base = stripSuffix(name);
+  if (base in KANJI_TIME_RANK) return 0;
+  if (/^[0-9０-９]+\s*[直勤]/.test(name)) return 1;
+  if (/^シフト/.test(name)) return 1;
+  if (/^[A-Za-z]/.test(name)) return 2;
+  if (/^[一-鿿]/.test(name)) return 3;
+  return 4;
+}
+
+/**
+ * Ordena turnos segun el orden canonico del sistema.
+ * No muta el array original.
+ */
+export function sortShiftEntries<T extends { name: string }>(shifts: T[]): T[] {
+  return [...shifts].sort((a, b) => {
+    const ga = shiftGroup(a.name);
+    const gb = shiftGroup(b.name);
+    if (ga !== gb) return ga - gb;
+
+    if (ga === 0) {
+      const ra = KANJI_TIME_RANK[stripSuffix(a.name.trim())] ?? 99;
+      const rb = KANJI_TIME_RANK[stripSuffix(b.name.trim())] ?? 99;
+      if (ra !== rb) return ra - rb;
+      return suffixNumber(a.name) - suffixNumber(b.name);
+    }
+
+    if (ga === 2) {
+      const cmp = a.name.localeCompare(b.name);
+      if (cmp !== 0) return cmp;
+      return suffixNumber(a.name) - suffixNumber(b.name);
+    }
+
+    // Group 1, 3, 4: compare by suffix number then by string
+    const sn = suffixNumber(a.name) - suffixNumber(b.name);
+    if (sn !== 0) return sn;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 // ─── Time Calculations ──────────────────────────────────────────────
 
 export function calcMinsBetween(start: string, end: string): number {
@@ -83,8 +164,8 @@ function fmtTimeJP(time: string): string {
 }
 
 export function composeWorkHoursText(shifts: ShiftEntry[]): string {
-  return shifts
-    .filter((s) => s.startTime && s.endTime)
+  const valid = shifts.filter((s) => s.startTime && s.endTime);
+  return sortShiftEntries(valid)
     .map((s) => `${s.name}：${fmtTimeJP(s.startTime)}～${fmtTimeJP(s.endTime)}`)
     .join("　");
 }
@@ -101,8 +182,8 @@ export function composeBreakForShift(shift: ShiftEntry): string {
 }
 
 export function composeFullBreakText(shifts: ShiftEntry[]): string {
-  return shifts
-    .filter((s) => s.breaks.some((b) => b.startTime && b.endTime))
+  const withBreaks = shifts.filter((s) => s.breaks.some((b) => b.startTime && b.endTime));
+  return sortShiftEntries(withBreaks)
     .map(composeBreakForShift)
     .join("\n");
 }
@@ -156,7 +237,7 @@ interface ShiftSource {
 
 export function parseExistingShifts(factory: ShiftSource): ShiftEntry[] {
   const workHoursText = factory.workHours || "";
-  const shiftNamePat = /[A-Za-z\u4e00-\u9fff\d]+[勤直務]|シフト\d?/g;
+  const shiftNamePat = /[A-Za-z\u4e00-\u9fff\d]+[勤直務夜番][①-⑩\d０-９]*|シフト\d?/g;
   const shiftRe = new RegExp(`(${shiftNamePat.source})：\\s*(\\d{1,2}[時:]\\d{2}分?\\s*[～~ー-]\\s*\\d{1,2}[時:]\\d{2})`, "g");
 
   // Always try to parse from workHours text first — it preserves custom names
@@ -186,7 +267,7 @@ export function parseExistingShifts(factory: ShiftSource): ShiftEntry[] {
           }
         }
       }
-      return shifts;
+      return sortShiftEntries(shifts);
     }
   }
 
