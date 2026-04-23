@@ -33,6 +33,9 @@ export function calculateEndDate(startDate: Date, period: string, conflictDate: 
   }
   const months = PERIOD_TO_MONTHS[period] ?? 3;
   const calculated = addMonths(startDate, months);
+  // "N ヶ月 / 1年" se interpreta como "último día del día anterior al aniversario":
+  // 2025-10-01 + 1 año → 2026-09-30 (no 2026-10-01).
+  calculated.setDate(calculated.getDate() - 1);
   if (conflictDate && calculated > conflictDate) {
     return conflictDate;
   }

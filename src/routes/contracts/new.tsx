@@ -10,12 +10,31 @@ import { queryKeys } from "@/lib/query-keys";
 import { AnimatedPage } from "@/components/ui/animated";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, Factory as FactoryIcon, Layers, ChevronRight } from "lucide-react";
+import {
+  Building2,
+  Factory as FactoryIcon,
+  Layers,
+  ChevronRight,
+  Users,
+  UserPlus,
+  Calendar,
+  Search,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Check, AlertTriangle } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import type { Factory } from "@/lib/api";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { api, type Factory, type Employee } from "@/lib/api";
+
+type EmployeeWithRate = Employee & { displayRate?: number | null };
+
+function formatJpDate(iso: string | null | undefined): string {
+  if (!iso) return "--";
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  return `${parts[0]}/${parts[1]}/${parts[2]}`;
+}
 
 export const Route = createFileRoute("/contracts/new")({
   component: NewContractWizard,
@@ -127,17 +146,180 @@ function NewContractWizard() {
     [wizard, state.startDate, state.endDateOverride, effectiveConflict]
   );
 
-  // Group employees by displayRate for preview
-  const employeesByRate = useMemo(() => {
-    if (!employees) return [];
-    const groups = new Map<number, typeof employees>();
-    for (const emp of employees) {
-      const rate = emp.displayRate ?? 0;
+  // Step 2 state: search + status filters + retired query
+  const [search, setSearch] = useState("");
+  const [showActive, setShowActive] = useState(true);
+  const [showOnLeave, setShowOnLeave] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
+
+  // Lazy query: retired employees of the same company (factoryId=null after resignation)
+  const { data: retiredEmployees, isLoading: isRetiredLoading } = useQuery({
+    queryKey: queryKeys.employees.all({ companyId: state.companyId ?? undefined, status: "inactive" }),
+    queryFn: () => api.getEmployees({ companyId: state.companyId ?? undefined, status: "inactive" }),
+    enabled: showInactive && !!state.companyId,
+  });
+
+  // Merge main + retired (dedup by id)
+  const allEmployees = useMemo<EmployeeWithRate[]>(() => {
+    const main = (employees || []) as EmployeeWithRate[];
+    const retired = (retiredEmployees || []) as EmployeeWithRate[];
+    const mainIds = new Set(main.map((e) => e.id));
+    const retiredDedup = retired
+      .filter((e) => !mainIds.has(e.id))
+      .map((e) => ({ ...e, displayRate: e.billingRate ?? e.hourlyRate }));
+    return [...main, ...retiredDedup];
+  }, [employees, retiredEmployees]);
+
+  // Filter by status checkboxes
+  const statusFiltered = useMemo(() => {
+    return allEmployees.filter((emp) => {
+      const s = emp.status ?? "active";
+      if (s === "active") return showActive;
+      if (s === "onLeave") return showOnLeave;
+      if (s === "inactive") return showInactive;
+      return true;
+    });
+  }, [allEmployees, showActive, showOnLeave, showInactive]);
+
+  // Apply search
+  const searchFiltered = useMemo(() => {
+    if (!search) return statusFiltered;
+    const s = search.toLowerCase();
+    return statusFiltered.filter(
+      (e) =>
+        e.fullName?.toLowerCase().includes(s) ||
+        e.katakanaName?.toLowerCase().includes(s) ||
+        e.employeeNumber?.includes(s)
+    );
+  }, [statusFiltered, search]);
+
+  // Split into existing (hireDate < contract.startDate) vs new hires (within contract period)
+  const { existingEmployees, newHireEmployees } = useMemo(() => {
+    const existing: EmployeeWithRate[] = [];
+    const newHires: EmployeeWithRate[] = [];
+    const contractStart = state.startDate || "";
+    const contractEnd = state.endDate || "";
+
+    for (const emp of searchFiltered) {
+      const hire = emp.hireDate;
+      if (!contractStart || !hire) {
+        existing.push(emp);
+        continue;
+      }
+      if (hire < contractStart) {
+        existing.push(emp);
+      } else if (!contractEnd || hire <= contractEnd) {
+        newHires.push(emp);
+      }
+      // else: hireDate > contractEnd → excluded silently
+    }
+    return { existingEmployees: existing, newHireEmployees: newHires };
+  }, [searchFiltered, state.startDate, state.endDate]);
+
+  // Effective startDate per employee
+  const getEffectiveStartDate = useCallback(
+    (emp: EmployeeWithRate): string => {
+      const cs = state.startDate || "";
+      if (!cs) return cs;
+      const hire = emp.hireDate;
+      if (!hire || hire < cs) return cs;
+      return hire;
+    },
+    [state.startDate]
+  );
+
+  // Group employees by rate within each section (for visual display)
+  type RateGroup = { rate: number; emps: EmployeeWithRate[] };
+  const groupByRate = useCallback((emps: EmployeeWithRate[]): RateGroup[] => {
+    const groups = new Map<number, EmployeeWithRate[]>();
+    for (const emp of emps) {
+      const rate = emp.displayRate ?? emp.billingRate ?? emp.hourlyRate ?? 0;
       if (!groups.has(rate)) groups.set(rate, []);
       groups.get(rate)!.push(emp);
     }
-    return Array.from(groups.entries()).sort((a, b) => b[0] - a[0]);
-  }, [employees]);
+    return Array.from(groups.entries())
+      .sort((a, b) => b[0] - a[0])
+      .map(([rate, emps]) => ({ rate, emps }));
+  }, []);
+
+  const existingByRate = useMemo(() => groupByRate(existingEmployees), [existingEmployees, groupByRate]);
+  const newHiresByRate = useMemo(() => groupByRate(newHireEmployees), [newHireEmployees, groupByRate]);
+
+  // For contract creation: group selected employees by (rate, effectiveStartDate)
+  type ContractGroup = {
+    rate: number;
+    startDate: string;
+    contractDate: string;
+    notificationDate: string;
+    emps: EmployeeWithRate[];
+    kind: "existing" | "newhire";
+  };
+  const selectedGroups = useMemo(() => {
+    if (!state.startDate) return new Map<string, ContractGroup>();
+    const groups = new Map<string, ContractGroup>();
+    const selectedSet = new Set(state.employeeIds);
+    const empMap = new Map(allEmployees.map((e) => [e.id, e]));
+
+    for (const id of state.employeeIds) {
+      const emp = empMap.get(id);
+      if (!emp) continue;
+      if (!selectedSet.has(emp.id)) continue;
+      const rate = emp.displayRate ?? emp.billingRate ?? emp.hourlyRate ?? 0;
+      const startDate = getEffectiveStartDate(emp);
+      const key = `${rate}__${startDate}`;
+      if (!groups.has(key)) {
+        const isNewHire = !!state.startDate && startDate !== state.startDate;
+        let contractDate = "";
+        let notificationDate = "";
+        if (startDate) {
+          const calc = calculateContractDates(startDate);
+          contractDate = calc.contractDate;
+          notificationDate = calc.notificationDate;
+        }
+        groups.set(key, {
+          rate,
+          startDate,
+          contractDate,
+          notificationDate,
+          emps: [],
+          kind: isNewHire ? "newhire" : "existing",
+        });
+      }
+      groups.get(key)!.emps.push(emp);
+    }
+
+    return new Map(
+      [...groups.entries()].sort(([, a], [, b]) => {
+        if (a.kind !== b.kind) return a.kind === "existing" ? -1 : 1;
+        if (a.startDate !== b.startDate) return a.startDate.localeCompare(b.startDate);
+        return b.rate - a.rate;
+      })
+    );
+  }, [state.employeeIds, state.startDate, allEmployees, getEffectiveStartDate]);
+
+  const toggleEmployee = useCallback(
+    (empId: number, checked: boolean) => {
+      if (checked) {
+        wizard.setEmployeeIds([...state.employeeIds, empId]);
+      } else {
+        wizard.setEmployeeIds(state.employeeIds.filter((id) => id !== empId));
+      }
+    },
+    [wizard, state.employeeIds]
+  );
+
+  const toggleAllInGroup = useCallback(
+    (emps: EmployeeWithRate[]) => {
+      const ids = emps.map((e) => e.id);
+      const allSelected = ids.every((id) => state.employeeIds.includes(id));
+      if (allSelected) {
+        wizard.setEmployeeIds(state.employeeIds.filter((id) => !ids.includes(id)));
+      } else {
+        wizard.setEmployeeIds([...new Set([...state.employeeIds, ...ids])]);
+      }
+    },
+    [wizard, state.employeeIds]
+  );
 
   const handleSubmit = useCallback(async () => {
     if (
@@ -150,33 +332,32 @@ function NewContractWizard() {
       toast.error("すべての項目を入力してください");
       return;
     }
+    if (selectedGroups.size === 0) return;
     try {
-      const selectedSet = new Set(state.employeeIds);
-      const dates = calculateContractDates(state.startDate);
-      // Only create one contract per rate group that contains at least one selected employee,
-      // and only include employees actually checked in that group.
-      for (const [rate, emps] of employeesByRate) {
-        const selectedEmps = emps.filter((e) => selectedSet.has(e.id));
-        if (selectedEmps.length === 0) continue;
+      for (const [, group] of selectedGroups) {
         await create.mutateAsync({
           companyId: state.companyId,
           factoryId: state.factoryId,
-          startDate: state.startDate,
+          startDate: group.startDate,
           endDate: state.endDate,
-          contractDate: dates.contractDate,
-          notificationDate: dates.notificationDate,
+          contractDate: group.contractDate,
+          notificationDate: group.notificationDate,
           conflictDateOverride: state.useConflictDateOverride ? state.conflictDateOverride : null,
-          employeeAssignments: selectedEmps.map((e) => ({ employeeId: e.id, hourlyRate: rate })),
+          employeeAssignments: group.emps.map((e) => ({ employeeId: e.id, hourlyRate: group.rate })),
         });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll });
-      toast.success("契約を作成しました");
+      toast.success(
+        selectedGroups.size > 1
+          ? `${selectedGroups.size}件の契約書を作成しました`
+          : "契約を作成しました"
+      );
       wizard.reset();
       navigate({ to: "/contracts" });
     } catch {
       // error handled by hook
     }
-  }, [state, employeesByRate, create, queryClient, navigate, wizard]);
+  }, [state, selectedGroups, create, queryClient, navigate, wizard]);
 
   const canProceedStep1 = state.factoryId && state.startDate && state.endDate;
 
@@ -518,70 +699,293 @@ function NewContractWizard() {
       {state.step === 2 && (
         <div className="space-y-6">
           <Card className="p-6 space-y-4">
-            <h2 className="text-lg font-semibold">派遣社員を選択</h2>
-            {employeesByRate.length === 0 ? (
-              <p className="text-muted-foreground">この工場に社員が存在しません</p>
-            ) : (
-              <div className="space-y-4">
-                {employeesByRate.map(([rate, emps]) => (
-                  <div key={rate} className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold">¥{rate.toLocaleString()} / 時間 ({emps.length}名)</span>
-                    </div>
-                    <div className="space-y-2">
-                      {emps.map((emp) => (
-                        <label key={emp.id} className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
+            <div>
+              <h2 className="text-lg font-semibold">派遣社員を選択</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                既存社員と契約期間中に入社する新規入社を分けて表示します。
+                新規入社は各社員の入社日が契約開始日になります。
+              </p>
+            </div>
+
+            {/* Search + status filters */}
+            <div className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <input
+                  type="text"
+                  placeholder="名前・カナ・社員番号で検索..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  aria-label="社員検索"
+                  className="w-full rounded-lg border border-border/80 bg-background px-3 py-2.5 pl-10 text-sm shadow-xs transition-all placeholder:text-muted-foreground/60 focus:border-primary/30 focus:shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                  {state.employeeIds.length} 名
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                  状態
+                </span>
+                <label className="flex cursor-pointer items-center gap-1.5 hover:text-foreground transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={showActive}
+                    onChange={(e) => setShowActive(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  />
+                  <span className="rounded-full bg-[var(--color-status-ok-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-status-ok)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-status-ok)_25%,transparent)]">
+                    在職中
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-1.5 hover:text-foreground transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={showOnLeave}
+                    onChange={(e) => setShowOnLeave(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  />
+                  <span className="rounded-full bg-[var(--color-status-warning-muted)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-status-warning)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)]">
+                    休職中
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-center gap-1.5 hover:text-foreground transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={showInactive}
+                    onChange={(e) => setShowInactive(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-border accent-primary"
+                  />
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-inset ring-border">
+                    退職者
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Empty state */}
+            {existingEmployees.length === 0 && newHireEmployees.length === 0 && !isRetiredLoading && (
+              <div className="flex flex-col items-center py-10 text-center">
+                <User className="mb-2 h-8 w-8 text-muted-foreground/20" />
+                <p className="text-sm text-muted-foreground">社員が見つかりません</p>
+                {!showActive && !showOnLeave && !showInactive && (
+                  <p className="mt-1 text-xs text-muted-foreground/70">
+                    少なくとも1つの状態フィルタを有効にしてください
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Section 1: Existing employees (grouped by rate) */}
+            {existingByRate.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-primary/70" />
+                  <h3 className="text-sm font-semibold text-primary/80">
+                    既存社員 ({existingEmployees.length}名)
+                  </h3>
+                  {state.startDate && (
+                    <span className="text-xs text-muted-foreground">
+                      契約開始 {formatJpDate(state.startDate)}
+                    </span>
+                  )}
+                </div>
+                {existingByRate.map(({ rate, emps }) => {
+                  const allSelected = emps.every((e) => state.employeeIds.includes(e.id));
+                  return (
+                    <div key={`ex-${rate}`} className="border border-border/60 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">
+                          ¥{rate.toLocaleString()} / 時間 ({emps.length}名)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleAllInGroup(emps)}
+                          className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                        >
+                          {allSelected ? "すべて解除" : "すべて選択"}
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {emps.map((emp) => (
+                          <EmployeeCheckRow
+                            key={emp.id}
+                            emp={emp}
                             checked={state.employeeIds.includes(emp.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                wizard.setEmployeeIds([...state.employeeIds, emp.id]);
-                              } else {
-                                wizard.setEmployeeIds(state.employeeIds.filter((id) => id !== emp.id));
-                              }
-                            }}
-                            className="h-4 w-4 rounded border-border text-primary"
+                            onToggle={(checked) => toggleEmployee(emp.id, checked)}
                           />
-                          <span>{emp.fullName}</span>
-                          <span className="text-muted-foreground text-sm">{emp.employeeNumber}</span>
-                        </label>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Section 2: New hires (grouped by rate, each row shows its hireDate as start) */}
+            {newHiresByRate.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-[var(--color-status-warning)]" />
+                  <h3 className="text-sm font-semibold text-[var(--color-status-warning)]">
+                    新規入社 ({newHireEmployees.length}名)
+                  </h3>
+                  <span className="text-xs text-muted-foreground">
+                    契約開始は各社員の入社日
+                  </span>
+                </div>
+                {newHiresByRate.map(({ rate, emps }) => {
+                  const allSelected = emps.every((e) => state.employeeIds.includes(e.id));
+                  return (
+                    <div
+                      key={`nh-${rate}`}
+                      className="border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_4%,transparent)] rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold">
+                          ¥{rate.toLocaleString()} / 時間 ({emps.length}名)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleAllInGroup(emps)}
+                          className="text-xs font-medium text-[var(--color-status-warning)] hover:opacity-80 transition-colors"
+                        >
+                          {allSelected ? "すべて解除" : "すべて選択"}
+                        </button>
+                      </div>
+                      <div className="space-y-2">
+                        {emps.map((emp) => (
+                          <EmployeeCheckRow
+                            key={emp.id}
+                            emp={emp}
+                            checked={state.employeeIds.includes(emp.id)}
+                            onToggle={(checked) => toggleEmployee(emp.id, checked)}
+                            showHireDateAsStart
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </Card>
 
-          {(() => {
-            const selectedSet = new Set(state.employeeIds);
-            const activeGroupCount = employeesByRate.filter(([, emps]) =>
-              emps.some((e) => selectedSet.has(e.id))
-            ).length;
-            if (activeGroupCount <= 1) return null;
-            return (
-              <div className="rounded-md border border-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)] bg-[var(--color-status-warning-muted)] p-3">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-status-warning)]" />
-                  <p className="text-sm font-semibold text-[var(--color-status-warning)]">
-                    複数の単価が選択されています — {activeGroupCount}件の契約が作成されます
-                  </p>
+          {/* Split preview */}
+          {selectedGroups.size > 1 && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-warning)_8%,transparent)] p-4"
+            >
+              <div className="mb-3 flex items-center gap-2.5">
+                <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-warning)_15%,transparent)] p-1.5">
+                  <AlertTriangle className="h-4 w-4 text-[var(--color-status-warning)]" />
                 </div>
+                <span className="text-sm font-semibold text-[var(--color-status-warning)]">
+                  単価・開始日が異なるため {selectedGroups.size} 件の契約書に分割されます
+                </span>
               </div>
-            );
-          })()}
+              <div className="space-y-2">
+                {Array.from(selectedGroups.entries()).map(([key, group]) => (
+                  <div key={key} className="rounded-lg bg-white p-3 text-sm shadow-xs dark:bg-card">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-bold text-violet-400 tabular-nums">
+                          ¥{group.rate.toLocaleString()}/h
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[11px] font-mono tabular-nums text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatJpDate(group.startDate)}
+                        </span>
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[10px] font-medium ring-1 ring-inset",
+                            group.kind === "existing"
+                              ? "bg-primary/10 text-primary ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30"
+                              : "bg-[var(--color-status-warning-muted)] text-[var(--color-status-warning)] ring-[color-mix(in_srgb,var(--color-status-warning)_25%,transparent)]"
+                          )}
+                        >
+                          {group.kind === "existing" ? "既存社員" : "新規入社"}
+                        </span>
+                      </div>
+                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20 dark:bg-primary/15 dark:text-primary/90 dark:ring-primary/30">
+                        {group.emps.length} 名
+                      </span>
+                    </div>
+                    <p className="mt-1.5 truncate text-xs text-muted-foreground">
+                      {group.emps.map((e) => e.fullName).join("、")}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => wizard.setStep(1)}>
               <ArrowLeft className="h-4 w-4 mr-2" />戻る
             </Button>
             <Button onClick={handleSubmit} disabled={state.employeeIds.length === 0 || create.isPending}>
-              {create.isPending ? "作成中..." : `契約を作成 (${state.employeeIds.length}名)`}
+              {create.isPending
+                ? "作成中..."
+                : selectedGroups.size > 1
+                ? `${selectedGroups.size} 件の契約書を作成`
+                : `契約を作成 (${state.employeeIds.length}名)`}
             </Button>
           </div>
         </div>
       )}
     </AnimatedPage>
+  );
+}
+
+function EmployeeCheckRow({
+  emp,
+  checked,
+  onToggle,
+  showHireDateAsStart = false,
+}: {
+  emp: EmployeeWithRate;
+  checked: boolean;
+  onToggle: (checked: boolean) => void;
+  showHireDateAsStart?: boolean;
+}) {
+  const status = emp.status ?? "active";
+  const isRetired = status === "inactive";
+  const isOnLeave = status === "onLeave";
+
+  return (
+    <label className="flex items-center gap-3 cursor-pointer rounded-md px-2 py-1 hover:bg-muted/40 transition-colors">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onToggle(e.target.checked)}
+        className="h-4 w-4 rounded border-border text-primary"
+      />
+      <span className={cn(isRetired && "text-muted-foreground")}>{emp.fullName}</span>
+      <span className="text-muted-foreground text-sm">{emp.employeeNumber}</span>
+      {isRetired && (
+        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-inset ring-border">
+          退職
+        </span>
+      )}
+      {isOnLeave && (
+        <span className="rounded-full bg-[var(--color-status-warning-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--color-status-warning)] ring-1 ring-inset ring-[color-mix(in_srgb,var(--color-status-warning)_30%,transparent)]">
+          休職
+        </span>
+      )}
+      {showHireDateAsStart && emp.hireDate && (
+        <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-[var(--color-status-warning-muted)] px-2 py-0.5 text-[11px] font-mono tabular-nums text-[var(--color-status-warning)]">
+          <Calendar className="h-3 w-3" />
+          契約開始 {formatJpDate(emp.hireDate)}
+        </span>
+      )}
+      {!showHireDateAsStart && emp.hireDate && (
+        <span className="ml-auto font-mono tabular-nums text-[10px] text-muted-foreground/70">
+          入社 {formatJpDate(emp.hireDate)}
+        </span>
+      )}
+    </label>
   );
 }
