@@ -1,6 +1,33 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-22 (sesión tarde: wizard fix + appendTeiji + PDF traceability)
+> Última actualización: 2026-04-23 (sesión refactor completo + cleanup dead code)
+
+## Sesión 2026-04-23 — Refactor completo KobetsuV3
+
+**7 splits + 4 investigaciones + 1 fix de encoding:**
+
+- **R-1**: Eliminado wrapper `documents-generate-batch.ts` (re-export puro sin callers externos)
+- **R-2**: `validateForPdf` en `validation.ts` marcado como test-only con JSDoc
+- **R-3**: `cleanupOrphanedFiles` no existe — función activa es `cleanupPurgedContractDocuments` (usada en contracts.ts DELETE /purge)
+- **R-4**: `batch-contracts.ts` (969L) → `batch-contracts/write.ts` + `read.ts` + `cancel.ts` + `types.ts`
+- **R-5**: `factories.ts` (864L) → `factories/crud.ts` + `roles.ts` + `calendars.ts` + `cascade.ts` + `excel.ts`
+- **R-6**: `koritsu-pdf-parser.ts` (759L) → `koritsu-types.ts` + `koritsu-pdf-parser.ts` + `koritsu-excel-parser.ts` + fix encoding `工的`(U+7684)→`務`(U+52D9)
+- **R-7**: `import-factories-service.ts` (679L) → `import-factories/parser.ts` + `validator.ts` + `writer.ts`
+- **P-9**: `shouheisha.tsx` (1194L→615L) — 8 componentes extraídos + barrel export `-index.ts`
+- **L-1**: `/takao-reentries` endpoint NO existe — lógica en `takao-detection.ts`
+- **L-2**: Koritsu import es ACTIVO — frontend `companies/koritsu.tsx` lo usa
+- **L-3**: `employee-mapper.ts` y `import-employees.ts` son complementarios (PDF vs Excel→DB), no se unifican
+
+**Investigación datos:**
+- 13 `contract_employees.hourly_rate` NULL (KOB-202604-0004兄妹, todos con `billing_rate=1750`) — NO se automatiza, usuario maneja via shaindaicho
+- 4 empleados sin rates (DAO VIET CHIEN, CAO ANH DI, LUONG XUAN TUAN, DAO CONG PHUC) — huérfanos sin factory_id, asignación manual
+- 6 contratos cancelled sin campos Art.26 (usa `supervisor_name`, etc. — no `article26_*`)
+
+**Commits**: fec6937..594549e · typecheck ✓ · lint ✓ · 762/762 tests ✓
+
+**Detalle técnico**: `.claude/memory/session_2026-04-23.md`
+
+---
 
 ## Sesión 2026-04-22c — Wizard fix + appendTeiji + PDF traceability
 
