@@ -262,7 +262,20 @@ export function buildCommonData(
     workHours,
     breakTime,
     overtimeHours: factory.overtimeHours || c.overtimeMax || "",
-    hourlyRate: c.hourlyRate ?? factory.hourlyRate ?? 0,
+    hourlyRate: c.hourlyRate ?? (() => {
+      // Infer from contract_employees assignments when contract.hourlyRate is null
+      // (legacy contracts created before hourlyRate was set at contract level)
+      if (c.employees && c.employees.length > 0) {
+        const rates = c.employees.map((ce) => ce.hourlyRate ?? ce.employee.billingRate ?? ce.employee.hourlyRate ?? null).filter((r): r is number => r !== null);
+        if (rates.length > 0) {
+          // Use the most common rate (mode) from assignments
+          const freq = new Map<number, number>();
+          for (const r of rates) { freq.set(r, (freq.get(r) ?? 0) + 1); }
+          return Array.from(freq.entries()).sort((a, b) => b[1] - a[1])[0]![0];
+        }
+      }
+      return factory.hourlyRate ?? 0;
+    })(),
     conflictDate: c.conflictDateOverride ?? factory.conflictDate ?? "",
     closingDay: factory.closingDayText || (factory.closingDay ? `${factory.closingDay}日` : ""),
     paymentDay: factory.paymentDayText || (factory.paymentDay ? `${factory.paymentDay}日` : ""),
