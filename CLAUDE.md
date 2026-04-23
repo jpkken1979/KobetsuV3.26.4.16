@@ -474,13 +474,48 @@ These items are tracked in `ESTADO_PROYECTO.md` and awaiting user decision:
 
 ## Integracion Antigravity
 
-Proyecto integrado con **Antigravity v6.0.0** (instalado por Nexus el 2026-04-08). Runtime MCP-first con gateway en `:4747`, memoria `antigravity-memory` (mem0), y SDK JS/TS en `.antigravity/sdk/antigravity.js`. Config en `.antigravity/config.json` y `.antigravity/ai_manifest.json`.
+Proyecto integrado con **Antigravity v5.0.0**.
+Instalado por Nexus el 2026-04-23.
 
-Detalles operativos en reglas auto-inyectadas:
+### Persona activa: gentleman
 
-- `ecosystem-usage.md` — orden MCP-first, fallback local
-- `memory-engine.md` — antigravity-memory (mem0), endpoints del gateway
-- `persona.md` — modos `gentleman` / `neutral` / `conciso` y `ANTIGRAVITY_PERSONA`
-- `.antigravity/rules.md` — runtime completo, tiers de agentes, SDK
+El estilo de comunicacion de la IA se adapta segun el modo de persona.
+Modos disponibles: `gentleman` (detallado, pedagogico), `neutral` (factual),
+`conciso` (minimalista). Configurar via `ANTIGRAVITY_PERSONA` env var o
+`.antigravity/config.json`. Ver `.claude/rules/persona.md` para detalles.
+
+### Runtime MCP-first
+
+```
+.agent/
+  agents/ skills/ skills-custom/ workflows/
+  scripts/ core/ mcp/ plugins/
+.claude/
+  settings.json hooks/ rules/
+.antigravity/
+  config.json sdk/ ai_manifest.json rules.md
+```
+
+### Clientes compatibles
+
+- Claude Code: `.claude/settings.json` + `.mcp.json`
+- Cursor: `.cursor/mcp.json` + `.cursorrules`
+- Windsurf: `.windsurf/mcp.json` + `.windsurfrules`
+- VS Code / Roo / Cline: `.vscode/mcp.json` y `.vscode/cline_mcp_settings.json`
+- Zed: `.zed/settings.json`
+- Cualquier IA/IDE con MCP: `.mcp.json` y `.antigravity/ai_manifest.json`
+
+### SDK JS/TS
+
+```js
+import { runAgent } from "./.antigravity/sdk/antigravity.js";
+const result = await runAgent("explorer", "analiza el repo");
+```
+
+### Memoria
+
+- Memoria MCP: `antigravity-memory` (mem0)
+- Memoria de proyecto: `ESTADO_PROYECTO.md`
+- Reglas compartidas: `.claude/rules/` y `.antigravity/rules.md`
 
 <!-- ANTIGRAVITY-END -->

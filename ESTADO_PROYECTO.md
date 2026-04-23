@@ -1,6 +1,6 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-23 (sesión b — orden canonico de turnos + split PDF multicolumna)
+> Última actualización: 2026-04-23 (sesión c — split 既存/新規入社 + endDate -1 día + tanka 社員台帳 priority en PDF)
 
 ## Sesión 2026-04-23b — Orden canónico de turnos + fix render multicolumna
 
@@ -18,6 +18,20 @@
 **Tests**: +7 unitarios en `shift-utils.test.ts`. Total 770/770 · typecheck ✓
 
 **Detalle técnico**: `.claude/memory/session_2026-04-23b.md`
+
+---
+
+## Sesión 2026-04-23c — Split 既存/新規入社 en wizard + endDate -1 día + tanka priority en PDF
+
+**3 fixes críticos:**
+
+- **Split 既存/新規入社 en Step 2 del wizard activo**: `src/routes/contracts/new.tsx` reescrito para mostrar dos secciones visuales. `既存社員` = `hireDate < contract.startDate` (contrato completo); `新規入社` = `startDate ≤ hireDate ≤ endDate` (cada uno con su propio `calculateContractDates(hireDate)`). Checkboxes para filtrar status: 在職中 (active), 休職中 (onLeave), 退職者 (inactive).
+- **endDate = startDate + N meses - 1 día**: `calculateEndDate()` en `use-contract-wizard.ts` ahora hace `addMonths(startDate, N); setDate(getDate() - 1)`. Así 2025/10/01 + 1年 → 2026/09/30 (no 2026/10/01).
+- **tanka del 社員台帳 manda sobre factory en PDF**: root cause: contratos KOB-202510-0006/0007 tienen `contracts.hourly_rate = NULL` pero `contract_employees.assignment_rate = 1750`. El fallback `c.hourlyRate ?? factory.hourlyRate` usaba ¥1,700 del factory. Fix: `buildCommonData()` en `document-generation.ts` infiere de las asignaciones (mode) cuando `c.hourlyRate` es null. También el wizard ahora pasa `hourlyRate` + rates derivados en el payload.
+
+**Commits**: 32e9569, 5cef899, 8cb48b4, 210f780 · typecheck ✓ · 770 tests ✓
+
+**Detalle técnico**: `.claude/memory/session_2026-04-23c.md`
 
 ---
 
