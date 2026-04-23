@@ -202,7 +202,7 @@ export function buildCommonData(
     // "A勤務：7:00～15:30　B勤務：15:30～0:00" → "A勤務：...\nB勤務：..."
     workHours = fullWorkHours.includes("\n")
       ? fullWorkHours
-      : fullWorkHours.replace(/\s+(?=[A-Za-z\u4e00-\u9fff\d]+[勤直務]：)/g, "\n");
+      : fullWorkHours.replace(/　+/g, "\n").trim();
   } else if (factory.workHoursDay || factory.workHoursNight) {
     const parts: string[] = [];
     if (factory.workHoursDay) parts.push(`【昼勤】${factory.workHoursDay}`);

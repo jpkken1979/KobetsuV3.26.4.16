@@ -67,7 +67,7 @@ setInterval(() => {
 export async function securityHeadersMiddleware(_c: Context, next: Next) {
   await next();
   _c.header("X-Content-Type-Options", "nosniff");
-  _c.header("X-Frame-Options", "DENY");
+  _c.header("X-Frame-Options", "SAMEORIGIN");
   _c.header("Referrer-Policy", "strict-origin-when-cross-origin");
   _c.header("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
 }

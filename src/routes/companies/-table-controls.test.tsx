@@ -10,7 +10,7 @@ describe("CompanyTableControls", () => {
     const onScroll = vi.fn();
     const onOpenImport = vi.fn();
     const onExport = vi.fn();
-    const onToggleFullscreen = vi.fn();
+    const onToggleExpand = vi.fn();
 
     render(
       <CompanyTableControls
@@ -19,14 +19,14 @@ describe("CompanyTableControls", () => {
         search=""
         filterCompany="all"
         companyNames={["会社A", "会社B"]}
-        isFullscreen={false}
+        isExpandMode={false}
         exporting={false}
         onSearchChange={onSearchChange}
         onFilterCompanyChange={onFilterCompanyChange}
         onScroll={onScroll}
         onOpenImport={onOpenImport}
         onExport={onExport}
-        onToggleFullscreen={onToggleFullscreen}
+        onToggleExpand={onToggleExpand}
       />,
     );
 
@@ -44,8 +44,8 @@ describe("CompanyTableControls", () => {
     fireEvent.click(screen.getByText("Excel出力"));
     expect(onExport).toHaveBeenCalledTimes(1);
 
-    fireEvent.click(screen.getByTitle("フルスクリーン"));
-    expect(onToggleFullscreen).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: /全画面表示/i }));
+    expect(onToggleExpand).toHaveBeenCalledTimes(1);
 
     fireEvent.change(
       screen.getByPlaceholderText("会社名・工場名・住所で検索..."),
@@ -67,20 +67,20 @@ describe("CompanyTableControls", () => {
         search=""
         filterCompany="all"
         companyNames={["会社A"]}
-        isFullscreen
-        exporting
+        isExpandMode={true}
+        exporting={true}
         onSearchChange={() => {}}
         onFilterCompanyChange={() => {}}
         onScroll={() => {}}
         onOpenImport={() => {}}
         onExport={() => {}}
-        onToggleFullscreen={() => {}}
+        onToggleExpand={() => {}}
       />,
     );
 
     const exportButton = screen.getByRole("button", { name: "出力中..." });
     expect(exportButton).toBeTruthy();
     expect(exportButton).toHaveProperty("disabled", true);
-    expect(screen.getByText("Esc で通常表示に戻る")).toBeTruthy();
+    expect(screen.getByText("sidebar 非表示中 ・ URLの?expand=1で切り替え")).toBeTruthy();
   });
 });

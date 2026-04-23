@@ -1,10 +1,9 @@
 import {
   ChevronLeft,
   ChevronRight,
+  Expand,
   FileSpreadsheet,
   Filter,
-  Maximize2,
-  Minimize2,
   Search,
   Table2,
   Upload,
@@ -18,14 +17,14 @@ interface CompanyTableControlsProps {
   search: string;
   filterCompany: string;
   companyNames: string[];
-  isFullscreen: boolean;
+  isExpandMode: boolean;
   exporting: boolean;
   onSearchChange: (value: string) => void;
   onFilterCompanyChange: (value: string) => void;
   onScroll: (direction: "left" | "right") => void;
   onOpenImport: () => void;
   onExport: () => void;
-  onToggleFullscreen: () => void;
+  onToggleExpand: () => void;
 }
 
 export function CompanyTableControls({
@@ -34,14 +33,14 @@ export function CompanyTableControls({
   search,
   filterCompany,
   companyNames,
-  isFullscreen,
+  isExpandMode,
   exporting,
   onSearchChange,
   onFilterCompanyChange,
   onScroll,
   onOpenImport,
   onExport,
-  onToggleFullscreen,
+  onToggleExpand,
 }: CompanyTableControlsProps) {
   return (
     <>
@@ -95,15 +94,17 @@ export function CompanyTableControls({
             {exporting ? "出力中..." : "Excel出力"}
           </button>
           <button
-            onClick={onToggleFullscreen}
-            className="rounded-lg border border-border/50 p-2 text-muted-foreground/60 transition-colors hover:bg-muted/50 hover:text-foreground/80 dark:border-white/10 dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white/70"
-            title={isFullscreen ? "通常表示 (Esc)" : "フルスクリーン"}
-          >
-            {isFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
+            onClick={onToggleExpand}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-all",
+              isExpandMode
+                ? "border-amber-500/40 bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 active:scale-95 dark:border-amber-400/40 dark:text-amber-300"
+                : "border-border/50 text-muted-foreground/60 hover:bg-muted/50 hover:text-foreground/80 active:scale-95 dark:border-white/10 dark:text-white/40 dark:hover:bg-white/5 dark:hover:text-white/70",
             )}
+            title={isExpandMode ? "通常表示に戻る" : "テーブルを全画面表示"}
+          >
+            <Expand className="h-3.5 w-3.5" />
+            {isExpandMode ? "通常表示" : "全画面表示"}
           </button>
         </div>
       </div>
@@ -134,9 +135,9 @@ export function CompanyTableControls({
             ))}
           </select>
         </div>
-        {isFullscreen && (
+        {isExpandMode && (
           <span className="ml-auto text-[10px] text-muted-foreground/40 dark:text-white/40">
-            Esc で通常表示に戻る
+            sidebar 非表示中 ・ URLの?expand=1で切り替え
           </span>
         )}
       </div>

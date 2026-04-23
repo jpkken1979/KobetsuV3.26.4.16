@@ -48,6 +48,8 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   const isTablePage = pathname.includes("/table") || pathname === "/employees/" || pathname === "/data-check/" || pathname === "/contracts/";
+  const search = routerState.location.search as { expand?: string };
+  const isExpandMode = search.expand === "1";
   const contentClasses = isTablePage ? "max-w-none px-3 md:px-4" : MODE_CLASSES[layoutMode];
 
   return (
@@ -114,27 +116,11 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Sidebar — fixed on desktop, slide-in on mobile */}
-      <div
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
-          sidebarCollapsed ? "w-[4.8rem]" : "w-[18rem]",
-        )}
-      >
-        <Sidebar onClose={() => setSidebarOpen(false)} />
-      </div>
-
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Header
-          onMenuClick={() => setSidebarOpen(true)}
-          layoutMode={layoutMode}
-          onModeChange={handleModeChange}
-        />
-        <main id="main-content" className="flex-1 overflow-y-auto">
+      {/* Expand mode — full page without sidebar */}
+      {isExpandMode && (
+        <main id="main-content" className="flex-1 overflow-y-auto bg-background">
           <div className={contentClasses}>
-            {shouldReduceMotion ? (
-              children
-            ) : (
+            {shouldReduceMotion ? children : (
               <AnimatePresence mode="wait">
                 <motion.div
                   key={pathname}
@@ -150,7 +136,48 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
         </main>
-      </div>
+      )}
+
+      {/* Normal mode — sidebar + main */}
+      {!isExpandMode && (
+        <>
+        <div
+          className={cn(
+            "fixed inset-y-0 left-0 z-40 transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
+            sidebarOpen ? "translate-x-0" : "-translate-x-full",
+            sidebarCollapsed ? "w-[4.8rem]" : "w-[18rem]",
+          )}
+        >
+          <Sidebar onClose={() => setSidebarOpen(false)} />
+        </div>
+
+        <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden">
+          <Header
+            onMenuClick={() => setSidebarOpen(true)}
+            layoutMode={layoutMode}
+            onModeChange={handleModeChange}
+          />
+          <main id="main-content" className="flex-1 overflow-y-auto">
+            <div className={contentClasses}>
+              {shouldReduceMotion ? children : (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={pathname}
+                    variants={pageVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    transition={pageTransition}
+                  >
+                    {children}
+                  </motion.div>
+                </AnimatePresence>
+              )}
+            </div>
+          </main>
+        </div>
+        </>
+      )}
 
       {/* Command Palette — global */}
       <CommandPalette />

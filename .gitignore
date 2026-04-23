@@ -49,3 +49,11 @@ typecheck_output.txt
 push_output.txt
 sqlite.db
 .mcp.json.bak
+debug-*.ts
+debug-*.cjs
+db_check_temp.js
+screenshot_*.png
+test-ena-layout.ts
+test-fix-layout.ts
+test-pdf-en*.ts
+DataTotal/

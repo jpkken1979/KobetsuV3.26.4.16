@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useFactories } from "@/lib/hooks/use-factories";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useFactories } from "@/lib/hooks/use-factories";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { AnimatedPage } from "@/components/ui/animated";
@@ -18,25 +19,36 @@ export const Route = createFileRoute("/companies/table")({
   component: CompanyTablePage,
 });
 
-// ─── Main Page Component ───────────────────────────────────────────────
-
 function CompanyTablePage() {
+  const navigate = useNavigate();
+  const searchParams = useSearch({ from: "/companies/table" });
+  const isExpandMode = (searchParams as { expand?: string }).expand === "1";
   const [search, setSearch] = useState("");
   const [filterCompany, setFilterCompany] = useState<string>("all");
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [yearlyConfigFactory, setYearlyConfigFactory] = useState<Factory | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Escape key exits fullscreen
+  const toggleExpand = () => {
+    if (isExpandMode) {
+      navigate({ to: "/companies/table", search: {}, replace: true });
+    } else {
+      navigate({ to: "/companies/table", search: { expand: "1" } as Record<string, string>, replace: true });
+    }
+  };
+
+  // ESC key exits expand mode
   useEffect(() => {
+    if (!isExpandMode) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isFullscreen) setIsFullscreen(false);
+      if (e.key === "Escape") {
+        navigate({ to: "/companies/table", search: {}, replace: true });
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isFullscreen]);
+  }, [isExpandMode, navigate]);
 
   const { data: factories, isLoading } = useFactories();
 
@@ -146,7 +158,6 @@ function CompanyTablePage() {
     scrollRef.current.scrollTo({ left: offsetLeft, behavior: "smooth" });
   }, []);
 
-  // Unique company names for filter
   const companyNames = [
     ...new Set(
       (factories ?? [])
@@ -164,19 +175,19 @@ function CompanyTablePage() {
         search={search}
         filterCompany={filterCompany}
         companyNames={companyNames}
-        isFullscreen={isFullscreen}
+        isExpandMode={isExpandMode}
         exporting={exporting}
         onSearchChange={setSearch}
         onFilterCompanyChange={setFilterCompany}
         onScroll={scroll}
         onOpenImport={() => setShowImport(true)}
         onExport={handleExportExcel}
-        onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+        onToggleExpand={toggleExpand}
       />
 
       <CompanyTableGrid
         isLoading={isLoading}
-        isFullscreen={isFullscreen}
+        isFullscreen={false}
         rowData={rowData}
         scrollRef={scrollRef}
         onYearlyConfig={setYearlyConfigFactory}
@@ -205,15 +216,9 @@ function CompanyTablePage() {
 
   return (
     <>
-      {isFullscreen ? (
-        <div className="fixed inset-0 z-50 overflow-auto bg-background p-4 pb-16 space-y-4">
-          {tableContent}
-        </div>
-      ) : (
-        <AnimatedPage className="space-y-4">
-          {tableContent}
-        </AnimatedPage>
-      )}
+      <AnimatedPage className="space-y-4">
+        {tableContent}
+      </AnimatedPage>
       {showImport && <ImportModal onClose={() => setShowImport(false)} />}
       {yearlyConfigFactory && (
         <FactoryYearlyConfigDialog
