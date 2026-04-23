@@ -37,7 +37,7 @@ interface KakariEntry {
 
 interface SupportDeptManagerEntry {
   lineIdx: number;
-  deptType: "品質課" | "重工課";
+  deptType: "品質課" | "重工課" | "工務課";
   managerName: string;
 }
 
@@ -59,8 +59,8 @@ const LOCATION_TO_FACTORY: Record<string, string> = {
   乙川工場: "乙川工場",
   亀崎: "亀崎工場",
   亀崎工場: "亀崎工場",
-  "州的崎": "州的崎工場",
-  "州的崎工場": "州的崎工場",
+  "州の崎": "州の崎工場",
+  "州の崎工場": "州の崎工場",
 };
 
 /**
@@ -86,7 +86,9 @@ function resolveDeptFactory(
 function resolveKakariFactory(kakariName: string, fallbackFactory: string): string {
   const locMatch = kakariName.match(/[（(](.+?)[）)]/);
   if (locMatch) {
-    return LOCATION_TO_FACTORY[locMatch[1]] ?? fallbackFactory;
+    const inner = locMatch[1];
+    // Direct match first, then strip 工場 suffix and retry
+    return LOCATION_TO_FACTORY[inner] ?? LOCATION_TO_FACTORY[inner.replace(/工場$/, "")] ?? fallbackFactory;
   }
   return fallbackFactory;
 }
@@ -97,6 +99,7 @@ function resolveKakariFactory(kakariName: string, fallbackFactory: string): stri
 function resolveKakariDept(kakariName: string, fallbackDept: string): string {
   if (kakariName.startsWith("品質")) return "品質課";
   if (kakariName.startsWith("重工")) return "重工課";
+  if (kakariName.startsWith("工務")) return "工務課";
   if (kakariName.startsWith("経営企画")) return "経営企画課";
   if (kakariName.startsWith("経理")) return "経理課";
   if (kakariName.startsWith("営業")) return "営業課";
@@ -147,7 +150,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
     if (line.includes("派遣先責任者") && line.includes("指揮命令者")) continue;
     if (/^工\s*場/.test(line) && line.includes("電話番号")) continue;
     if (line.length === 1) continue;
-    if (/^(本社工場|州的崎工場|亀崎工場|乙川工場|親和寮)$/.test(line)) continue;
+    if (/^(本社工場|州の崎工場|亀崎工場|乙川工場|親和寮)$/.test(line)) continue;
     if (/^(通\s*常|3組2交替|時\s*間\s*外|特別条項)$/.test(line)) continue;
     if (line === "住所") continue;
 
@@ -187,12 +190,12 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
     }
 
     // ── COMPOUND: 品質課/重工課 + 係 + supervisor on same line ──
-    // Pattern: "品 質 課 古川 市朗 品質係（州的崎） 渡部 浩司 係長 0569-20-0332"
+    // Pattern: "品 質 課 古川 市朗 品質係（州の崎） 渡部 浩司 係長 0569-20-0332"
     const compoundKakariMatch = line.match(
-      /^(品\s*質\s*課|工\s*務\s*課)\s+(.+?)\s+((?:品質|重工)係(?:[（(].+?[）)])?)\s+(.+?)\s+(係長)(?:\s+(\d{4}-\d{2}-\d{4}))?$/,
+      /^(品\s*質\s*課|工\s*務\s*課)\s+(.+?)\s+((?:品質|重工|工務)係(?:[（(].+?[）)])?)\s+(.+?)\s+(係長)(?:\s+(\d{4}-\d{2}-\d{4}))?$/,
     );
     if (compoundKakariMatch) {
-      const deptType = compoundKakariMatch[1].replace(/\s+/g, "") as "品質課" | "重工課";
+      const deptType = compoundKakariMatch[1].replace(/\s+/g, "") as "品質課" | "重工課" | "工務課" | "工務課";
       const managerName = compoundKakariMatch[2].replace(/\s+/g, " ").trim();
       const kakariName = compoundKakariMatch[3].replace(/\s+/g, "");
       const supervisorName = compoundKakariMatch[4].replace(/\s+/g, " ").trim();
@@ -211,7 +214,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
       /^(品\s*質\s*課|工\s*務\s*課)\s+(\S+\s+\S+)\s+(\S+\s+\S+)\s+(係長)(?:\s+(\d{4}-\d{2}-\d{4}))?$/,
     );
     if (supportTwoNamesMatch) {
-      const deptType = supportTwoNamesMatch[1].replace(/\s+/g, "") as "品質課" | "重工課";
+      const deptType = supportTwoNamesMatch[1].replace(/\s+/g, "") as "品質課" | "重工課" | "工務課";
       const managerName = supportTwoNamesMatch[2].trim();
       // The supervisor name is part2 — but we don't know which 係 they belong to
       // We just record the manager; the supervisor comes from separate 係 lines
@@ -222,13 +225,13 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
 
     // ── 係 with supervisor name ──
     const kakariMatch = line.match(
-      /^((?:品質|重工|経営企画|経理|営業)係(?:[（(].+?[）)])?)\s+(.+?)\s+(係長)(?:\s+(\d{4}-\d{2}-\d{4}))?$/,
+      /^((?:品質|重工|工務|工務|経営企画|経理|営業)係(?:[（(].+?[）)])?)\s+(.+?)\s+(工長|係長)(?:\s+(\d{4}-\d{2}-\d{4}))?$/,
     );
     if (kakariMatch) {
       const kakariName = kakariMatch[1].replace(/\s+/g, "");
       const supervisorName = kakariMatch[2].replace(/\s+/g, " ").trim();
       const phone = kakariMatch[4] ?? null;
-      if (kakariName.startsWith("品質") || kakariName.startsWith("重工")) {
+      if (kakariName.startsWith("品質") || kakariName.startsWith("重工") || kakariName.startsWith("工務") || kakariName.startsWith("工務")) {
         allKakari.push({ lineIdx: i, kakariName, supervisorName, phone });
       }
       pendingPhone = null;
@@ -237,7 +240,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
 
     // ── 係 without supervisor (phone only) ──
     const kakariPhoneOnly = line.match(
-      /^((?:品質|重工)係(?:[（(].+?[）)])?)\s+(\d{4}-\d{2}-\d{4})$/,
+      /^((?:品質|重工|工務|工務)係(?:[（(].+?[）)])?)\s+(\d{4}-\d{2}-\d{4})$/,
     );
     if (kakariPhoneOnly) {
       const kakariName = kakariPhoneOnly[1].replace(/\s+/g, "");
@@ -252,7 +255,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
       /^(品\s*質\s*課|工\s*務\s*課)\s+(\S+\s+\S+)\s*$/,
     );
     if (supportDeptMatch && !line.includes("係")) {
-      const deptType = supportDeptMatch[1].replace(/\s+/g, "") as "品質課" | "重工課";
+      const deptType = supportDeptMatch[1].replace(/\s+/g, "") as "品質課" | "重工課" | "工務課";
       const managerName = supportDeptMatch[2].trim();
       allSupportManagers.push({ lineIdx: i, deptType, managerName });
       pendingPhone = null;
@@ -382,7 +385,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
   //   - Compound 製造2課+3工区
   //   - Bare 5工区, 6工区, 7工区 → 製造3課（乙川工場）
   //
-  // Block 2 (州的崎工場): from compound "製造1課" onwards
+  // Block 2 (州の崎工場): from compound "製造1課" onwards
   //   - Compound 製造1課+1工区
   //   - Bare 2工区, 3工区 → 製造2課
   //   - Compound 製造3課+5工区
@@ -406,16 +409,16 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
   // ── Assign block1 (本社工場) ──
   assignKoukuBlock(result, block1Kouku, "本社工場", "0566-21-5128", bottomDeptManagers, compoundLines, boundaryIdx);
 
-  // ── Assign block2 (州的崎工場) ──
-  assignKoukuBlock(result, block2Kouku, "州的崎工場", "0569-20-0332", bottomDeptManagers, compoundLines, boundaryIdx);
+  // ── Assign block2 (州の崎工場) ──
+  assignKoukuBlock(result, block2Kouku, "州の崎工場", "0569-20-0332", bottomDeptManagers, compoundLines, boundaryIdx);
 
   // ── Reassign post-compound bare 工区 using bottom dept managers ──
   // Each block has its OWN redirect: block1 → 乙川工場, block2 → 亀崎工場
   reassignPostCompound(result, block1Kouku, bottomDeptManagers, "本社工場", "乙川工場");
-  reassignPostCompound(result, block2Kouku, bottomDeptManagers, "州的崎工場", "亀崎工場");
+  reassignPostCompound(result, block2Kouku, bottomDeptManagers, "州の崎工場", "亀崎工場");
 
   // ── Reassign inter-compound bare 工区 (between two compounds in block2) ──
-  reassignInterCompound(result, block2Kouku, bottomDeptManagers, "州的崎工場", boundaryIdx);
+  reassignInterCompound(result, block2Kouku, bottomDeptManagers, "州の崎工場", boundaryIdx);
 
   // ── Apply bottom dept managers as 派遣先責任者 overrides ──
   for (const bm of bottomDeptManagers) {
@@ -438,14 +441,14 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
   // ════════════════════════════════════════════════════════════════════════════
 
   // Group support managers by factory block.
-  // In real text, managers appear in pairs: 州的崎 pair first, then 本社 pair.
+  // In real text, managers appear in pairs: 州の崎 pair first, then 本社 pair.
   // Detection: compound kakari lines tell us the block; standalone managers
-  // are grouped by order (first of each deptType = 州的崎, second = 本社).
+  // are grouped by order (first of each deptType = 州の崎, second = 本社).
 
   interface ResolvedSupport {
-    deptType: "品質課" | "重工課";
+    deptType: "品質課" | "重工課" | "工務課";
     managerName: string;
-    block: "本社" | "州的崎";
+    block: "本社" | "州の崎";
   }
 
   const resolvedSupport: ResolvedSupport[] = [];
@@ -460,15 +463,15 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
       const ck = allKakari.find(k => k.lineIdx === sm.lineIdx);
       if (ck) {
         const factory = resolveKakariFactory(ck.kakariName, "");
-        const block: "本社" | "州的崎" =
-          factory.includes("州的崎") || factory.includes("亀崎") ? "州的崎" : "本社";
+        const block: "本社" | "州の崎" =
+          factory.includes("州の崎") || factory.includes("亀崎") ? "州の崎" : "本社";
         resolvedSupport.push({ deptType: sm.deptType, managerName: sm.managerName, block });
         continue;
       }
     }
-    // Standalone: first of each type = 州的崎, second = 本社
+    // Standalone: first of each type = 州の崎, second = 本社
     const sameTypeCount = resolvedSupport.filter(r => r.deptType === sm.deptType).length;
-    const block: "本社" | "州的崎" = sameTypeCount === 0 ? "州的崎" : "本社";
+    const block: "本社" | "州の崎" = sameTypeCount === 0 ? "州の崎" : "本社";
     resolvedSupport.push({ deptType: sm.deptType, managerName: sm.managerName, block });
   }
 
@@ -477,13 +480,13 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
     const factory = resolveKakariFactory(k.kakariName, "");
     const parentDept = resolveKakariDept(k.kakariName, "");
 
-    let factoryBlock: "本社" | "州的崎";
-    if (factory.includes("州的崎") || factory.includes("亀崎")) {
-      factoryBlock = "州的崎";
+    let factoryBlock: "本社" | "州の崎";
+    if (factory.includes("州の崎") || factory.includes("亀崎")) {
+      factoryBlock = "州の崎";
     } else if (factory.includes("本社") || factory.includes("乙川")) {
       factoryBlock = "本社";
     } else {
-      factoryBlock = k.lineIdx < boundaryIdx ? "本社" : "州的崎";
+      factoryBlock = k.lineIdx < boundaryIdx ? "本社" : "州の崎";
     }
 
     const matchingManager = resolvedSupport.find(
@@ -491,7 +494,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
     );
 
     result.factories.push({
-      factoryName: factory || (factoryBlock === "本社" ? "本社工場" : "州的崎工場"),
+      factoryName: factory || (factoryBlock === "本社" ? "本社工場" : "州の崎工場"),
       department: parentDept,
       lineName: k.kakariName,
       hakensakiManagerName: matchingManager?.managerName ?? null,
@@ -527,12 +530,12 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
   for (const entry of result.factories) {
     if (entry.factoryName && factoryPhones[entry.factoryName]) {
       const factoryPhone = factoryPhones[entry.factoryName];
-      // If the entry's phone is the block default (本社 or 州的崎) but its factory is different,
+      // If the entry's phone is the block default (本社 or 州の崎) but its factory is different,
       // replace with the factory's own phone
       if (entry.phone === "0566-21-5128" && entry.factoryName !== "本社工場") {
         entry.phone = factoryPhone;
       }
-      if (entry.phone === "0569-20-0332" && entry.factoryName !== "州的崎工場") {
+      if (entry.phone === "0569-20-0332" && entry.factoryName !== "州の崎工場") {
         entry.phone = factoryPhone;
       }
     }
@@ -542,7 +545,7 @@ export function parseKoritsuPdfText(text: string): KoritsuParsedResult {
   // PHASE 4: Addresses
   // ════════════════════════════════════════════════════════════════════════════
 
-  const ADDRESS_ORDER = ["本社工場", "州的崎工場", "亀崎工場", "乙川工場", "親和寮"];
+  const ADDRESS_ORDER = ["本社工場", "州の崎工場", "亀崎工場", "乙川工場", "親和寮"];
   if (addressLines.length > 0 && Object.keys(result.addresses).length === 0) {
     for (let i = 0; i < addressLines.length && i < ADDRESS_ORDER.length; i++) {
       result.addresses[ADDRESS_ORDER[i]] = addressLines[i];
