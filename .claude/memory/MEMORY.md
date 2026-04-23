@@ -5,6 +5,3 @@
 - [Sesion 2026-04-15b — Admin bypass localhost + CLAUDE.md fixes](session_2026-04-15b.md) — tsx no cargaba .env; bypass localhost en adminGuardMiddleware; --env-file .env en dev scripts; commit ecd281c
 - [Sesion 2026-04-15c — factory/company yearly config + table UX](session_2026-04-15c.md) — inkan 朱肉; MSGothic font; factory_yearly_config + company_yearly_config cascade; 年度 button tabla; light mode fix
 - [GitHub repo KobetsuV3](reference_github.md) — https://github.com/jpkken1979/KobetsuV3.26.4.16
-- [Idiomas permitidos solo ES/EN/JA](feedback_languages.md) — nunca mezclar otros idiomas en codigo, comentarios o respuestas
-- [Orden canonico de turnos](pattern_shift_canonical_order.md) — sortShiftEntries + normalizer server; dia→noche→numerados→letras
-- [Sesion 2026-04-23b — orden canonico + split PDF](session_2026-04-23b.md) — shift sort UI/DB/PDF; regex fix 昼勤①/深夜; split secuencial 9 shifts Takao
