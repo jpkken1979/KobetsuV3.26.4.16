@@ -335,6 +335,10 @@ function NewContractWizard() {
     if (selectedGroups.size === 0) return;
     try {
       for (const [, group] of selectedGroups) {
+        // Rate del contrato: manda el 単価 del 社員台帳 (billingRate ?? hourlyRate),
+        // fallback al rate del factory. Los derivados (残業/深夜/休日) se calculan
+        // según multiplicadores legales (125% / 125% / 135%).
+        const rate = group.rate;
         await create.mutateAsync({
           companyId: state.companyId,
           factoryId: state.factoryId,
@@ -343,7 +347,14 @@ function NewContractWizard() {
           contractDate: group.contractDate,
           notificationDate: group.notificationDate,
           conflictDateOverride: state.useConflictDateOverride ? state.conflictDateOverride : null,
-          employeeAssignments: group.emps.map((e) => ({ employeeId: e.id, hourlyRate: group.rate })),
+          hourlyRate: rate,
+          overtimeRate: Math.round(rate * 1.25),
+          nightShiftRate: Math.round(rate * 1.25),
+          holidayRate: Math.round(rate * 1.35),
+          employeeAssignments: group.emps.map((e) => ({
+            employeeId: e.id,
+            hourlyRate: e.billingRate ?? e.hourlyRate ?? rate,
+          })),
         });
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll });
