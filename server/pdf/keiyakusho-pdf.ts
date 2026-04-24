@@ -4,7 +4,7 @@
  * Refactor 2026-04-23 — match al formato de referencia
  * "個別契約書TEXPERT2026.1Perfect.pdf" (plantilla oficial UNS).
  *
- * Landscape A4 (841.89 × 595.28pt). Dos mitades:
+ * Landscape A4 visible (842.0 × 595.22pt). Dos mitades:
  *   Izquierda (cols A-H) = No.1 — 労働契約書
  *   Derecha   (cols J-P) = No.2 — 就業条件明示書
  *   Col I separador.
@@ -14,6 +14,7 @@
  *   - Grid pasó de 18 a 16 columnas útiles
  *   - Fondo gris LBG sacado — labels se distinguen por borde + posición
  *   - Font base 7pt uniforme (antes 4.5-6pt) con auto-shrink 3.5pt mínimo
+ *   - Grid impreso con el tamaño exacto de la plantilla: 748.92,529.56pt
  *   - 就業時間: renderizado adaptativo según cantidad de turnos (1, 2, 3-5, 6+)
  *
  * Font: JP-Mincho (BIZ UD明朝).
@@ -100,11 +101,16 @@ export interface KeiyakushoData {
 const fmtDate = formatDateJP;
 
 // ─── GRID SYSTEM ──────────────────────────────────────────────────────
-// Landscape A4: 841.89 × 595.28pt
+// Landscape A4 visible. The reference PDF is stored as portrait A4 with
+// /Rotate 90, but renders to the same 842.0 × 595.22pt landscape viewport.
 // 16 columnas: A-B labels izq | C-H valores izq | I separador | J-K labels der | L-P valores der
 
-const ML = 10;   // margin left/right
-const MT = 8;    // margin top
+const PAGE_WIDTH = 842.0;
+const PAGE_HEIGHT = 595.22;
+const TABLE_WIDTH = 748.92;
+const TABLE_HEIGHT = 529.56;
+const TABLE_LEFT = (PAGE_WIDTH - TABLE_WIDTH) / 2;
+const TABLE_TOP = (PAGE_HEIGHT - TABLE_HEIGHT) / 2;
 
 // Anchos relativos (px Excel). Suma = 1662.
 // Spacers C/M viejos (21px c/u) absorbidos en columna C y L nuevas.
@@ -116,10 +122,9 @@ const COL_PX = [
   141, 115, 125, 88, 237,                    // L-P: valores der (706px) — L absorbió spacer
 ];
 const TOTAL_PX = COL_PX.reduce((a, b) => a + b, 0);
-const TW = 841.89 - ML * 2;
 
 const CX: number[] = [];
-{ let x = ML; for (const w of COL_PX) { CX.push(x); x += (w / TOTAL_PX) * TW; } CX.push(x); }
+{ let x = TABLE_LEFT; for (const w of COL_PX) { CX.push(x); x += (w / TOTAL_PX) * TABLE_WIDTH; } CX.push(x); }
 
 // Alturas de fila indexadas por número de fila Excel
 const RH_LIST: number[] = [
@@ -136,11 +141,10 @@ const RH_LIST: number[] = [
   13.5, 13.5, 13.5, 13.5, 13.5, 13.5, 13.5, 13.5, 13.5, 13.5,  // 45-54: 更新
 ];
 const TOTAL_RH = RH_LIST.slice(2).reduce((a, b) => a + b, 0);
-const AVAIL_H = 595.28 - MT - 4;
-const YS = AVAIL_H / TOTAL_RH;
+const YS = TABLE_HEIGHT / TOTAL_RH;
 
 const RY: number[] = [0, 0];
-{ let y = MT; for (let i = 2; i <= 54; i++) { RY.push(y); y += RH_LIST[i] * YS; } RY.push(y); }
+{ let y = TABLE_TOP; for (let i = 2; i <= 54; i++) { RY.push(y); y += RH_LIST[i] * YS; } RY.push(y); }
 
 // Índices de columna (0-based). _I (col 8) es el separador entre mitades — no se dibuja.
 const _A = 0, _B = 1;

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
   [
-    "btn-press focus-premium shine-hover relative inline-flex cursor-pointer items-center justify-center gap-2",
+    "btn-press focus-premium relative inline-flex cursor-pointer items-center justify-center gap-2",
     "rounded-md font-semibold tracking-normal",
     "transition-[transform,background-color,border-color,box-shadow,color] duration-200",
     "disabled:pointer-events-none disabled:opacity-50",
@@ -13,13 +13,12 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary: gradient rojo → naranja con glow doble ring + shine permanente
+        // Primary: restrained accent for operational screens.
         default: cn(
           "text-primary-foreground border border-transparent",
-          "bg-[linear-gradient(135deg,var(--color-primary),var(--color-accent))]",
-          "shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-primary)_55%,transparent),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]",
-          "hover:-translate-y-[1px]",
-          "hover:shadow-[0_12px_32px_-6px_color-mix(in_srgb,var(--color-primary)_60%,transparent),0_0_0_1px_color-mix(in_srgb,var(--color-primary)_45%,transparent)]",
+          "bg-primary",
+          "shadow-[0_1px_2px_color-mix(in_srgb,var(--color-primary)_22%,transparent)]",
+          "hover:bg-[color-mix(in_srgb,var(--color-primary)_88%,black)]",
           "active:translate-y-0",
         ),
         // Destructive: rojo sólido puro, sin naranja
@@ -52,9 +51,7 @@ const buttonVariants = cva(
         // Legacy aliases — redirigen al default para mantener compatibilidad
         cyan: cn(
           "text-primary-foreground border border-transparent",
-          "bg-[linear-gradient(135deg,var(--color-primary),var(--color-accent))]",
-          "shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-primary)_55%,transparent)]",
-          "hover:-translate-y-[1px]",
+          "bg-primary hover:bg-[color-mix(in_srgb,var(--color-primary)_88%,black)]",
         ),
         success: cn(
           "bg-[color-mix(in_srgb,var(--color-status-ok)_95%,black)] text-white border border-transparent",

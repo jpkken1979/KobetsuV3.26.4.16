@@ -21,7 +21,7 @@ export function EmptyState({ icon: Icon, title, description, children, className
             transition: { duration: 0.25, ease: [0.5, 0, 0, 1] as [number, number, number, number] },
           })}
       className={cn(
-        "flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-card/60 py-20 backdrop-blur-sm",
+        "flex flex-col items-center justify-center rounded-lg border border-dashed border-border/60 bg-card py-16",
         className,
       )}
     >
@@ -30,7 +30,6 @@ export function EmptyState({ icon: Icon, title, description, children, className
           "relative flex h-16 w-16 items-center justify-center rounded-md",
           "border border-[color-mix(in_srgb,var(--color-primary)_22%,var(--color-border))]",
           "bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)]",
-          "shadow-[0_0_0_6px_color-mix(in_srgb,var(--color-primary)_6%,transparent),0_8px_24px_-8px_color-mix(in_srgb,var(--color-primary)_30%,transparent)]",
         )}
       >
         <Icon
@@ -39,7 +38,7 @@ export function EmptyState({ icon: Icon, title, description, children, className
           aria-hidden="true"
         />
       </div>
-      <p className="mt-5 text-display text-base font-semibold text-foreground">{title}</p>
+      <p className="mt-5 text-base font-semibold text-foreground">{title}</p>
       {description && (
         <p className="mt-2 max-w-[320px] text-center text-xs leading-relaxed text-muted-foreground">
           {description}

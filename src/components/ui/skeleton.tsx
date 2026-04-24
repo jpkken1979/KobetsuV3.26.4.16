@@ -27,7 +27,7 @@ export function SkeletonTable({ rows = 8, columns = 6, className }: SkeletonTabl
   return (
     <div
       className={cn(
-        "rounded-lg border border-border/60 bg-card/80 shadow-[var(--shadow-card)] backdrop-blur-sm overflow-hidden",
+        "overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]",
         className
       )}
     >
@@ -63,7 +63,7 @@ export function SkeletonTable({ rows = 8, columns = 6, className }: SkeletonTabl
 
 export function StatCardSkeleton() {
   return (
-    <div className="relative overflow-hidden rounded-lg border border-border/60 bg-card/80 p-4 backdrop-blur-sm">
+    <div className="relative overflow-hidden rounded-lg border border-border/60 bg-card p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="space-y-2">
           <Skeleton className="h-3 w-20" />
@@ -87,7 +87,7 @@ export function DashboardSkeleton() {
 
 export function ChartSkeleton() {
   return (
-    <div className="rounded-lg border border-border/40 bg-card/80 p-6 shadow-[var(--shadow-card)] backdrop-blur-sm">
+    <div className="rounded-lg border border-border/40 bg-card p-6 shadow-[var(--shadow-card)]">
       <Skeleton className="mb-4 h-5 w-32" />
       <Skeleton className="h-[220px] w-full rounded-md" />
     </div>

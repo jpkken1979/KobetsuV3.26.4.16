@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -67,6 +67,67 @@ function normalizeNumber(value: string) {
 
 function textOrNull(value: string) {
   return value.trim() ? value.trim() : null;
+}
+
+function SummaryRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 border-b border-border/50 py-2 last:border-0">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="max-w-[68%] text-right text-sm font-medium text-foreground">{value || "-"}</span>
+    </div>
+  );
+}
+
+function formatMoneyLabel(value: string) {
+  if (!value.trim()) return "未設定";
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? `¥${parsed.toLocaleString("ja-JP")}` : value;
+}
+
+function GenerationSummary({
+  companyId,
+  selectedFactoryLabel,
+  recruitsCount,
+  startDate,
+  endDate,
+  hourlyRate,
+  billingRate,
+  includeShugyojoken,
+  canGenerate,
+}: {
+  companyId: number | null;
+  selectedFactoryLabel: string;
+  recruitsCount: number;
+  startDate: string;
+  endDate: string;
+  hourlyRate: string;
+  billingRate: string;
+  includeShugyojoken: boolean;
+  canGenerate: boolean;
+}) {
+  return (
+    <Card variant="default" className="p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">生成前チェック</h2>
+          <p className="mt-1 text-xs text-muted-foreground">PDF作成前の主要条件</p>
+        </div>
+        <Badge variant={canGenerate ? "success" : "secondary"} size="sm" dot={canGenerate}>
+          {canGenerate ? "READY" : "未完了"}
+        </Badge>
+      </div>
+
+      <div className="rounded-md border border-border/60 bg-background/60 px-3">
+        <SummaryRow label="派遣先" value={companyId ? "選択済み" : "未選択"} />
+        <SummaryRow label="ライン" value={selectedFactoryLabel || "未選択"} />
+        <SummaryRow label="招聘者" value={`${recruitsCount}名`} />
+        <SummaryRow label="契約期間" value={startDate && endDate ? `${startDate} - ${endDate}` : "未設定"} />
+        <SummaryRow label="時給" value={formatMoneyLabel(hourlyRate)} />
+        <SummaryRow label="請求単価" value={formatMoneyLabel(billingRate)} />
+        <SummaryRow label="就業条件明示書" value={includeShugyojoken ? "作成する" : "作成しない"} />
+      </div>
+    </Card>
+  );
 }
 
 // ─── Page component ───────────────────────────────────────────────────────────
@@ -600,7 +661,19 @@ function ShouheishaPage() {
         </div>
 
         {/* Right column */}
-        <div className="space-y-6">
+        <div className="space-y-6 xl:sticky xl:top-4 xl:self-start">
+          <GenerationSummary
+            companyId={companyId}
+            selectedFactoryLabel={selectedFactoryLabel}
+            recruitsCount={recruits.length}
+            startDate={startDate}
+            endDate={endDate}
+            hourlyRate={hourlyRate}
+            billingRate={billingRate}
+            includeShugyojoken={includeShugyojoken}
+            canGenerate={canGenerate}
+          />
+
           {/* Step 4 — Pricing & dates + generate buttons */}
           <Card variant="default" className="p-6">
             <PricingDatesForm

@@ -132,78 +132,67 @@ function DataCheckPage() {
         </div>
       </PageHeader>
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {(["green", "yellow", "red", "gray"] as const).map((level) => (
-          <button
-            key={level}
-            onClick={() => setFilter(filter === level ? "all" : level)}
-            className={cn(
-              "rounded-lg border p-3 text-center transition-all cursor-pointer",
-              filter === level
-                ? "ring-2 ring-primary"
-                : "border-border/60 hover:border-border",
-              "bg-card shadow-[var(--shadow-card)]"
-            )}
-          >
-            <div className="flex items-center justify-center gap-2">
-              <div
+      <div className="sticky top-0 z-20 rounded-lg border border-border/60 bg-background/95 p-3 shadow-[var(--shadow-card)] backdrop-blur">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+            {(["green", "yellow", "red", "gray"] as const).map((level) => (
+              <button
+                key={level}
+                onClick={() => setFilter(filter === level ? "all" : level)}
                 className={cn(
-                  "h-2.5 w-2.5 rounded-full",
-                  COMPLETENESS_CONFIG[level].dotClass
+                  "rounded-md border px-3 py-2 text-left transition-all cursor-pointer",
+                  filter === level
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/60 bg-card hover:border-border"
                 )}
-              />
-              <span className="text-2xl font-bold tabular-nums">
-                {data?.stats[level] ?? 0}
-              </span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {COMPLETENESS_CONFIG[level].label}
-            </p>
-          </button>
-        ))}
-      </div>
-
-      {/* Filters Row */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Company Filter */}
-        <div className="relative">
-          <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
-          <select
-            value={companyId ?? ""}
-            onChange={(e) =>
-              setCompanyId(e.target.value ? Number(e.target.value) : undefined)
-            }
-            className="h-9 rounded-lg border border-border/60 bg-card pl-9 pr-8 text-sm text-foreground shadow-sm transition-colors hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer appearance-none"
-          >
-            <option value="">全企業</option>
-            {companies?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
+              >
+                <div className="flex items-center gap-2">
+                  <div className={cn("h-2.5 w-2.5 rounded-full", COMPLETENESS_CONFIG[level].dotClass)} />
+                  <span className="text-lg font-bold tabular-nums">{data?.stats[level] ?? 0}</span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">{COMPLETENESS_CONFIG[level].label}</p>
+              </button>
             ))}
-          </select>
+          </div>
+
+          <div className="flex items-center gap-2 rounded-md border border-border/60 bg-card px-3 py-2 text-xs text-muted-foreground">
+            <ClipboardCheck className="h-3.5 w-3.5" />
+            <span>
+              {filtered.length}
+              {data ? ` / ${data.stats.total}` : ``} 件
+            </span>
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
-          <input
-            type="text"
-            placeholder="氏名、社員番号、カナ、工場名で検索…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9 w-full rounded-lg border border-border/60 bg-card pl-9 pr-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground/40 hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
-          />
-        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border/50 pt-3">
+          <div className="relative">
+            <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+            <select
+              value={companyId ?? ""}
+              onChange={(e) =>
+                setCompanyId(e.target.value ? Number(e.target.value) : undefined)
+              }
+              className="h-9 rounded-md border border-border/60 bg-card pl-9 pr-8 text-sm text-foreground shadow-sm transition-colors hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer appearance-none"
+            >
+              <option value="">全企業</option>
+              {companies?.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Results count */}
-        <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-          <ClipboardCheck className="h-3.5 w-3.5" />
-          <span>
-            {filtered.length}
-            {data ? ` / ${data.stats.total}` : ``} 件
-          </span>
+          <div className="relative min-w-[220px] flex-1 max-w-xl">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+            <input
+              type="text"
+              placeholder="氏名、社員番号、カナ、工場名で検索…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-9 w-full rounded-md border border-border/60 bg-card pl-9 pr-3 text-sm text-foreground shadow-sm transition-colors placeholder:text-muted-foreground/40 hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
         </div>
       </div>
 
