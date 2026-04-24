@@ -152,7 +152,7 @@ export function ImportModal({ onClose }: ImportModalProps) {
       setResult(nextResult);
       setDiff(null);
       queryClient.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
 
       if (nextResult.success) {
         const summaryParts = [

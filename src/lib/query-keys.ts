@@ -6,7 +6,9 @@
 export const queryKeys = {
   companies: {
     all: ["companies"] as const,
+    list: (params?: { includeInactive?: boolean }) => ["companies", params] as const,
     detail: (id: number) => ["companies", id] as const,
+    invalidateAll: ["companies"] as const,
   },
   factories: {
     all: (params?: { companyId?: number }) => ["factories", params] as const,
@@ -55,6 +57,7 @@ export const queryKeys = {
   factoryYearlyConfig: {
     byFactory: (factoryId: number) => ["factory-yearly-config", factoryId] as const,
     summary: () => ["factory-yearly-config", "summary"] as const,
+    invalidateAll: ["factory-yearly-config"] as const,
   },
   companyYearlyConfig: {
     byCompany: (companyId: number) => ["company-yearly-config", companyId] as const,

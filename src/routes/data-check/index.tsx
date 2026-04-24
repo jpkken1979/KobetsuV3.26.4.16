@@ -157,7 +157,7 @@ function DataCheckPage() {
                 {data?.stats[level] ?? 0}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
+            <p className="mt-1 text-xs text-muted-foreground">
               {COMPLETENESS_CONFIG[level].label}
             </p>
           </button>

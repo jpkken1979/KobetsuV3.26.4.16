@@ -10,6 +10,6 @@ export function shouheishaCardVariants() {
   return cardVariants;
 }
 
-export function shouheishaMotionEnabled() {
+export function useShouheishaMotionEnabled() {
   return !useReducedMotion();
 }

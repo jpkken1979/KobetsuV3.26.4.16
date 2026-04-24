@@ -42,7 +42,7 @@ export function PageHeader({
         )}
         <h1
           className={cn(
-            "text-display text-[2rem] md:text-[2.5rem]",
+            "text-display text-xl md:text-2xl",
             gradientTitle &&
               "bg-[linear-gradient(135deg,var(--color-primary),var(--color-accent))] bg-clip-text text-transparent",
           )}

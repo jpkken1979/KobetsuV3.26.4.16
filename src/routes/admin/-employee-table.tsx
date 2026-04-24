@@ -364,7 +364,7 @@ export function EmployeeTable({
         (r) => onEdit(r),
         (r) => onDelete(r),
       ),
-    [],
+    [onEdit, onDelete],
   );
 
   const table = useReactTable({

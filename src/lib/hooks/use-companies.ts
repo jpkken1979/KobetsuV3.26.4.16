@@ -8,7 +8,7 @@ import type { Company, CompanyCreate, CompanyUpdate } from "@/lib/api-types";
 export function useCompanies(opts?: { includeInactive?: boolean }) {
   const params = opts?.includeInactive ? "?includeInactive=true" : "";
   return useQuery({
-    queryKey: queryKeys.companies.all,
+    queryKey: queryKeys.companies.list(opts),
     queryFn: () => api.get<Company[]>(`/companies${params}`),
   });
 }
@@ -26,7 +26,7 @@ export function useCreateCompany() {
   return useMutation({
     mutationFn: (data: CompanyCreate) => api.post<Company>("/companies", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.companies.all });
+      qc.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       onMutationSuccess("企業を作成しました");
     },
     onError: (err: unknown) => onMutationError(err),
@@ -39,7 +39,7 @@ export function useUpdateCompany() {
     mutationFn: ({ id, data }: { id: number; data: CompanyUpdate }) =>
       api.put<Company>(`/companies/${id}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.companies.all });
+      qc.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       onMutationSuccess("企業を更新しました");
     },
     onError: (err: unknown) => onMutationError(err),

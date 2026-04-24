@@ -118,6 +118,41 @@ describe("Factories", () => {
       expect(factory.companyId).toBe(companyId);
     }
   });
+
+  it("PUT /api/factories/bulk-calendar hits bulk route (not /:id)", async () => {
+    const res = await request("/api/factories/bulk-calendar", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ calendarText: "土日・祝日" }),
+    });
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toHaveProperty("updated");
+    expect(data).toHaveProperty("calendarText");
+  });
+
+  it("PUT /api/factories/bulk-roles hits bulk route (not /:id)", async () => {
+    const facRes = await request("/api/factories");
+    const facs = await facRes.json();
+    if (!Array.isArray(facs) || facs.length === 0) return;
+
+    const first = facs[0];
+    const res = await request("/api/factories/bulk-roles", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyId: first.companyId,
+        factoryName: first.factoryName,
+        roleKey: "hakensakiManager",
+        value: { name: "TEST", dept: "TEST", phone: "000", address: null },
+        excludeLineIds: [],
+      }),
+    });
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toHaveProperty("updated");
+    expect(data).toHaveProperty("excluded");
+  });
 });
 
 // ─── Employees ──────────────────────────────────────────────────────
@@ -306,4 +341,14 @@ describe("Error Handling", () => {
     expect(res.status).toBe(404);
   });
 
+});
+
+describe("Factory Yearly Config", () => {
+  it("GET /api/factory-yearly-config/fiscal-year/resolve resolves fiscal year", async () => {
+    const res = await request("/api/factory-yearly-config/fiscal-year/resolve?date=2026-04-01");
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data).toHaveProperty("fiscalYear");
+    expect(typeof data.fiscalYear).toBe("number");
+  });
 });

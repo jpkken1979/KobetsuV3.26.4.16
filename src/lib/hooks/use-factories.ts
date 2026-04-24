@@ -42,7 +42,7 @@ export function useCreateFactory() {
     mutationFn: (data: Partial<Factory>) => api.createFactory(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
-      qc.invalidateQueries({ queryKey: queryKeys.companies.all });
+      qc.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       onMutationSuccess("工場を登録しました");
     },
     onError: (err: unknown) => onMutationError(err),
@@ -55,7 +55,7 @@ export function useUpdateFactory() {
     mutationFn: ({ id, data }: { id: number; data: Partial<Factory> }) => api.updateFactory(id, data),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
-      qc.invalidateQueries({ queryKey: queryKeys.companies.all });
+      qc.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       qc.invalidateQueries({ queryKey: queryKeys.dataCheck.invalidateAll });
       const companyId = (variables.data as { companyId?: number }).companyId;
       if (typeof companyId === "number") {
@@ -73,7 +73,7 @@ export function useDeleteFactory() {
     mutationFn: (id: number) => api.deleteFactory(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
-      qc.invalidateQueries({ queryKey: queryKeys.companies.all });
+      qc.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       onMutationSuccess("工場を削除しました");
     },
     onError: (err: unknown) => onMutationError(err),
@@ -97,7 +97,7 @@ export function useBulkUpdateRoles() {
     }) => api.bulkUpdateFactoryRoles(data),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.factories.roleSummary(variables.companyId) });
       onMutationSuccess("担当者を一括更新しました");
     },

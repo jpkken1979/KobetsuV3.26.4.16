@@ -60,7 +60,7 @@ export function useCreateEmployee() {
   return useMutation({
     mutationFn: (data: EmployeeCreate) => api.post<Employee>("/employees", data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+      qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
       onMutationSuccess("社員を作成しました");
     },
     onError: (err: unknown) => onMutationError(err),
@@ -73,7 +73,7 @@ export function useUpdateEmployee() {
     mutationFn: ({ id, data }: { id: number; data: EmployeeUpdate }) =>
       api.put<Employee>(`/employees/${id}`, data),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+      qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
       onMutationSuccess("社員を更新しました");
     },
     onError: (err: unknown) => onMutationError(err),
@@ -86,7 +86,7 @@ export function useImportEmployees() {
     mutationFn: (rows: Record<string, unknown>[]) =>
       api.post<ImportResult>("/import/employees", { rows }),
     onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+      qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
       onMutationSuccess(`インポート完了: ${data.summary.inserted}件`);
     },
     onError: (err: unknown) => onMutationError(err),

@@ -155,6 +155,7 @@ export async function importFactories(
   mode: "upsert" | "skip",
   deleteIds: number[],
   rawCompanyData: Record<string, unknown>[],
+  enrichCompanies: boolean = true,
 ): Promise<FactoryImportResult> {
   // Build company info map from Sheet 2 (企業情報)
   const companyInfoMap = new Map<string, CompanyInfo>();
@@ -276,7 +277,7 @@ export async function importFactories(
 
     // Enrich companies with empty fields from Sheet 2
     let txCompaniesUpdated = 0;
-    if (companyInfoMap.size > 0) {
+    if (enrichCompanies && companyInfoMap.size > 0) {
       const currentCompanies = db.select().from(clientCompanies).all();
       for (const co of currentCompanies) {
         const info = companyInfoMap.get(co.name);

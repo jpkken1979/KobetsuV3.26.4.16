@@ -173,7 +173,7 @@ function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.invalidateAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.dataCheck.invalidateAll });
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
     } catch {
       toast.error("社員テーブルのクリアに失敗しました");

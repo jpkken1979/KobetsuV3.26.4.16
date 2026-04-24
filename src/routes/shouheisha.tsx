@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -141,35 +141,13 @@ function ShouheishaPage() {
   const selectedFactoryAddress = selectedFactory?.address ?? "";
   const selectedFactoryPhone = selectedFactory?.phone ?? "";
 
-  useEffect(() => {
-    if (selectedFactory) {
-      applyFactoryDefaults(selectedFactory);
-    }
-  }, [selectedFactory?.id]);
-
-  useEffect(() => {
-    if (selectedFactory && autoFillEnabled) {
-      applyScheduleDefaults(selectedFactory);
-    }
-  }, [selectedFactory?.id, autoFillEnabled]);
-
-  // ── Recruit list helpers ───────────────────────────────────────────────────────
-
-  const updateRecruit = (index: number, patch: Partial<RecruitForm>) => {
-    setRecruits((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
-  };
-  const addRecruit = () => setRecruits((prev) => [...prev, emptyRecruit()]);
-  const removeRecruit = (index: number) =>
-    setRecruits((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
-
   // ── Factory defaults application ─────────────────────────────────────────────
 
-  const applyFactoryDefaults = (factory: Factory) => {
-    if (typeof factory.hourlyRate === "number" && !hourlyRate) {
-      setHourlyRate(String(factory.hourlyRate));
-    }
-    if (typeof factory.hourlyRate === "number" && !billingRate) {
-      setBillingRate(String(factory.hourlyRate));
+  const applyFactoryDefaults = useCallback((factory: Factory) => {
+    if (typeof factory.hourlyRate === "number") {
+      const rate = String(factory.hourlyRate);
+      setHourlyRate((prev) => prev || rate);
+      setBillingRate((prev) => prev || rate);
     }
     setJobDescription(factory.jobDescription2 || factory.jobDescription || "");
     setShiftPattern(factory.shiftPattern || "");
@@ -198,15 +176,36 @@ function ShouheishaPage() {
     setResponsibilityLevel(factory.supervisorRole || factory.hakensakiManagerRole || "");
     setOvertimeMax(factory.overtimeHours || "");
     setWelfare(factory.workerCalendar || "");
-  };
+  }, []);
 
-  const applyScheduleDefaults = (factory: Factory) => {
+  const applyScheduleDefaults = useCallback((factory: Factory) => {
     setWorkStartTime(factory.workHoursDay || "");
     setWorkEndTime(factory.workHoursNight || "");
     setBreakMinutes(
       factory.breakTime !== null && factory.breakTime !== undefined ? String(factory.breakTime) : "",
     );
+  }, []);
+
+  useEffect(() => {
+    if (selectedFactory) {
+      applyFactoryDefaults(selectedFactory);
+    }
+  }, [selectedFactory, applyFactoryDefaults]);
+
+  useEffect(() => {
+    if (selectedFactory && autoFillEnabled) {
+      applyScheduleDefaults(selectedFactory);
+    }
+  }, [selectedFactory, autoFillEnabled, applyScheduleDefaults]);
+
+  // ── Recruit list helpers ───────────────────────────────────────────────────────
+
+  const updateRecruit = (index: number, patch: Partial<RecruitForm>) => {
+    setRecruits((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)));
   };
+  const addRecruit = () => setRecruits((prev) => [...prev, emptyRecruit()]);
+  const removeRecruit = (index: number) =>
+    setRecruits((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
 
   // ── Cascade handlers ───────────────────────────────────────────────────────────
 
@@ -339,7 +338,8 @@ function ShouheishaPage() {
             contractDate: effectiveContractDate,
             notificationDate: effectiveNotificationDate,
             status: "active",
-            hourlyRate: effectiveHourlyRate,
+            // Domain rule: contract-level hourlyRate stores billing unit price for PDFs.
+            hourlyRate: effectiveBillingRate,
             overtimeRate: null,
             nightShiftRate: null,
             holidayRate: null,
@@ -363,7 +363,8 @@ function ShouheishaPage() {
             notes: notes.trim() || null,
             employeeAssignments: employees.map((emp) => ({
               employeeId: emp.id,
-              hourlyRate: effectiveHourlyRate ?? undefined,
+              // Keep assignment rate aligned with billingRate (単価).
+              hourlyRate: effectiveBillingRate ?? undefined,
               individualStartDate: startDate,
               individualEndDate: endDate,
               isIndefinite: false,
@@ -422,8 +423,8 @@ function ShouheishaPage() {
     },
     onSuccess: async (data) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.contracts.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll }),
         queryClient.invalidateQueries({ queryKey: queryKeys.documents.all }),
       ]);
       setResult(data);
@@ -471,7 +472,7 @@ function ShouheishaPage() {
     },
     onSuccess: async (data) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.employees.all() }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll }),
         queryClient.invalidateQueries({ queryKey: queryKeys.documents.all }),
       ]);
       setResult(data);

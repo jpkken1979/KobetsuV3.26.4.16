@@ -288,10 +288,10 @@ export function buildCommonData(
     supervisorPhone: yearlyConfig?.supervisorPhone || factory.supervisorPhone || c.supervisorPhone || "",
     supervisorRole: yearlyConfig?.supervisorRole || factory.supervisorRole || "",
 
-    // 派遣先責任者 — factory yearly config → company yearly config → factory static data
-    hakensakiManagerDept: yearlyConfig?.hakensakiManagerDept || companyConfig?.hakensakiManagerDept || factory.hakensakiManagerDept || factory.supervisorDept || "",
-    hakensakiManagerName: yearlyConfig?.hakensakiManagerName || companyConfig?.hakensakiManagerName || factory.hakensakiManagerName || factory.supervisorName || "",
-    hakensakiManagerPhone: yearlyConfig?.hakensakiManagerPhone || companyConfig?.hakensakiManagerPhone || factory.hakensakiManagerPhone || factory.supervisorPhone || "",
+    // 派遣先責任者 — keep role boundaries strict (never fallback to 指揮命令者).
+    hakensakiManagerDept: yearlyConfig?.hakensakiManagerDept || companyConfig?.hakensakiManagerDept || factory.hakensakiManagerDept || "",
+    hakensakiManagerName: yearlyConfig?.hakensakiManagerName || companyConfig?.hakensakiManagerName || factory.hakensakiManagerName || "",
+    hakensakiManagerPhone: yearlyConfig?.hakensakiManagerPhone || companyConfig?.hakensakiManagerPhone || factory.hakensakiManagerPhone || "",
     hakensakiManagerRole: yearlyConfig?.hakensakiManagerRole || companyConfig?.hakensakiManagerRole || factory.hakensakiManagerRole || "",
 
     // 休日テキスト — factory yearly config → company yearly config → empty

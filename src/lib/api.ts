@@ -240,7 +240,13 @@ export const api = {
     request<ImportResult>("/import/employees", { method: "POST", body: JSON.stringify(data) }),
   importCompanies: (data: { data: Record<string, unknown>[]; mode?: "upsert" | "skip" }) =>
     request<ImportResult>("/import/companies", { method: "POST", body: JSON.stringify(data) }),
-  importFactories: (data: { data: Record<string, unknown>[]; mode?: "upsert" | "skip"; deleteIds?: number[]; companyData?: Record<string, unknown>[] }) =>
+  importFactories: (data: {
+    data: Record<string, unknown>[];
+    mode?: "upsert" | "skip";
+    deleteIds?: number[];
+    companyData?: Record<string, unknown>[];
+    enrichCompanies?: boolean;
+  }) =>
     request<ImportResult>("/import/factories", { method: "POST", body: JSON.stringify(data) }),
   diffEmployees: (data: { data: Record<string, unknown>[] }) =>
     request<EmployeeDiffResult>("/import/employees/diff", { method: "POST", body: JSON.stringify(data) }),

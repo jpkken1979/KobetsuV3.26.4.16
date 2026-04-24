@@ -80,7 +80,7 @@ export function useApplyKoritsuImport() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll });
-      qc.invalidateQueries({ queryKey: queryKeys.companies.all });
+      qc.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
     },
     onError: (err: unknown) => onMutationError(err),
   });

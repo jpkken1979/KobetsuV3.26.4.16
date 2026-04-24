@@ -115,7 +115,7 @@ export function StepCompanySelect({
             <FactoryIcon className="h-3.5 w-3.5" />
             工場
           </div>
-          <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
+          <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/60 p-2">
             {cascadeLoading && (
               <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -142,7 +142,7 @@ export function StepCompanySelect({
             <FileText className="h-3.5 w-3.5" />
             配属先
           </div>
-          <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
+          <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/60 p-2">
             {departmentOptions.length === 0 && (
               <div className="px-3 py-2 text-sm text-muted-foreground">工場を選んでください</div>
             )}
@@ -163,7 +163,7 @@ export function StepCompanySelect({
             <Users className="h-3.5 w-3.5" />
             ライン
           </div>
-          <div className="max-h-64 space-y-1 overflow-y-auto rounded-xl border border-border/60 p-2">
+          <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/60 p-2">
             {lineOptions.length === 0 && (
               <div className="px-3 py-2 text-sm text-muted-foreground">配属先を選んでください</div>
             )}
@@ -206,18 +206,18 @@ export function StepCompanySelect({
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-lg bg-muted/20 px-3 py-2">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">住所 / 連絡先</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">住所 / 連絡先</div>
               <div className="mt-1 text-sm text-foreground">{selectedFactoryAddress || "未設定"}</div>
               <div className="mt-1 text-xs text-muted-foreground">{selectedFactoryPhone || "電話未設定"}</div>
             </div>
             <div className="rounded-lg bg-muted/20 px-3 py-2">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">業務メモ</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">業務メモ</div>
               <div className="mt-1 text-sm text-foreground">
                 {selectedFactory.jobDescription || selectedFactory.jobDescription2 || "未設定"}
               </div>
             </div>
             <div className="rounded-lg bg-muted/20 px-3 py-2">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">時給 / シフト</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">時給 / シフト</div>
               <div className="mt-1 text-sm text-foreground">
                 {selectedFactory.hourlyRate ? `${selectedFactory.hourlyRate} 円` : "単価未設定"}
               </div>
@@ -226,7 +226,7 @@ export function StepCompanySelect({
               </div>
             </div>
             <div className="rounded-lg bg-muted/20 px-3 py-2">
-              <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">責任者</div>
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">責任者</div>
               <div className="mt-1 text-sm text-foreground">{selectedFactory.supervisorName || "未設定"}</div>
               <div className="mt-1 text-xs text-muted-foreground">{selectedFactory.supervisorDept || "部署未設定"}</div>
             </div>
@@ -268,7 +268,7 @@ export function StepIndicatorBar() {
       <div className="grid gap-3 md:grid-cols-4">
         {["会社と工場を選ぶ", "招聘者の情報を入力", "価格と期間を設定", "ボタンで一括生成"].map((step, index) => (
           <div key={step} className="rounded-md border border-border/60 bg-background/70 px-4 py-3">
-            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            <div className="mb-2 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
               STEP {index + 1}
             </div>
             <div className="text-sm font-medium">{step}</div>

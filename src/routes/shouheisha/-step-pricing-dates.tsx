@@ -60,11 +60,11 @@ export function PricingDatesForm({
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
         <div>
-          <label className="text-sm font-medium">時給 / 単価</label>
+          <label className="text-sm font-medium">時給（支給）</label>
           <Input className={fieldClassName()} inputMode="decimal" value={hourlyRate} onChange={(e) => onHourlyRateChange(e.target.value)} />
         </div>
         <div>
-          <label className="text-sm font-medium">請求単価</label>
+          <label className="text-sm font-medium">請求単価（契約書反映）</label>
           <Input className={fieldClassName()} inputMode="decimal" value={billingRate} onChange={(e) => onBillingRateChange(e.target.value)} />
         </div>
         <div>
@@ -98,11 +98,11 @@ export function PricingDatesForm({
           <div className="mt-2 grid gap-2 text-muted-foreground md:grid-cols-2">
             <div>
               契約日: {contractDateOverride || contractDates.contractDate}
-              {contractDateOverride && <span className="ml-2 text-[10px] uppercase tracking-wider text-primary">手動</span>}
+              {contractDateOverride && <span className="ml-2 text-xs uppercase tracking-wide text-primary">手動</span>}
             </div>
             <div>
               通知日: {contractDateOverride || contractDates.notificationDate}
-              {contractDateOverride && <span className="ml-2 text-[10px] uppercase tracking-wider text-primary">手動</span>}
+              {contractDateOverride && <span className="ml-2 text-xs uppercase tracking-wide text-primary">手動</span>}
             </div>
           </div>
         </div>

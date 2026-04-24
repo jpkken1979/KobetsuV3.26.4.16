@@ -291,10 +291,10 @@ export function generateKeiyakushoPDF(doc: Doc, data: KeiyakushoData): void {
   const uName = data.complaintUnsName || `${unsMgr.role}　${unsMgr.name}`;
   const uPhone = data.complaintUnsPhone || unsMgr.phone;
 
-  // 派遣先責任者 (fallback a supervisor)
-  const hmDept = data.hakensakiManagerDept || data.supervisorDept;
-  const hmName = data.hakensakiManagerName || data.supervisorName;
-  const hmPhone = data.hakensakiManagerPhone || data.supervisorPhone || data.companyPhone;
+  // 派遣先責任者 (never fallback to 指揮命令者)
+  const hmDept = data.hakensakiManagerDept || "";
+  const hmName = data.hakensakiManagerName || "";
+  const hmPhone = data.hakensakiManagerPhone || data.companyPhone;
 
   // Jigyosho + composición 就業場所
   const jigyosho = getTakaoJigyosho(data.companyName, data.factoryAddress || data.companyAddress);

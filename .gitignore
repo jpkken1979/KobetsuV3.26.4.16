@@ -7,14 +7,15 @@ output/
 data/*.db
 data/*.db-shm
 data/*.db-wal
+data/kobetsu.db*
 data/kobetsu-auto-*.db
 data/backups/
 
 # Env and local config
-# NOTA: .env SÍ se versiona en este repo privado (decisión explícita — único
-# desarrollador/usuario). En forks o mirrors públicos, sacar con
-# `git rm --cached .env` y rotar todos los tokens.
+.env
+.env.*
 .env.local
+.mcp.json
 *.local
 
 # Generated files
@@ -35,6 +36,7 @@ __pycache__/
 .omc/
 .superpowers/
 .tanstack/
+.playwright-cli/
 .vscode/
 .windsurf/
 .worktrees/

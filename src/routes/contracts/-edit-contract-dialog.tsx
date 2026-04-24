@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { Contract, Employee, Factory } from "@/lib/api-types";
 import { Dialog, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
@@ -6,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { queryKeys } from "@/lib/query-keys";
 
 interface Props {
   contract: Contract;
@@ -14,6 +16,7 @@ interface Props {
 }
 
 export function EditContractDialog({ contract, open, onOpenChange }: Props) {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("employee");
 
   // Employee fields
@@ -57,7 +60,7 @@ export function EditContractDialog({ contract, open, onOpenChange }: Props) {
   }, [employee, factory, open]);
 
   const handleSaveEmployee = async () => {
-    if (!employee) return;
+    if (!employee) return false;
     setEmployeePending(true);
     try {
       await api.updateEmployee(employee.id, {
@@ -67,15 +70,17 @@ export function EditContractDialog({ contract, open, onOpenChange }: Props) {
         nationality: nationality || null,
       });
       toast.success("社員情報を更新しました");
+      return true;
     } catch {
       // error handled by api
+      return false;
     } finally {
       setEmployeePending(false);
     }
   };
 
   const handleSaveFactory = async () => {
-    if (!factory) return;
+    if (!factory) return false;
     setFactoryPending(true);
     try {
       await api.updateFactory(factory.id, {
@@ -86,19 +91,31 @@ export function EditContractDialog({ contract, open, onOpenChange }: Props) {
         address: address || null,
       });
       toast.success("派遣先情報を更新しました");
+      return true;
     } catch {
       // error handled by api
+      return false;
     } finally {
       setFactoryPending(false);
     }
   };
 
   const handleSave = async () => {
-    if (activeTab === "employee") {
-      await handleSaveEmployee();
-    } else {
-      await handleSaveFactory();
-    }
+    const saved =
+      activeTab === "employee"
+        ? await handleSaveEmployee()
+        : await handleSaveFactory();
+
+    if (!saved) return;
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.detail(contract.id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.factories.invalidateAll }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.dataCheck.invalidateAll }),
+    ]);
   };
 
   return (

@@ -66,7 +66,7 @@ export function SqlRunner() {
       persistHistory(updated);
       return updated;
     });
-  }, [result]);
+  }, [result, query]);
 
   async function handleExecute() {
     if (!query.trim() || isExecuting) return;

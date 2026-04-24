@@ -13,6 +13,14 @@ export const employeesRouter = new Hono();
 
 const VALID_EMPLOYEE_STATUSES = ["active", "inactive", "onLeave"] as const;
 
+function parseOptionalNumber(value: unknown): number | null {
+  if (value === null || value === undefined) return null;
+  const text = String(value).trim();
+  if (text.length === 0) return null;
+  const num = Number(text);
+  return Number.isFinite(num) ? num : null;
+}
+
 // GET /api/employees — list with optional filters
 employeesRouter.get("/", async (c) => {
   try {
@@ -100,13 +108,21 @@ employeesRouter.get("/completeness", async (c) => {
       with: { factory: { with: { company: true } } },
     });
 
-    const REQUIRED_EMPLOYEE = ["fullName", "employeeNumber", "hireDate", "hourlyRate", "billingRate"];
+    const REQUIRED_EMPLOYEE = ["fullName", "employeeNumber", "hireDate", "hourlyRate", "billingRate"] as const;
     const REQUIRED_FACTORY = ["supervisorName", "supervisorPhone", "workHours", "conflictDate"];
 
     const rows = emps.map((emp) => {
       const missingEmployee: string[] = [];
       for (const f of REQUIRED_EMPLOYEE) {
-        if (!emp[f as keyof typeof emp]) missingEmployee.push(f);
+        if (f === "hourlyRate" || f === "billingRate") continue;
+        const value = emp[f as keyof typeof emp];
+        if (value === null || value === undefined || value === "") {
+          missingEmployee.push(f);
+        }
+      }
+      // For rates, require at least one of billingRate/hourlyRate (0 is valid).
+      if (emp.billingRate == null && emp.hourlyRate == null) {
+        missingEmployee.push("billingRate|hourlyRate");
       }
       const missingFactory: string[] = [];
       if (emp.factory) {
@@ -199,8 +215,8 @@ employeesRouter.post("/import", async (c) => {
         birthDate: row["生年月日"] ? String(row["生年月日"]).trim() : null,
         status: row["ステータス"] ? String(row["ステータス"]).trim() : "active",
         hireDate: row["入社日"] ? String(row["入社日"]).trim() : null,
-        hourlyRate: row["時給"] ? Number(row["時給"]) : null,
-        billingRate: row["請求単価"] ? Number(row["請求単価"]) : null,
+        hourlyRate: parseOptionalNumber(row["時給"]),
+        billingRate: parseOptionalNumber(row["請求単価"]),
         visaExpiry: row["ビザ期限"] ? String(row["ビザ期限"]).trim() : null,
         visaType: row["ビザ種別"] ? String(row["ビザ種別"]).trim() : null,
         postalCode: row["郵便番号"] ? String(row["郵便番号"]).trim() : null,

@@ -50,47 +50,50 @@ export function RootLayout({ children }: { children: React.ReactNode }) {
   const isTablePage = pathname.includes("/table") || pathname === "/employees/" || pathname === "/data-check/" || pathname === "/contracts/";
   const search = routerState.location.search as { expand?: string };
   const isExpandMode = search.expand === "1";
+  const showDecorativeBackground = !isTablePage && !isExpandMode;
   const contentClasses = isTablePage ? "max-w-none px-3 md:px-4" : MODE_CLASSES[layoutMode];
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-background">
-      <div aria-hidden="true" className="pointer-events-none">
-        <div className="bg-grid" />
-        <div
-          className="bg-orb"
-          style={{
-            width: 680,
-            height: 680,
-            background: "radial-gradient(circle, rgba(214,31,42,0.18), transparent 70%)",
-            top: -220,
-            left: -120,
-            animationDelay: "0s",
-          }}
-        />
-        <div
-          className="bg-orb"
-          style={{
-            width: 520,
-            height: 520,
-            background: "radial-gradient(circle, rgba(255,122,24,0.16), transparent 68%)",
-            top: "32vh",
-            right: -160,
-            animationDelay: "-3s",
-          }}
-        />
-        <div
-          className="bg-orb"
-          style={{
-            width: 420,
-            height: 420,
-            background: "radial-gradient(circle, rgba(245,165,36,0.10), transparent 72%)",
-            bottom: -110,
-            left: "35%",
-            animationDelay: "-5s",
-          }}
-        />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_35%)] dark:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.03),_transparent_35%)]" />
-      </div>
+      {showDecorativeBackground && (
+        <div aria-hidden="true" className="pointer-events-none">
+          <div className="bg-grid" />
+          <div
+            className="bg-orb"
+            style={{
+              width: 680,
+              height: 680,
+              background: "radial-gradient(circle, rgba(214,31,42,0.18), transparent 70%)",
+              top: -220,
+              left: -120,
+              animationDelay: "0s",
+            }}
+          />
+          <div
+            className="bg-orb"
+            style={{
+              width: 520,
+              height: 520,
+              background: "radial-gradient(circle, rgba(255,122,24,0.16), transparent 68%)",
+              top: "32vh",
+              right: -160,
+              animationDelay: "-3s",
+            }}
+          />
+          <div
+            className="bg-orb"
+            style={{
+              width: 420,
+              height: 420,
+              background: "radial-gradient(circle, rgba(245,165,36,0.10), transparent 72%)",
+              bottom: -110,
+              left: "35%",
+              animationDelay: "-5s",
+            }}
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_35%)] dark:bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.03),_transparent_35%)]" />
+        </div>
+      )}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-4 focus:left-4 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:shadow-lg"

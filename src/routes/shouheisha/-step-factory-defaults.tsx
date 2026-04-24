@@ -121,27 +121,44 @@ export function FactoryDefaultsForm({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <FieldRow label="業務内容" value={jobDescription} onChange={(v) => onChange({ jobDescription: v })} multiline rows={3} />
-        <FieldRow label="シフトパターン" value={shiftPattern} onChange={(v) => onChange({ shiftPattern: v })} />
-        <FieldRow label="勤務時間" value={workHours} onChange={(v) => onChange({ workHours: v })} />
-        <FieldRow label="勤務日" value={workDays} onChange={(v) => onChange({ workDays: v })} />
-        <FieldRow label="開始時刻" value={workStartTime} onChange={(v) => onChange({ workStartTime: v })} />
-        <FieldRow label="終了時刻" value={workEndTime} onChange={(v) => onChange({ workEndTime: v })} />
-        <FieldRow label="休憩分" value={breakMinutes} onChange={(v) => onChange({ breakMinutes: v })} inputMode="numeric" />
-        <FieldRow label="責任区分" value={responsibilityLevel} onChange={(v) => onChange({ responsibilityLevel: v })} />
-        <FieldRow label="指揮命令者" value={supervisorName} onChange={(v) => onChange({ supervisorName: v })} />
-        <FieldRow label="所属部署" value={supervisorDept} onChange={(v) => onChange({ supervisorDept: v })} />
-        <FieldRow label="電話番号" value={supervisorPhone} onChange={(v) => onChange({ supervisorPhone: v })} />
-        <FieldRow label="苦情窓口（顧客側）" value={complaintHandlerClient} onChange={(v) => onChange({ complaintHandlerClient: v })} />
-        <FieldRow label="苦情窓口（派遣元）" value={complaintHandlerUns} onChange={(v) => onChange({ complaintHandlerUns: v })} />
-        <FieldRow label="派遣元責任者" value={hakenmotoManager} onChange={(v) => onChange({ hakenmotoManager: v })} />
-        <FieldRow label="残業上限" value={overtimeMax} onChange={(v) => onChange({ overtimeMax: v })} />
-        <FieldRow label="安全衛生措置" value={safetyMeasures} onChange={(v) => onChange({ safetyMeasures: v })} multiline rows={3} />
-        <FieldRow label="契約終了措置" value={terminationMeasures} onChange={(v) => onChange({ terminationMeasures: v })} multiline rows={3} />
-        <div className="md:col-span-2">
-          <FieldRow label="福利厚生" value={welfare} onChange={(v) => onChange({ welfare: v })} multiline rows={3} />
-        </div>
+      <div className="space-y-4">
+        <section className="rounded-lg border border-border/60 p-4">
+          <h3 className="text-sm font-semibold">就業条件</h3>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            <FieldRow label="業務内容" value={jobDescription} onChange={(v) => onChange({ jobDescription: v })} multiline rows={3} />
+            <FieldRow label="シフトパターン" value={shiftPattern} onChange={(v) => onChange({ shiftPattern: v })} />
+            <FieldRow label="勤務時間" value={workHours} onChange={(v) => onChange({ workHours: v })} />
+            <FieldRow label="勤務日" value={workDays} onChange={(v) => onChange({ workDays: v })} />
+            <FieldRow label="開始時刻" value={workStartTime} onChange={(v) => onChange({ workStartTime: v })} />
+            <FieldRow label="終了時刻" value={workEndTime} onChange={(v) => onChange({ workEndTime: v })} />
+            <FieldRow label="休憩分" value={breakMinutes} onChange={(v) => onChange({ breakMinutes: v })} inputMode="numeric" />
+            <FieldRow label="残業上限" value={overtimeMax} onChange={(v) => onChange({ overtimeMax: v })} />
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border/60 p-4">
+          <h3 className="text-sm font-semibold">責任者・連絡先</h3>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            <FieldRow label="責任区分" value={responsibilityLevel} onChange={(v) => onChange({ responsibilityLevel: v })} />
+            <FieldRow label="指揮命令者" value={supervisorName} onChange={(v) => onChange({ supervisorName: v })} />
+            <FieldRow label="所属部署" value={supervisorDept} onChange={(v) => onChange({ supervisorDept: v })} />
+            <FieldRow label="電話番号" value={supervisorPhone} onChange={(v) => onChange({ supervisorPhone: v })} />
+            <FieldRow label="苦情窓口（顧客側）" value={complaintHandlerClient} onChange={(v) => onChange({ complaintHandlerClient: v })} />
+            <FieldRow label="苦情窓口（派遣元）" value={complaintHandlerUns} onChange={(v) => onChange({ complaintHandlerUns: v })} />
+            <FieldRow label="派遣元責任者" value={hakenmotoManager} onChange={(v) => onChange({ hakenmotoManager: v })} />
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border/60 p-4">
+          <h3 className="text-sm font-semibold">安全・契約関連</h3>
+          <div className="mt-3 grid gap-4 md:grid-cols-2">
+            <FieldRow label="安全衛生措置" value={safetyMeasures} onChange={(v) => onChange({ safetyMeasures: v })} multiline rows={3} />
+            <FieldRow label="契約終了措置" value={terminationMeasures} onChange={(v) => onChange({ terminationMeasures: v })} multiline rows={3} />
+            <div className="md:col-span-2">
+              <FieldRow label="福利厚生" value={welfare} onChange={(v) => onChange({ welfare: v })} multiline rows={3} />
+            </div>
+          </div>
+        </section>
       </div>
     </>
   );

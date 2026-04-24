@@ -64,6 +64,14 @@ factoryYearlyConfigRouter.post("/copy-to", async (c) => {
   }
 });
 
+// GET /api/factory-yearly-config/fiscal-year/resolve?date=YYYY-MM-DD
+// Must be defined before parameterized routes to avoid shadowing.
+factoryYearlyConfigRouter.get("/fiscal-year/resolve", async (c) => {
+  const date = c.req.query("date");
+  if (!date) return c.json({ error: "Parámetro date requerido" }, 400);
+  return c.json({ fiscalYear: getFiscalYear(date) });
+});
+
 // GET /api/factory-yearly-config/:factoryId — todas las configs de una fábrica
 factoryYearlyConfigRouter.get("/:factoryId", async (c) => {
   try {
@@ -132,11 +140,4 @@ factoryYearlyConfigRouter.delete("/:id", async (c) => {
   } catch (err: unknown) {
     return c.json({ error: String(err) }, 500);
   }
-});
-
-// GET /api/factory-yearly-config/fiscal-year/resolve?date=YYYY-MM-DD
-factoryYearlyConfigRouter.get("/fiscal-year/resolve", async (c) => {
-  const date = c.req.query("date");
-  if (!date) return c.json({ error: "Parámetro date requerido" }, 400);
-  return c.json({ fiscalYear: getFiscalYear(date) });
 });

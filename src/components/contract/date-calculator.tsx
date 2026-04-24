@@ -146,7 +146,7 @@ export function DateCalculator() {
         updateField("endDate", newEnd);
       }
     }
-  }, [data.factoryContractPeriod, data.factoryConflictDate]); // intentional: only re-run when factory period/conflict date change
+  }, [data.startDate, data.endDate, data.factoryContractPeriod, data.factoryConflictDate, updateField]);
 
   const canProceed = data.startDate && data.endDate && data.contractDate;
 

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const buttonVariants = cva(
   [
     "btn-press focus-premium shine-hover relative inline-flex cursor-pointer items-center justify-center gap-2",
-    "rounded-md font-semibold tracking-[-0.005em]",
+    "rounded-md font-semibold tracking-normal",
     "transition-[transform,background-color,border-color,box-shadow,color] duration-200",
     "disabled:pointer-events-none disabled:opacity-50",
   ].join(" "),

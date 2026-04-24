@@ -211,11 +211,12 @@ function ContractsList() {
     },
   });
 
+  const tableRows = table.getRowModel().rows;
+
   const groupedContracts = useMemo<ContractGroup[]>(() => {
-    const rows = table.getRowModel().rows;
     const groups = new Map<number, ContractGroup>();
 
-    for (const row of rows) {
+    for (const row of tableRows) {
       const c = row.original as Contract;
       const fid = c.factoryId ?? 0;
       if (!groups.has(fid)) {
@@ -235,9 +236,7 @@ function ContractsList() {
     }
 
     return [...groups.values()];
-    // Deps reactivos: recomputar cuando data/filtros/sort changed.
-    // NO usar [table] solo — table es ref estable y no invalida el memo.
-  }, [flatContracts, globalFilter, sorting, table]);
+  }, [tableRows]);
 
   const [setModalGroup, setSetModalGroup] = useState<ContractGroup | null>(null);
 
@@ -385,11 +384,11 @@ function ContractsList() {
             {groupedContracts.map((group) => (
               <div
                 key={`mobile-${group.key}`}
-                className="rounded-lg border border-border/60 bg-card/80 p-4 shadow-[var(--shadow-card)] backdrop-blur-sm"
+                className="rounded-lg border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-display text-sm font-semibold text-foreground">{group.companyName}</p>
+                    <p className="text-sm font-semibold text-foreground">{group.companyName}</p>
                     <p className="text-xs text-muted-foreground">
                       {[group.factoryName, group.department, group.lineName].filter(Boolean).join(" / ")}
                     </p>
@@ -480,7 +479,7 @@ function ContractsList() {
             initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
             animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={shouldReduceMotion ? { duration: 0 } : { duration: 0.3, ease: [0.5, 0, 0, 1] }}
-            className="hidden overflow-hidden rounded-lg border border-border/60 bg-card/80 shadow-[var(--shadow-card)] backdrop-blur-sm md:block"
+            className="hidden overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)] md:block"
           >
             <div className="max-h-[calc(100vh-280px)] overflow-auto">
               <table className="w-full min-w-[700px]">
@@ -575,7 +574,7 @@ function ContractsList() {
                                   )}
                                 />
                                 <FolderOpen className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                                <span className="text-display text-sm font-semibold text-foreground">
+                                <span className="text-sm font-semibold text-foreground">
                                   {group.companyName}
                                 </span>
                                 {(group.factoryName !== "--" || group.department || group.lineName) && (

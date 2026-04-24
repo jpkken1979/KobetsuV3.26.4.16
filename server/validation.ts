@@ -9,6 +9,20 @@ const optionalBool = z.boolean().optional().nullable();
 const dateStr = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD format");
 const optionalDate = dateStr.optional().nullable();
 
+function validateRateOrder(
+  data: { hourlyRate?: number | null; billingRate?: number | null },
+  ctx: z.RefinementCtx,
+) {
+  if (data.hourlyRate == null || data.billingRate == null) return;
+  if (data.billingRate < data.hourlyRate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["billingRate"],
+      message: "billingRate must be greater than or equal to hourlyRate",
+    });
+  }
+}
+
 // ─── Company ─────────────────────────────────────────────────────────
 
 export const createCompanySchema = z.object({
@@ -85,7 +99,7 @@ export const updateFactorySchema = createFactorySchema.partial();
 
 // ─── Employee ────────────────────────────────────────────────────────
 
-export const createEmployeeSchema = z.object({
+const employeeSchemaBase = z.object({
   employeeNumber: z.string().min(1, "Employee number is required"),
   fullName: z.string().min(1, "Full name is required"),
   status: z.enum(["active", "inactive", "onLeave"]).optional(),
@@ -106,7 +120,8 @@ export const createEmployeeSchema = z.object({
   factoryId: optionalInt,
 });
 
-export const updateEmployeeSchema = createEmployeeSchema.partial();
+export const createEmployeeSchema = employeeSchemaBase.superRefine(validateRateOrder);
+export const updateEmployeeSchema = employeeSchemaBase.partial().superRefine(validateRateOrder);
 
 // ─── Contract ────────────────────────────────────────────────────────
 

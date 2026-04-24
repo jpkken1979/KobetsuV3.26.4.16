@@ -201,16 +201,16 @@ describe("buildCommonData", () => {
     expect(result.hakensakiManagerRole).toBe("部長");
   });
 
-  it("falls back to supervisor for hakensakiManager when not set", () => {
+  it("does not fall back to supervisor for hakensakiManager when not set", () => {
     const contract = makeContractWithRelations();
     contract.factory.hakensakiManagerDept = null;
     contract.factory.hakensakiManagerName = null;
     contract.factory.hakensakiManagerPhone = null;
     const result = buildCommonData(contract);
 
-    expect(result.hakensakiManagerName).toBe("田中太郎");
-    expect(result.hakensakiManagerDept).toBe("製造部");
-    expect(result.hakensakiManagerPhone).toBe("0565-00-0002");
+    expect(result.hakensakiManagerName).toBe("");
+    expect(result.hakensakiManagerDept).toBe("");
+    expect(result.hakensakiManagerPhone).toBe("");
   });
 
   it("uses closingDayText and paymentDayText as text fields", () => {

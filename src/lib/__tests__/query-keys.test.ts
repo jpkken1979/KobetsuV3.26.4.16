@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import { queryKeys } from "../query-keys";
 
 describe("queryKeys", () => {
-  it("companies has all, detail", () => {
+  it("companies has all, list, detail, invalidateAll", () => {
     expect(queryKeys.companies.all).toEqual(["companies"]);
+    expect(queryKeys.companies.list({ includeInactive: true })).toEqual(["companies", { includeInactive: true }]);
     expect(queryKeys.companies.detail(1)).toEqual(["companies", 1]);
+    expect(queryKeys.companies.invalidateAll).toEqual(["companies"]);
   });
 
   it("employees has all (function), detail, invalidateAll", () => {

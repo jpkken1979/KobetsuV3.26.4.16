@@ -12,10 +12,11 @@ import { factoriesRouter as excelRouter } from "./excel.js";
 export const factoriesRouter = new Hono();
 
 // Mount each sub-router at the root path (Hono auto-resolves their registered paths)
-factoriesRouter.route("/", crudRouter);
+// Important: mount literal/specialized routes before CRUD's "/:id" handlers.
 factoriesRouter.route("/", rolesRouter);
 factoriesRouter.route("/", calendarsRouter);
 factoriesRouter.route("/", cascadeRouter);
 factoriesRouter.route("/", excelRouter);
+factoriesRouter.route("/", crudRouter);
 
 export { REQUIRED_FACTORY_FIELDS } from "./crud.js";

@@ -91,7 +91,7 @@ export function FactoryPanel({
   const updateCompanyMut = useMutation({
     mutationFn: (data: Record<string, string>) => api.updateCompany(companyId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.invalidateAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
       toast.success("企業情報を更新しました");
       setEditingCompany(false);

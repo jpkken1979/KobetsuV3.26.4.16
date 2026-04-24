@@ -205,7 +205,7 @@ export function EmployeeManager() {
     if (confirmAction.type === "delete") {
       try {
         await api.delete<{ deleted: boolean }>(`/admin/crud/employees/${confirmAction.row.id}`);
-        qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+        qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
         toast.success("社員を削除しました");
       } catch (err: unknown) {
         onMutationError(err);
@@ -223,7 +223,7 @@ export function EmployeeManager() {
         }
       }
       toast.success(`${deleted}/${ids.length}件を削除しました`);
-      qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+        qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
       setSelectedIds(new Set());
       setConfirmAction(null);
     }
@@ -245,7 +245,7 @@ export function EmployeeManager() {
         });
     }
     toast.success(`${updated}/${ids.length}件を更新しました`);
-    qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+        qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
     setSelectedIds(new Set());
   }
 
@@ -434,7 +434,7 @@ export function EmployeeManager() {
           columns={employeeColumns}
           row={editRow._raw as unknown as Record<string, unknown>}
           onSuccess={() => {
-            qc.invalidateQueries({ queryKey: queryKeys.employees.all() });
+      qc.invalidateQueries({ queryKey: queryKeys.employees.invalidateAll });
           }}
           onClose={() => {
             setEditRow(null);

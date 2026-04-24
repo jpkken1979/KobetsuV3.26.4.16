@@ -1,6 +1,7 @@
 // server/__tests__/validation.test.ts
 import { describe, it, expect } from "vitest";
 import { validateForPdf } from "../services/validation.js";
+import { createEmployeeSchema, updateEmployeeSchema } from "../validation.js";
 
 const completeFactory = {
   supervisorName: "田中太郎",
@@ -65,5 +66,35 @@ describe("validateForPdf (R17)", () => {
     const result = validateForPdf(completeFactory, [empZero]);
     // billingRate = 0 is not null, so it passes the nullish check
     expect(result.valid).toBe(true);
+  });
+});
+
+describe("employee rate ordering validation", () => {
+  it("rejects billingRate lower than hourlyRate on create", () => {
+    const result = createEmployeeSchema.safeParse({
+      employeeNumber: "E-1",
+      fullName: "TEST USER",
+      hourlyRate: 1400,
+      billingRate: 1300,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts billingRate equal to hourlyRate", () => {
+    const result = createEmployeeSchema.safeParse({
+      employeeNumber: "E-2",
+      fullName: "TEST USER",
+      hourlyRate: 1400,
+      billingRate: 1400,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects billingRate lower than hourlyRate on update", () => {
+    const result = updateEmployeeSchema.safeParse({
+      hourlyRate: 1600,
+      billingRate: 1200,
+    });
+    expect(result.success).toBe(false);
   });
 });

@@ -306,7 +306,7 @@ function EditableText({
       aria-label={value ? `${placeholder}を編集: ${value}` : `${placeholder}を設定`}
       className={cn(
         "group flex w-full items-center gap-1 rounded px-2 py-1 text-left transition-colors hover:bg-primary/5 focus:outline-none focus:ring-2 focus:ring-primary/20",
-        !value && "text-muted-foreground/40 italic text-[10px]"
+        !value && "text-muted-foreground/40 italic text-xs"
       )}
     >
       <span className="text-xs truncate">{value || placeholder}</span>
@@ -475,7 +475,7 @@ function EmployeesList() {
         break;
       }
     }
-  }, [focusedCell, filteredEmployees.length]);
+  }, [focusedCell, filteredEmployees]);
 
   // Virtual scrolling
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -579,7 +579,7 @@ function EmployeesList() {
           ) : filteredEmployees.length > 0 ? (
             <div
               ref={containerRef}
-              className="overflow-hidden rounded-lg border border-border/60 bg-card/80 shadow-[var(--shadow-card)] backdrop-blur-sm"
+              className="overflow-hidden rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]"
             >
               <div ref={scrollContainerRef} className="overflow-auto max-h-[calc(100vh-240px)]">
                   <table 
@@ -672,7 +672,7 @@ function EmployeesList() {
                                     <EmployeeAvatar name={emp.fullName ?? "?"} />
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                       <span className="font-medium text-foreground truncate">{emp.fullName}</span>
-                                      <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-tighter truncate">{emp.katakanaName}</span>
+                                      <span className="text-[11px] text-muted-foreground/60 font-medium uppercase tracking-tight truncate">{emp.katakanaName}</span>
                                       {emp.visaExpiry && <VisaBadge expiryDate={emp.visaExpiry} />}
                                     </div>
                                   </div>
@@ -703,7 +703,7 @@ function EmployeesList() {
                                 {col.key === "factory" && (
                                   <div className="flex flex-col min-w-0">
                                     <span className="text-sm text-muted-foreground truncate font-medium">{emp.company?.shortName || emp.company?.name || "--"}</span>
-                                    <span className="text-[10px] text-muted-foreground/45 truncate">{emp.factory?.factoryName || "--"}</span>
+                                    <span className="text-xs text-muted-foreground/55 truncate">{emp.factory?.factoryName || "--"}</span>
                                   </div>
                                 )}
                                 {col.key === "clientEmployeeId" && (

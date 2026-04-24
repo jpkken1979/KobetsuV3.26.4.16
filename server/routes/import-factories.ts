@@ -27,6 +27,7 @@ const factoryImportSchema = z.object({
   mode: z.enum(["upsert", "skip"]).default("upsert"),
   deleteIds: z.array(z.number().int().positive()).default([]),
   companyData: z.array(z.record(z.string(), z.unknown())).default([]),
+  enrichCompanies: z.boolean().default(false),
 });
 
 importFactoriesRouter.post("/factories", async (c) => {
@@ -34,10 +35,10 @@ importFactoriesRouter.post("/factories", async (c) => {
   if (!raw) return c.json({ error: "Invalid JSON body" }, 400);
   const parsed = factoryImportSchema.safeParse(raw);
   if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
-  const { data: rows, mode, deleteIds, companyData: rawCompanyData } = parsed.data;
+  const { data: rows, mode, deleteIds, companyData: rawCompanyData, enrichCompanies } = parsed.data;
 
   try {
-    const result = await importFactories(rows, mode, deleteIds, rawCompanyData);
+    const result = await importFactories(rows, mode, deleteIds, rawCompanyData, enrichCompanies);
 
     return c.json({
       success: true,

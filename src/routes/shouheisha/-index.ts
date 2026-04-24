@@ -5,7 +5,7 @@ export { fieldClassName } from "./-step-recruit-form";
 
 export type { GeneratedArtifact, GenerationResult } from "./-result-panel";
 
-export { shouheishaCardVariants, shouheishaMotionEnabled } from "./shouheisha-variants";
+export { shouheishaCardVariants, useShouheishaMotionEnabled } from "./-shouheisha-variants";
 
 // ─── Page section components ──────────────────────────────────────────────────
 

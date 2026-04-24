@@ -99,6 +99,7 @@ const ALWAYS_SHOW_KEYS = new Set([
   "factory.department",
   "factory.lineName",
 ]);
+const NUMERIC_KEYS = new Set(["billingRate", "hourlyRate"]);
 
 // ─── Row tint classes ────────────────────────────────────────────────
 
@@ -310,8 +311,6 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
     });
   }, [employees, showAllColumns]);
 
-  const NUMERIC_KEYS = new Set(["billingRate", "hourlyRate"]);
-
   // Multi-level sort
   const sorted = useMemo(() => {
     if (sortLevels.length === 0) return employees;
@@ -381,12 +380,12 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
   }).filter((g) => g.colCount > 0);
 
   // Helper to get column label for sort display
-  const getColLabel = useCallback((key: string) => {
+  const getColLabel = (key: string) => {
     const col = COLUMNS.find((c) => c.key === key);
     if (!col) return key;
     const grp = COLUMN_GROUPS.find((g) => g.group === col.group);
     return grp?.label && col.label ? `${grp.label} ${col.label}` : col.label || key;
-  }, []);
+  };
 
   return (
     <div className="space-y-2">
@@ -394,12 +393,12 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
       {sortLevels.length > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/20 px-3 py-1.5">
           <ArrowUpDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="text-[11px] text-muted-foreground">並べ替え:</span>
+          <span className="text-xs text-muted-foreground">並べ替え:</span>
           <div className="flex flex-wrap items-center gap-1.5">
             {sortLevels.map((s, i) => (
               <span
                 key={s.key}
-                className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
               >
                 {sortLevels.length > 1 && <span className="text-[9px] font-bold">{i + 1}</span>}
                 {getColLabel(s.key)}
@@ -417,14 +416,14 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
           <button
             type="button"
             onClick={() => setSortLevels([])}
-            className="ml-auto text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             クリア
           </button>
         </div>
       )}
 
-      <div className="rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)] overflow-auto max-h-[calc(100vh-320px)]">
+      <div className="overflow-auto max-h-[calc(100vh-320px)] rounded-lg border border-border/60 bg-card shadow-[var(--shadow-card)]">
         <div style={{ minWidth: visibleTotalWidth }}>
           {/* Group Header Row */}
           <div className="flex border-b border-border/40">
@@ -433,7 +432,7 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
                 key={g.group}
                 style={{ width: g.totalW }}
                 className={cn(
-                  "flex-shrink-0 px-2 py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 border-r border-border/20 last:border-r-0",
+                  "flex-shrink-0 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-muted-foreground/70 border-r border-border/20 last:border-r-0",
                   g.colorClass
                 )}
               >
@@ -456,7 +455,7 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
                   key={col.key}
                   style={{ width: w }}
                   className={cn(
-                    "relative flex flex-shrink-0 items-center gap-0.5 px-2 py-2 text-[11px] font-semibold text-muted-foreground truncate border-r border-border/10 last:border-r-0 select-none",
+                    "relative flex flex-shrink-0 items-center gap-0.5 px-2 py-2 text-xs font-semibold text-muted-foreground truncate border-r border-border/10 last:border-r-0 select-none",
                     grp?.colorClass,
                     isSortable && "cursor-pointer hover:text-foreground transition-colors",
                     isSorted && "text-foreground"
@@ -490,7 +489,7 @@ export function FlatView({ employees, showAllColumns = false }: FlatViewProps) {
             <div
               key={emp.id}
               className={cn(
-                "flex h-9 border-b border-border/20 transition-colors hover:bg-muted/30 last:border-b-0",
+                "flex h-10 border-b border-border/20 transition-colors hover:bg-muted/30 last:border-b-0",
                 ROW_TINT[emp.completeness]
               )}
             >

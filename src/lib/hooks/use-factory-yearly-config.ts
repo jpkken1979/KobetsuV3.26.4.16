@@ -55,7 +55,7 @@ export function useCopyFactoryYearlyConfig() {
     mutationFn: (data: { sourceFactoryId: number; fiscalYear: number; targetFactoryIds: number[] }) =>
       api.copyFactoryYearlyConfig(data),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ["factory-yearly-config"] });
+      qc.invalidateQueries({ queryKey: queryKeys.factoryYearlyConfig.invalidateAll });
       onMutationSuccess(
         `${res.copied}件コピー完了${res.skipped > 0 ? `（${res.skipped}件スキップ）` : ""}`
       );

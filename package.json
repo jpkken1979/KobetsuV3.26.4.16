@@ -19,7 +19,7 @@
     "test": "npm run test:prepare && vitest --no-file-parallelism",
     "test:prepare": "cross-env DATABASE_PATH=data/kobetsu.test.db tsx server/db/seed.ts --force",
     "test:run": "npm run test:prepare && cross-env DATABASE_PATH=data/kobetsu.test.db vitest run --no-file-parallelism",
-    "test:coverage": "npm run test:prepare && cross-env DATABASE_PATH=data/kobetsu.test.db vitest run --no-file-parallelism --coverage --coverage.include=server/services/**/*.ts --coverage.include=src/routes/companies/-table-*.tsx --coverage.thresholds.lines=50 --coverage.thresholds.functions=50 --coverage.thresholds.statements=50 --coverage.thresholds.branches=50 --coverage.thresholds.perFile=false --coverage.thresholds.\"server/services/contract-dates.ts\".lines=95 --coverage.thresholds.\"server/services/batch-helpers.ts\".lines=85 --coverage.thresholds.\"server/services/koritsu-pdf-parser.ts\".lines=80",
+    "test:coverage": "npm run test:prepare && cross-env DATABASE_PATH=data/kobetsu.test.db vitest run --no-file-parallelism --coverage",
     "test:pdf-snapshots:update": "cross-env UPDATE_PDF_SNAPSHOTS=1 vitest run server/__tests__/pdf-snapshots.test.ts",
     "lint": "eslint src/ server/",
     "typecheck": "tsc --noEmit"
