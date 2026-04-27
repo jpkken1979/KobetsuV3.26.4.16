@@ -58,6 +58,6 @@ Puertos por default:
 
 ## Documentación de ejecución
 
-- [Roadmap V3](C:/Users/kenji/OneDrive/Desktop/KobetsuVsKonetsu/KobetsuV3/docs/v3/ROADMAP_V3.md)
-- [Matriz de Migración](C:/Users/kenji/OneDrive/Desktop/KobetsuVsKonetsu/KobetsuV3/docs/v3/MIGRATION_MATRIX.md)
-- [Registro de Riesgos](C:/Users/kenji/OneDrive/Desktop/KobetsuVsKonetsu/KobetsuV3/docs/v3/RISK_REGISTER.md)
+- [Roadmap V3](docs/v3/ROADMAP_V3.md)
+- [Matriz de Migración](docs/v3/MIGRATION_MATRIX.md)
+- [Registro de Riesgos](docs/v3/RISK_REGISTER.md)

@@ -236,11 +236,13 @@ src/
 - `src/routeTree.gen.ts` is **auto-generated** by TanStack Router — never edit manually
 
 ### Large Files Warning
-- Several route/component files exceed 500 lines. Consider splitting when adding features:
-  - `shouheisha.tsx` (1194L) — recruitment bulk for 外国人材, largest route file
-  - `employees/index.tsx` (829L), `companies/-koritsu-components.tsx` (805L), `contracts/index.tsx` (787L), `companies/koritsu.tsx` (769L), `settings/index.tsx` (763L), `import/-import-page.tsx` (762L), `contracts/batch.tsx` (716L), `admin/-contract-manager.tsx` (708L), `admin/-employee-table.tsx` (716L), `companies/-import-modal.tsx` (602L), `data-check/-flat-view.tsx` (578L), `admin/-stats-dashboard.tsx` (536L), `admin/-audit-explorer.tsx` (515L), `contracts/mid-hires.tsx` (555L), `contracts/new-hires.tsx` (552L), `contracts/$contractId.tsx` (541L), `contracts/new.tsx` (532L), `history/index.tsx` (540L)
-  - Shared: `src/lib/api-types.ts` (907L) — interfaces agrupadas por dominio; partir si se vuelve incómodo navegar
-  - Server: `routes/factories.ts` (864L), `services/batch-contracts.ts` (818L), `services/koritsu-pdf-parser.ts` (759L), `services/import-factories-service.ts` (661L)
+- Several route/component files exceed 500 lines. Consider splitting when adding features (line counts are approximate — verify before quoting):
+  - Largest route files: `shouheisha.tsx` (foreign recruitment), `employees/index.tsx`, `contracts/index.tsx`, `companies/koritsu.tsx`, `settings/index.tsx`, `import/-import-page.tsx`, `contracts/batch.tsx`
+  - Large admin: `admin/-contract-manager.tsx`, `admin/-employee-table.tsx`, `admin/-stats-dashboard.tsx`, `admin/-audit-explorer.tsx`
+  - Large contracts: `contracts/mid-hires.tsx`, `contracts/new-hires.tsx`, `contracts/$contractId.tsx`, `contracts/new.tsx`, `history/index.tsx`
+  - Large shared: `src/lib/api-types.ts` — interfaces grouped by domain; split if navigation becomes cumbersome
+  - Large server: `routes/factories.ts`, `services/batch-contracts.ts`, `services/koritsu-pdf-parser.ts`, `services/import-factories-service.ts`
+  - A **drift guard test** (`claude-md-drift.test.ts`) validates route and service file counts against this section — update counts alongside any add/remove
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
 - `closingDayText` and `paymentDayText` are free text (`"当月末"`, `"翌月20日"`), NOT numbers — use the `*Text` schema fields in all UI and API
@@ -474,7 +476,7 @@ These items are tracked in `ESTADO_PROYECTO.md` and awaiting user decision:
 
 ## Integracion Antigravity
 
-Proyecto integrado con **Antigravity v5.0.0**.
+Proyecto integrado con **Antigravity v6.1.4**.
 Instalado por Nexus el 2026-04-23.
 
 ### Persona activa: gentleman
