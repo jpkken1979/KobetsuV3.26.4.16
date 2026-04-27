@@ -105,7 +105,7 @@ server/
 ├── db/
 │   ├── schema.ts           # 11 tables + relations + indexes
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
-├── routes/                 # 32 route files (CRUD, docs, batch, imports, admin)
+├── routes/                 # 31 route files (CRUD, docs, batch, imports, admin)
 ├── services/               # Business logic (30 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
