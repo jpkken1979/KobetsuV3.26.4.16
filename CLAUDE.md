@@ -53,8 +53,8 @@ Read these first when you need repo-specific context:
 ```bash
 npm install
 npm run dev                      # API (8026) + web (3026) via concurrently (tsx loads .env via --env-file)
-npm run dev:server               # API only (tsx watch --env-file .env server/index.ts)
-npm run dev:client               # Vite only
+npm run dev:server               # API only (tsx watch --env-file .env server/index.ts) — fallback Windows si concurrently falla
+npm run dev:client               # Vite only — correr en una segunda terminal junto con dev:server
 npm run build                    # Production build
 npm run test                     # Runs test:prepare first (drops/recreates data/kobetsu.test.db), then Vitest watch
 npm run test:prepare             # Force-seed data/kobetsu.test.db (never touches data/kobetsu.db)
@@ -106,10 +106,12 @@ server/
 │   ├── schema.ts           # 11 tables + relations + indexes
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
 ├── routes/                 # 31 route files (CRUD, docs, batch, imports, admin)
-├── services/               # Business logic (30 modules)
+├── services/               # Business logic (32 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
 ```
+
+> **Convención de carpetas:** `server/routes/factories.ts` es el entry point de Hono; `server/routes/factories/` contiene helpers de ese dominio. Mismo patrón en `services/batch-contracts.ts` + `services/batch-contracts/` y `services/import-factories-service.ts` + `services/import-factories/`. El drift guard cuenta solo archivos `.ts` del primer nivel.
 
 **Route files (31 files, grouped by purpose):**
 - **Domain CRUD (13):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`, `factory-yearly-config.ts`, `company-yearly-config.ts`
@@ -168,7 +170,9 @@ src/
 └── routes/                 # TanStack file-based routes (see table below)
 ```
 
-**React Query + utility hooks (`src/lib/hooks/`, 21 archivos):**
+**React Query + utility hooks (`src/lib/hooks/`, 22 archivos):**
+
+> El drift guard automatizado solo cubre `server/routes/` y `server/services/`. Esta tabla de hooks se mantiene a mano — actualizarla al agregar/quitar archivos en `src/lib/hooks/`.
 
 *Dominio CRUD:*
 | Hook | Purpose |
@@ -183,6 +187,7 @@ src/
 | `use-factory-yearly-config.ts` | Per-line annual config CRUD |
 | `use-contract-wizard.ts` | Wiring del wizard 5-step + split por tarifa |
 | `use-koritsu-import.ts` | Flujo de import específico コーリツ (Excel + PDF parse) |
+| `use-pdf-versions.ts` | Historial de PDFs generados (tabla `pdf_versions`) |
 
 *Admin panel (token-gated):*
 | Hook | Purpose |
@@ -427,24 +432,16 @@ Different format from all other companies — 3 separate generators in `server/p
 
 These rules are injected into every session automatically. When they conflict with generic guidance, rules win.
 
+**Específicas del dominio (críticas para este proyecto):**
+
 | Rule file | Scope |
 |-----------|-------|
 | `pdf-rules.md` | Pixel-perfect PDF generation, font rules, 派遣元責任者 roles, 高雄 事業所 logic |
 | `domain-rules.md` | Never auto-modify data, Excel trim keys, closingDay/paymentDay are text, cancelled contracts hidden |
-| `language.md` | Responses in Spanish, code in English, commits in Spanish |
-| `commits.md` | `<type>(<scope>): <description>` format |
-| `security.md` | No hardcoded secrets, no `shell=True`, `.env` versionado (excepción documentada, repo privado) |
-| `typescript.md` | Strict mode, no `any`, naming conventions |
-| `python.md` | Type hints, Google docstrings, ruff + mypy |
-| `best-practices.md` | MCP-first, 4-layer arch, backward-compatible refactors |
-| `architecture.md` | 4-layer separation: Directiva → Contexto → Ejecucion → Observabilidad |
-| `user-identity.md` | Developer profile, communication preferences, expertise |
-| `ecosystem-usage.md` | MCP-first discovery: skills/agents via MCP before local file reads |
-| `memory-engine.md` | antigravity-memory (mem0) as primary memory, not legacy claude-mem |
-| `memory-sync.md` | Sync memories to `.claude/memory/` in repo for cross-PC persistence |
-| `proactive-memory.md` | Call `memory_suggest` before creating new functions/components |
-| `skills-discovery.md` | Search skills.sh before implementing from scratch |
-| `AI_MEMORY.md` | Project identity, docs hierarchy, operational reminders |
+| `commits.md` | `<type>(<scope>): <description>` format en español |
+| `language.md` | Respuestas en español, código en inglés, commits en español |
+
+> El resto de reglas (`security.md`, `typescript.md`, `python.md`, `architecture.md`, `memory-engine.md`, `memory-sync.md`, `proactive-memory.md`, `skills-discovery.md`, `ecosystem-usage.md`, `user-identity.md`, etc.) se auto-inyectan en cada sesión desde `.claude/rules/` y `~/.claude/rules/`. Listarlas todas duplica lo que ya está en contexto.
 
 ### Reference Files
 
@@ -455,14 +452,6 @@ These rules are injected into every session automatically. When they conflict wi
 | `ESTADO_PROYECTO.md` | Project state document (Spanish) |
 | `Koritsu/` | コーリツ Excel template + 指揮命令者 PDF reference |
 | `design-system/jp-kobetsu/MASTER.md` | Design system spec (colores, spacing, componentes) |
-
-### Active Pending Items
-
-These items are tracked in `ESTADO_PROYECTO.md` and awaiting user decision:
-
-| Item | Status | Note |
-|------|--------|------|
-| Backup remoto (Litestream o `cp` con rotación) | ⏳ Pending | Requires user decision — not blocking |
 
 ## Files NOT to Commit
 
