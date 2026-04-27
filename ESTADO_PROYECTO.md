@@ -1,6 +1,20 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-23 (sesión c — split 既存/新規入社 + endDate -1 día + tanka 社員台帳 priority en PDF)
+> Última actualización: 2026-04-27 (CLAUDE.md drift de hooks + bugfix masivo calendario PDF en factory_yearly_config)
+
+## Sesión 2026-04-27 — CLAUDE.md drift de hooks + bugfix masivo calendario PDF (高雄/HUB)
+
+**1 docs + 1 bugfix de datos masivo:**
+
+- **CLAUDE.md afinado** (commit `bc8364c`, ya pusheado): drift de hooks corregido (`use-pdf-versions.ts` agregado, conteo 21→22), nota explícita de que el drift guard solo cubre routes/services, sección "Auto-Injected Rules" reducida de 16 a 4 entradas críticas + puntero genérico, convención de carpetas `factories/`/`batch-contracts/`/`import-factories/` documentada, fallback `dev:server` + `dev:client` para Windows, "Active Pending Items" removido. Drift guard test pasa (2/2). Net +15/-26 líneas.
+
+- **Bugfix masivo calendario PDF — `factory_yearly_config.sagyobi_text` corrupto**: PDF de KOB-202510-0042 (高雄工業 / HUB工場 / 製作1課 / 1次旋係.) mostraba feriados con fechas distintas a las del factory base. Root cause: cascada `yearlyConfig?.sagyobiText || factory.calendar` en `server/services/document-generation.ts:261` priorizaba un texto roto importado el 2026-04-15 sobre el texto correcto editado por el usuario. **74 filas afectadas** (FY 2024 y 2025, prácticamente todas las factories) con patrones `12月29日～1月5)` (sin `日`) y `12月30日～1月7日)`. Fix: UPDATE masivo `sagyobi_text = NULL` en las 74 filas — la cascada cae a `factory.calendar` (correcto). 13 filas FY 2026 con texto válido preservadas intactas. Backups en `data/kobetsu.db.backup-takao-fix-*` y `data/kobetsu.db.backup-mass-fix-*`.
+
+**Pendiente**: regenerar el PDF de KOB-202510-0042 para verificar; considerar mejora UX en editor 年度 que muestre `factory.calendar` al lado del campo `sagyobiText` para evitar que el usuario edite el factory base sin saber que el yearly config gana en cascada. Factories duplicadas con punto al final (`1次旋係` vs `1次旋係.`) siguen pendientes de decisión del usuario.
+
+**Detalle técnico**: `.claude/memory/session_2026-04-27.md` y `.claude/memory/bugfix_takao_yearly_config_cascade.md`
+
+---
 
 ## Sesión 2026-04-23b — Orden canónico de turnos + fix render multicolumna
 
