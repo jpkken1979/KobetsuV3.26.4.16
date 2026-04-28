@@ -255,6 +255,75 @@ describe("excelSerialToDate", () => {
     expect(excelSerialToDate("H15/03/20")).toBe("2003-03-20");
   });
 
+  // ─── Era completeness coverage ──────────────────────────────────────
+  // Coverage for ALL Japanese eras supported by the function (Reiwa, Heisei,
+  // Showa, Taisho, Meiji) with both full kanji and Latin abbreviation forms.
+  // Reference offsets in import-utils.ts: 令和=2018, 平成=1988, 昭和=1925,
+  // 大正=1911, 明治=1867.
+
+  it("parses Heisei era — full kanji at end-of-era boundary", () => {
+    // 平成31年4月30日 = last day of Heisei (Reiwa starts 2019-05-01)
+    expect(excelSerialToDate("平成31年4月30日")).toBe("2019-04-30");
+  });
+
+  it("parses Heisei era — H prefix with slash separator", () => {
+    expect(excelSerialToDate("H1/1/8")).toBe("1989-01-08"); // 平成元年 = 1989
+    expect(excelSerialToDate("H30/12/31")).toBe("2018-12-31");
+  });
+
+  it("parses Showa era — full kanji at end-of-era boundary", () => {
+    // 昭和64年1月7日 = last day of Showa (Heisei starts 1989-01-08)
+    expect(excelSerialToDate("昭和64年1月7日")).toBe("1989-01-07");
+  });
+
+  it("parses Showa era — S prefix", () => {
+    expect(excelSerialToDate("S40.10.10")).toBe("1965-10-10");
+  });
+
+  it("parses Taisho era — full kanji + T prefix", () => {
+    // 大正15年12月25日 = last day of Taisho (Showa starts 1926-12-26)
+    expect(excelSerialToDate("大正15年12月25日")).toBe("1926-12-25");
+    expect(excelSerialToDate("T1.7.30")).toBe("1912-07-30"); // 大正元年
+  });
+
+  it("parses Meiji era — full kanji + M prefix", () => {
+    // 明治45年7月29日 = last day of Meiji
+    expect(excelSerialToDate("明治45年7月29日")).toBe("1912-07-29");
+    expect(excelSerialToDate("M1.10.23")).toBe("1868-10-23"); // 明治元年
+  });
+
+  it("accepts era prefixes in lowercase", () => {
+    // ERA_OFFSETS lookup uses .toUpperCase() (line 93), so r/h/s/t/m must work
+    expect(excelSerialToDate("r8.4.1")).toBe("2026-04-01");
+    expect(excelSerialToDate("h31.4.30")).toBe("2019-04-30");
+  });
+
+  // ─── Excel serial edge cases ─────────────────────────────────────────
+
+  it("converts Excel serial for leap year date (2024-02-29)", () => {
+    // Verifica que el cálculo del epoch maneja años bisiestos correctamente.
+    // Serial 45351 ≈ 2024-02-29 (verified via Excel).
+    expect(excelSerialToDate(45351)).toBe("2024-02-29");
+  });
+
+  it("converts decimal serial by truncating to whole day", () => {
+    // Excel guarda hora como fracción decimal del día. Cuando un campo
+    // de fecha tiene timestamp (ej. 44927.5 = 2023-01-01 12:00), la función
+    // debe quedarse con la fecha del día UTC.
+    const result = excelSerialToDate(44927.5);
+    expect(result).toBe("2023-01-01");
+  });
+
+  it("handles string serial (string-encoded number)", () => {
+    expect(excelSerialToDate("44927")).toBe("2023-01-01");
+    expect(excelSerialToDate("45351")).toBe("2024-02-29");
+  });
+
+  it("rejects malformed era strings without throwing", () => {
+    expect(excelSerialToDate("Z9年4月1日")).toBeNull(); // era inexistente
+    expect(excelSerialToDate("令和年月日")).toBeNull(); // sin números
+  });
+
   it("handles string number (serial as string)", () => {
     const result = excelSerialToDate("44927");
     expect(result).toBe("2023-01-01");

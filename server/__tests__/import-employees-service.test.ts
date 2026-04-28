@@ -582,4 +582,85 @@ describe("buildEmployeeData — lógica de parseo", () => {
     );
     expect(data.hourlyRate).toBe(1500);
   });
+
+  // ─── hireDate / actualHireDate priority ───────────────────────────────
+  // Reglas (import-employees.ts:171-192):
+  //   parsedHireDate = excelSerialToDate(hireDate || 入社日)
+  //   parsedActualHireDate = excelSerialToDate(actualHireDate || 配属日 || 現入社)
+  //   output.hireDate = parsedHireDate
+  //   output.actualHireDate = parsedActualHireDate || parsedHireDate (fallback)
+
+  it("入社日 + 配属日 ambos presentes → hireDate y actualHireDate diferentes", () => {
+    const data = buildEmployeeData(
+      { "入社日": "2025-01-15", "配属日": "2025-03-01" },
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.hireDate).toBe("2025-01-15");
+    expect(data.actualHireDate).toBe("2025-03-01");
+  });
+
+  it("solo 入社日 presente → actualHireDate cae en hireDate (fallback)", () => {
+    const data = buildEmployeeData(
+      { "入社日": "2025-01-15" },
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.hireDate).toBe("2025-01-15");
+    expect(data.actualHireDate).toBe("2025-01-15");
+  });
+
+  it("solo 配属日 presente → actualHireDate poblado, hireDate null", () => {
+    const data = buildEmployeeData(
+      { "配属日": "2025-03-01" },
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.hireDate).toBeNull();
+    expect(data.actualHireDate).toBe("2025-03-01");
+  });
+
+  it("ningún campo de fecha → ambos null", () => {
+    const data = buildEmployeeData(
+      {},
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.hireDate).toBeNull();
+    expect(data.actualHireDate).toBeNull();
+  });
+
+  it("入社日 con era japonesa → parseado a YYYY-MM-DD", () => {
+    const data = buildEmployeeData(
+      { "入社日": "令和7年1月15日" }, // 2025-01-15
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.hireDate).toBe("2025-01-15");
+  });
+
+  it("入社日 con serial Excel → parseado correctamente", () => {
+    const data = buildEmployeeData(
+      { "入社日": 45351 }, // 2024-02-29 (leap year)
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.hireDate).toBe("2024-02-29");
+  });
+
+  it("配属日 alias 現入社 funciona igual", () => {
+    const data = buildEmployeeData(
+      { "現入社": "2025-04-01" },
+      emptyCompanyMap,
+      emptyFactories,
+      emptyLookup,
+    );
+    expect(data.actualHireDate).toBe("2025-04-01");
+  });
 });
