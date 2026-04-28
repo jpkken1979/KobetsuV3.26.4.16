@@ -1,6 +1,63 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (auditoría profesional aplicada — 13 hallazgos resueltos + drift `.env` cerrado)
+> Última actualización: 2026-04-28 (C-2 cerrado — seeds anonimizados, PII fuera del HEAD)
+
+## Sesión 2026-04-28g — C-2: anonimización de seeds (PII fuera del HEAD)
+
+**1 commit (en curso):**
+
+Cierra C-2 de auditoría 2026-04-28. Los `data/seed/*.json` tenían PII real:
+392 empleados con `fullName`, `birthDate`, `visaExpiry`, `address`, además de
+nombres de personas físicas como representantes legales y supervisores en
+`companies.json` y `factories.json`. Ahora **solo se versionan los `.example.json`**
+con datos sintéticos.
+
+### Estrategia (Opción A elegida por usuario)
+
+- **`scripts/anonymize-seeds.cjs`** (nuevo, reproducible): genera los 3
+  `.example.json` desde los reales con PRNG seeded (mulberry32, seed=20260428).
+  Misma entrada → misma salida. Pools de nombres romaji vietnamitas, addresses
+  ficticias en prefecturas inventadas, fechas de nacimiento y hire dates
+  válidos en rangos plausibles, postal codes con formato real pero arbitrarios.
+- **Mantiene `companyName` real** en cada empleado/factory porque la lógica
+  R11 de `takao-detection.ts` y los tests de `takao-detection.test.ts`,
+  `batch-helpers.test.ts`, `batch-contracts-service.test.ts` dependen de
+  strings exactos como `高雄` y `瑞陵精機株式会社`.
+- **`server/db/seed.ts`** (modificado): `loadJson()` ahora hace fallback
+  automático `*.json` → `*.example.json` con warning visible. Cero cambios
+  en la API pública del seed.
+- **`.gitignore`**: agregado `data/seed/*.json` + excepción `!data/seed/*.example.json`.
+- **`git rm --cached`** los 3 reales (`companies.json`, `factories.json`, `employees.json`).
+  Quedan en el filesystem local del usuario; nuevos clones / CI usan automáticamente
+  los `.example` via fallback.
+
+### Validación
+
+Ejecutado `npm run test:run` con los 3 `.json` reales **temporalmente removidos**
+del filesystem. Resultado: **781/781 tests passed (43 archivos)** usando solo
+los `.example.json` como fuente de seed. Conteos preservados (14 companies / 76
+factories / 392 employees).
+
+### Pendiente declarado (acción del usuario)
+
+- **Purga del histórico**: hasta este commit, los `.json` con PII vivieron en git.
+  Para sacarlos del histórico se requiere `git filter-repo` (destructivo —
+  reescribe SHAs, requiere coordinación con cualquier clone existente). Receta:
+
+  ```bash
+  git filter-repo --path data/seed/employees.json \
+    --path data/seed/factories.json \
+    --path data/seed/companies.json --invert-paths
+  git push origin --force --all
+  git push origin --force --tags
+  ```
+
+  Esto se deja como acción manual del usuario por su impacto en la red de clones.
+  Cualquier dev con clone previo debe rehacer `git clone` después.
+
+**Estado**: Typecheck ✓ · 781 tests ✓ · PII fuera del HEAD ✓ · Histórico pendiente de purga manual
+
+---
 
 ## Sesión 2026-04-28f — Auditoría profesional aplicada (13 fixes + B-1)
 

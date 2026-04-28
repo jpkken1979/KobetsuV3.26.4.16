@@ -36,6 +36,16 @@ const db = drizzle(sqlite, { schema });
 
 function loadJson<T>(filename: string): T {
   const filepath = path.join(seedDir, filename);
+  if (!fs.existsSync(filepath)) {
+    const fallback = filename.replace(/\.json$/, ".example.json");
+    const fallbackPath = path.join(seedDir, fallback);
+    if (fs.existsSync(fallbackPath)) {
+      console.warn(`[seed] ${filename} not found, using ${fallback} (synthetic data)`);
+      const raw = fs.readFileSync(fallbackPath, "utf-8");
+      return JSON.parse(raw) as T;
+    }
+    throw new Error(`[seed] Neither ${filename} nor ${fallback} exists in ${seedDir}`);
+  }
   const raw = fs.readFileSync(filepath, "utf-8");
   return JSON.parse(raw) as T;
 }

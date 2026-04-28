@@ -412,6 +412,23 @@ Schema defined in `server/db/schema.ts`. Drizzle config in `drizzle.config.ts`.
 - `npm run db:seed:force` is **DESTRUCTIVE** (drop/recreate all tables)
 - Before any destructive DB operation: `POST /api/backup` or copy `data/kobetsu.db*`
 
+### Seed Data Policy — CRITICAL
+
+`data/seed/*.json` (reales) tienen PII (nombres, fechas de nacimiento, direcciones, visa)
+y están **gitignored**. Solo se versionan `data/seed/*.example.json` con datos sintéticos.
+
+- **Tu PC tiene los `.json` reales** localmente (ignorados por git)
+- **Otros devs / CI** solo tienen los `.example.json`; el `seed.ts` hace fallback automático
+  con un warning `[seed] X.json not found, using X.example.json (synthetic data)`
+- **Para regenerar los `.example`** desde tus `.json` reales (ej. después de actualizar
+  el shape o agregar empresas): `node scripts/anonymize-seeds.cjs`
+- **Los `.example` mantienen** los `companyName` reales (`高雄`, `瑞陵精機株式会社`, etc.)
+  porque la lógica de detección R11 en `takao-detection.ts` y varios tests dependen de
+  esos strings exactos. Solo se anonimiza PII de personas físicas.
+- **Histórico previo**: hasta el commit que introdujo esta política, los `.json` con PII
+  estuvieron en git. Para purgarlos del histórico se requiere `git filter-repo`
+  (destructivo — coordinar con clones existentes). Ver ESTADO_PROYECTO.md sesión 2026-04-28g.
+
 ### Employee Assignment Integrity
 
 - **DBGenzaiX** (Excel) is the source of truth for employee assignment

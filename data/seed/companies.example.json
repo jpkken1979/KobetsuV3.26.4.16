@@ -3,7 +3,7 @@
     "name": "高雄工業株式会社",
     "address": "〒498-0066 愛知県弥富市楠三丁目13番地2",
     "phone": "0567-68-8110",
-    "representative": "下村 豊",
+    "representative": null,
     "shortName": "高雄工業",
     "isActive": true
   },
@@ -112,4 +112,3 @@
     "isActive": true
   }
 ]
-
