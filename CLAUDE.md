@@ -491,6 +491,26 @@ Different format from all other companies — 3 separate generators in `server/p
 - Output: `output/koritsu/` (separate from `output/kobetsu/`)
 - 派遣元管理台帳 reuses standard `hakenmotokanridaicho-pdf.ts`
 
+### Document Generation Flows — 8 ways to build the bundle
+
+The contract bundle (個別契約書 + 通知書 + 派遣先台帳 + 派遣元台帳) can be triggered from 8 distinct UI entry points. All converge on the same 5 PDF generators (`server/pdf/`), but each flow has its own backend handler and contract-creation strategy. When changing PDF logic, sanity-check at least one flow per group:
+
+| # | Flow (UI) | Page | Frontend API | Backend endpoint |
+|---|-----------|------|--------------|------------------|
+| 1 | **Single** (one contract) | `/contracts/:contractId`, `/documents` tab 契約別 | `generateContractDocuments` | `POST /documents/generate/:contractId` |
+| 2 | **Set / 一括** (multi-select, same factory/line) | `/contracts` (multi-select toolbar) | `generateSet` | `POST /documents/generate-set` |
+| 3 | **Batch bundles** (1 ZIP per contract, re-generate history) | `/history` | `generateBatchDocuments` | `POST /documents/generate-batch` |
+| 4 | **Factory 一括** (all active contracts of a factory) | `/documents` tab 工場一括 | `generateFactory` | `POST /documents/generate-factory` |
+| 5 | **ID指定** (派遣先/派遣元 ID list) | `/documents` tab ID指定 | `generateByIds` | `POST /documents/generate-by-ids` |
+| 6 | **新規入社者** (new hires) | `/contracts/new-hires` | `newHiresCreate` → `generateBatchDocuments` | `POST /contracts/batch/new-hires` then `/documents/generate-batch` |
+| 7 | **途中入社者** (tochuunyusha / mid-hires) | `/contracts/mid-hires` | `midHiresCreate` → `generateBatchDocuments` | `POST /contracts/batch/mid-hires` then `/documents/generate-batch` |
+| 8 | **召聘者 / 外国人材 recruiting** | `/shouheisha` | `generateContractDocuments` (loop per employee) | `POST /documents/generate/:contractId` |
+
+Notes:
+- Flow 6 / 7 also expose `generateDocs: boolean` toggles in the UI — when off, the contract is created but no PDF is generated.
+- `POST /contracts/batch/by-line` (used by `/contracts/batch`) classifies employees as 継続/新規/未配属 then internally falls into one of the 8 flows above for the actual PDF generation.
+- `POST /documents/keiyakusho/:employeeNumber` and `/documents/shugyojoken/:employeeNumber` are **per-employee** documents (労働契約書 / 就業条件明示書), not part of the bundle — they don't count among the 8.
+
 ## UI Theme (LUNARIS v2 Design System)
 
 - Light: `#f9fafb` bg, emerald `#059669` primary. Dark: `#0c0d0f` bg, neon green `#00ff88` primary
