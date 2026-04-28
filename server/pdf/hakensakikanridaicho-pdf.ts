@@ -179,9 +179,9 @@ export function generateHakensakiKanriDaichoPDF(doc: Doc, data: DaichoData): voi
   y += RH;
 
   // ═══ 事業所の所在地 + 組織単位 (split) ═══
-  const soshikiText = jigyosho
-    ? [jigyosho, data.factoryName, data.department].filter(Boolean).join("　")
-    : data.department;
+  const soshikiText = [jigyosho, data.factoryName, data.department]
+    .filter(Boolean)
+    .join("　");
   splitRow(y, RH, "事業所の所在地", data.factoryAddress,
     "組織単位", soshikiText, 250, 55);
   y += RH;

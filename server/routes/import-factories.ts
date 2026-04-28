@@ -26,6 +26,10 @@ const factoryImportSchema = z.object({
   data: z.array(z.record(z.string(), z.unknown())).min(1, "No data provided").max(5000, "Import exceeds maximum of 5,000 rows"),
   mode: z.enum(["upsert", "skip"]).default("upsert"),
   deleteIds: z.array(z.number().int().positive()).default([]),
+  /** Auto-delete factory rows NOT in the Excel (for companies present in the import).
+   *  Only deletes rows with 0 employees and 0 contracts.
+   *  Safe: always skips protected rows regardless of this flag. */
+  deleteMissing: z.boolean().default(false),
   companyData: z.array(z.record(z.string(), z.unknown())).default([]),
   enrichCompanies: z.boolean().default(false),
 });
@@ -35,10 +39,10 @@ importFactoriesRouter.post("/factories", async (c) => {
   if (!raw) return c.json({ error: "Invalid JSON body" }, 400);
   const parsed = factoryImportSchema.safeParse(raw);
   if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
-  const { data: rows, mode, deleteIds, companyData: rawCompanyData, enrichCompanies } = parsed.data;
+  const { data: rows, mode, deleteIds, deleteMissing, companyData: rawCompanyData, enrichCompanies } = parsed.data;
 
   try {
-    const result = await importFactories(rows, mode, deleteIds, rawCompanyData, enrichCompanies);
+    const result = await importFactories(rows, mode, deleteIds, rawCompanyData, enrichCompanies, deleteMissing);
 
     return c.json({
       success: true,

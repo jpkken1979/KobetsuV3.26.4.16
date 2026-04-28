@@ -156,6 +156,7 @@ export async function importFactories(
   deleteIds: number[],
   rawCompanyData: Record<string, unknown>[],
   enrichCompanies: boolean = true,
+  deleteMissing: boolean = false,
 ): Promise<FactoryImportResult> {
   // Build company info map from Sheet 2 (企業情報)
   const companyInfoMap = new Map<string, CompanyInfo>();
@@ -185,6 +186,9 @@ export async function importFactories(
     let txSkipped = 0;
     const txErrors: string[] = [];
     const txWarnings: string[] = [];
+    // Track all factory IDs that appear in the Excel (for deleteMissing logic)
+    const excelFactoryIds = new Set<number>();
+    const excelCompanyIds = new Set<number>();
 
     for (const rawRow of rows) {
       const row = normalizeImportRow(rawRow);
@@ -228,6 +232,8 @@ export async function importFactories(
         }
 
         if (matchedId) {
+          excelFactoryIds.add(matchedId);
+          excelCompanyIds.add(companyId);
           if (mode === "skip") { txSkipped++; continue; }
 
           // Only update fields with actual values — never overwrite with null/empty
@@ -258,8 +264,25 @@ export async function importFactories(
       }
     }
 
-    // Delete factories selected by the user
+    // Auto-delete factories NOT in the Excel (Option A: Excel = source of truth)
+    // Only targets companies present in the import. Skips rows with employees/contracts.
     let txDeleted = 0;
+    if (deleteMissing && excelCompanyIds.size > 0) {
+      for (const f of allFactories) {
+        if (excelCompanyIds.has(f.companyId) && !excelFactoryIds.has(f.id)) {
+          const empCount = db.select({ c: count() }).from(employees).where(eq(employees.factoryId, f.id)).get();
+          const conCount = db.select({ c: count() }).from(contracts).where(eq(contracts.factoryId, f.id)).get();
+          if ((empCount?.c ?? 0) === 0 && (conCount?.c ?? 0) === 0) {
+            db.delete(factories).where(eq(factories.id, f.id)).run();
+            txDeleted++;
+          } else {
+            txWarnings.push(
+              `SKIP delete: ${f.factoryName} (ID ${f.id}) — ${empCount?.c ?? 0} employees, ${conCount?.c ?? 0} contracts`,
+            );
+          }
+        }
+      }
+    }
     for (const id of deleteIds) {
       if (typeof id === "number" && id > 0) {
         const empCount = db.select({ c: count() }).from(employees).where(eq(employees.factoryId, id)).get();

@@ -305,9 +305,9 @@ export function generateKeiyakushoPDF(doc: Doc, data: KeiyakushoData): void {
   const shugyoName = jigyosho
     ? [data.companyName, jigyosho].filter(Boolean).join("　")
     : [data.companyName, data.factoryName, data.department].filter(Boolean).join("　");
-  const soshikiText = jigyosho
-    ? [jigyosho, data.factoryName, data.department].filter(Boolean).join("　")
-    : data.department || "";
+  const soshikiText = [jigyosho, data.factoryName, data.department]
+    .filter(Boolean)
+    .join("　");
 
   // Shift parsing (fuente de verdad: workHours; si vacío, fallback a day/night)
   const allBreaks = data.breakTime

@@ -147,9 +147,9 @@ export function generateHakenmotoKanriDaichoPDF(doc: Doc, data: HakenmotoDaichoD
     ? [data.companyName, jigyosho].filter(Boolean).join("　")
     : data.factoryName;
   y = labelRow(doc, y, RH * 1.5, "事業所の名称・所在地", `${locationName}　${data.factoryAddress}`, LW);
-  const soshikiText = jigyosho
-    ? [jigyosho, data.factoryName, data.department].filter(Boolean).join("　")
-    : `${data.department}　${data.lineName || ""}`;
+  const soshikiText = [jigyosho, data.factoryName, data.department]
+    .filter(Boolean)
+    .join("　");
   y = labelRow(doc, y, RH, "組織単位", soshikiText, LW);
   y = labelRow(doc, y, RH, "事業所電話番号", data.factoryPhone || data.companyPhone, LW);
   y += 3;

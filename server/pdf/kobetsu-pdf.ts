@@ -430,10 +430,11 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
   cell(doc, 5, 24, 5, 26, data.factoryPhone || data.companyPhone, 8, { noBorder: true });
 
   // Row 6: 組織単位 + 抵触日 (only 抵触日 has its own border)
+  // 組織単位 = jigyosho (Takao only) + factoryName + department — refleja 企業データ一覧
   cell(doc, 6, 2, 6, 6, "組織単位", 7.5, { align: "center" });
-  const soshikiText = jigyosho
-    ? [jigyosho, data.factoryName, data.department].filter(Boolean).join("　")
-    : data.department || "";
+  const soshikiText = [jigyosho, data.factoryName, data.department]
+    .filter(Boolean)
+    .join("　");
   cell(doc, 6, 7, 6, 13, soshikiText, 8, { align: "center" });
   cell(doc, 6, 14, 6, 15, "抵触日", 7.5, { align: "center" });
   cell(doc, 6, 16, 6, 26, formatDateJP(data.conflictDate), 8);
