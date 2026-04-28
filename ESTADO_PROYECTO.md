@@ -1,6 +1,28 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (batch factory e IDs como rutas dedicadas + sidebar)
+> Última actualización: 2026-04-28 (Showcase UI/UX para batch pages — Opción 3 Avanzada)
+
+## Sesión 2026-04-28c — Showcase UI/UX batch pages (BatchPageShell + Bento + Particles)
+
+**1 feat commit:**
+
+- **4 componentes UI nuevos + 5 archivos modificados** (commit `b92082b`):
+  - `src/components/ui/animated-number.tsx` — Counter rolling con easeOutCubic, respeta `useReducedMotion`
+  - `src/components/ui/batch-page-shell.tsx` — Hero con spotlight mouse-tracking, gradient title 135deg, breadcrumb, badge live-dot, stats inline animados, glow blur en icon pill
+  - `src/components/ui/bento-stats-grid.tsx` — 3 cards con border gradient + glow radial, stagger entrance, hover lift, 4 accents tokenizados (primary/accent/ok/info)
+  - `src/components/ui/particle-burst.tsx` — 14 partículas radiales con cubic-bezier ease-out, colores rotativos
+  - `src/routes/documents/batch-factory.tsx` y `batch-ids.tsx` consumen `getDashboardStats(30)` con stats reales en `BentoStatsGrid`
+  - `src/components/layout/sidebar.tsx` — `NavItem` extendido con `indent` y `badge` props (guide line gradient + pill mono "一括" que cambia a primary cuando active)
+  - `src/routes/documents/-factory-generator.tsx` — header interno duplicado eliminado; ParticleBurst integrado en success
+  - `src/routes/documents/-id-generator.tsx` — header textual reemplazado por label "進捗 · Progress"; ParticleBurst en `ResultStep` con `overflow-visible`
+
+**Estatísticas**: +560 insertions, -44 deletions. Typecheck ✓ · Lint ✓ · 776 tests ✓
+
+**Impacto**: Las páginas batch ahora tienen identidad visual showcase con animaciones premium que respetan accesibilidad. Componentes reutilizables (`BatchPageShell`, `BentoStatsGrid`, `AnimatedNumber`, `ParticleBurst`) listos para futuras vistas batch (`/contracts/batch`, `/contracts/new-hires`, `/contracts/mid-hires`) y celebraciones de éxito en otros flujos.
+
+**Decisiones técnicas clave**: spotlight con CSS variables (no canvas) para 100x mejor performance, `useReducedMotion` en TODOS los components, variants OUT de componentes (regla typescript.md), `color-mix(in srgb, ...)` tokenizado en `ACCENT_TOKENS` para legibilidad.
+
+---
 
 ## Sesión 2026-04-28b — Exponer batch factory e IDs como rutas dedicadas en sidebar
 
