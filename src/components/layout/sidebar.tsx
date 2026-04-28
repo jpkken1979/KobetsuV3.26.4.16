@@ -37,6 +37,8 @@ function NavItem({
   active,
   onClick,
   collapsed,
+  indent,
+  badge,
 }: {
   to: string;
   icon: ElementType;
@@ -44,6 +46,8 @@ function NavItem({
   active: boolean;
   onClick?: () => void;
   collapsed?: boolean;
+  indent?: boolean;
+  badge?: string;
 }) {
   return (
     <Link
@@ -56,11 +60,23 @@ function NavItem({
         active
           ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/15 dark:bg-primary/[0.14]"
           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground hover:translate-x-0.5",
-        collapsed && "justify-center px-0"
+        collapsed && "justify-center px-0",
+        indent && !collapsed && "ml-4 pl-4"
       )}
     >
       {active && (
         <span className={cn("absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary", collapsed && "hidden")} />
+      )}
+      {indent && !collapsed && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "absolute top-0 bottom-0 left-1 w-px",
+            active
+              ? "bg-gradient-to-b from-transparent via-primary/40 to-transparent"
+              : "bg-gradient-to-b from-transparent via-border/70 to-transparent"
+          )}
+        />
       )}
       <Icon
         className={cn(
@@ -72,7 +88,20 @@ function NavItem({
       />
       {!collapsed && <span className="truncate">{label}</span>}
 
-      {active && !collapsed && (
+      {!collapsed && badge && (
+        <span
+          className={cn(
+            "ml-auto rounded-md px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] ring-1",
+            active
+              ? "bg-primary/15 text-primary ring-primary/30"
+              : "bg-muted/60 text-muted-foreground/70 ring-border/60 group-hover:bg-primary/10 group-hover:text-primary group-hover:ring-primary/20"
+          )}
+        >
+          {badge}
+        </span>
+      )}
+
+      {active && !collapsed && !badge && (
         <span className="ml-auto h-2 w-2 rounded-full bg-primary shadow-[0_0_6px_var(--color-primary)]" />
       )}
     </Link>
@@ -106,8 +135,8 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { name: "招聘者", href: "/shouheisha", icon: Users },
         { name: "書類生成", href: "/documents", icon: FileDown },
-        { name: "工場一括", href: "/documents/batch-factory", icon: Package },
-        { name: "ID指定", href: "/documents/batch-ids", icon: Hash },
+        { name: "工場一括", href: "/documents/batch-factory", icon: Package, indent: true, badge: "一括" },
+        { name: "ID指定", href: "/documents/batch-ids", icon: Hash, indent: true, badge: "一括" },
         { name: "インポート", href: "/import", icon: Upload },
         { name: "企業テーブル", href: "/companies/table", icon: Table2 },
         { name: "コーリツ管理", href: "/companies/koritsu", icon: FileUp },
@@ -209,6 +238,8 @@ export function Sidebar({ onClose }: SidebarProps) {
                     active={isActive}
                     onClick={onClose}
                     collapsed={sidebarCollapsed}
+                    indent={"indent" in item ? item.indent : undefined}
+                    badge={"badge" in item ? item.badge : undefined}
                   />
                 );
               })}

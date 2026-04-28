@@ -1,3 +1,4 @@
+import { ParticleBurst } from "@/components/ui/particle-burst";
 import { api, downloadZip, type Company, type Factory, type GenerateFactoryResult } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { queryKeys } from "@/lib/query-keys";
@@ -14,7 +15,6 @@ import {
   FileText,
   Layers,
   Loader2,
-  Package,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -161,22 +161,6 @@ export function FactoryGenerator() {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
-        <div className="mb-1 flex items-center gap-2">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <Package className="h-4 w-4 text-primary" />
-          </div>
-          <h2 className="text-base font-bold">工場一括生成</h2>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-primary/20">
-            全契約
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground/70">
-          工場を選ぶと、その工場の全稼働契約の書類を一括でZIPに生成します
-        </p>
-      </div>
-
       {/* Step 1 — Company */}
       <div className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]">
         <div className="mb-3 flex items-center gap-2">
@@ -361,8 +345,9 @@ export function FactoryGenerator() {
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-            className="rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_8%,transparent)] p-4"
+            className="relative rounded-xl border border-[color-mix(in_srgb,var(--color-status-ok)_30%,transparent)] bg-[color-mix(in_srgb,var(--color-status-ok)_8%,transparent)] p-4"
           >
+            <ParticleBurst trigger={!!result} />
             <div className="mb-4 flex items-center gap-2.5">
               <div className="rounded-lg bg-[color-mix(in_srgb,var(--color-status-ok)_15%,transparent)] p-1.5">
                 <Check className="h-5 w-5 text-[var(--color-status-ok)]" />

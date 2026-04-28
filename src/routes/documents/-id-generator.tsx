@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { ParticleBurst } from "@/components/ui/particle-burst";
 import { api, downloadZip } from "@/lib/api";
 import type { ByIdsGroup, GenerateByIdsResult, PreviewByIdsResult } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
@@ -317,7 +318,8 @@ function ResultStep({ result, onReset }: { result: GenerateByIdsResult; onReset:
   return (
     <div className="space-y-4">
       {/* Success header */}
-      <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-4">
+      <div className="relative flex items-center gap-3 overflow-visible rounded-xl border border-primary/30 bg-primary/5 px-4 py-4">
+        <ParticleBurst trigger={!!result} />
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
           <Check className="h-5 w-5 text-primary" />
         </div>
@@ -453,9 +455,8 @@ export function IdGenerator() {
       <div className="border-b border-border/60 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold">ID指定 — 契約書一括生成</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              派遣先IDまたは派遣元番号から契約を作成してPDFを生成
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground/70">
+              進捗 · Progress
             </p>
           </div>
           {/* Step indicator */}
