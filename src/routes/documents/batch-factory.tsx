@@ -1,8 +1,6 @@
 import { BatchPageShell } from "@/components/ui/batch-page-shell";
 import { BentoStatsGrid, type BentoStat } from "@/components/ui/bento-stats-grid";
-import { api } from "@/lib/api";
-import { queryKeys } from "@/lib/query-keys";
-import { useQuery } from "@tanstack/react-query";
+import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import { createFileRoute } from "@tanstack/react-router";
 import { Building2, FileCheck2, Layers, Package } from "lucide-react";
 import { FactoryGenerator } from "./-factory-generator";
@@ -12,10 +10,7 @@ export const Route = createFileRoute("/documents/batch-factory")({
 });
 
 function BatchFactoryPage() {
-  const { data: stats } = useQuery({
-    queryKey: queryKeys.dashboard.stats(30),
-    queryFn: () => api.getDashboardStats(30),
-  });
+  const { data: stats } = useDashboardStats();
 
   const heroStats = [
     { label: "派遣先", value: stats?.companies ?? 0 },

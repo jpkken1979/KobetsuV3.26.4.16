@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCompanies } from "@/lib/hooks/use-companies";
+import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import {
   useMidHiresPreview,
   useMidHiresCreate,
@@ -33,6 +34,7 @@ import { MidHiresPreview } from "./-mid-hires-preview";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   UserPlus,
+  UserCheck,
   Users,
   FileText,
   Loader2,
@@ -63,6 +65,7 @@ export const Route = createFileRoute("/contracts/mid-hires")({
 
 function MidHiresBatch() {
   const { data: companies } = useCompanies();
+  const { data: dashboardStats } = useDashboardStats();
   const midHiresPreview = useMidHiresPreview();
   const midHiresCreate = useMidHiresCreate();
   const batchGenerateDocs = useBatchGenerateDocuments();
@@ -308,6 +311,14 @@ function MidHiresBatch() {
       <BatchPageHeader
         title="途中入社一括作成"
         description="指定期間に入社した社員を検出し、個別契約書・通知書・管理台帳を一括作成します"
+        icon={UserCheck}
+        badge="MID HIRES"
+        breadcrumb={["契約", "途中入社一括"]}
+        stats={[
+          { label: "派遣先", value: dashboardStats?.companies ?? 0 },
+          { label: "稼働社員", value: dashboardStats?.activeEmployees ?? 0 },
+          { label: "稼働契約", value: dashboardStats?.activeContracts ?? 0 },
+        ]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_400px]">

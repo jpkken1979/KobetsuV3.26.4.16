@@ -6,6 +6,7 @@ import type { ReactNode, ElementType } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { AnimatedPage } from "@/components/ui/animated";
+import { BatchPageShell } from "@/components/ui/batch-page-shell";
 import { Dialog, DialogTitle } from "@/components/ui/dialog";
 import type { Company } from "@/lib/api";
 import {
@@ -17,9 +18,17 @@ import {
   FileDown,
   Download,
   ArrowLeft,
+  Layers,
   ShieldAlert,
   Loader2,
+  type LucideIcon,
 } from "lucide-react";
+
+interface HeroStat {
+  label: string;
+  value: number;
+  format?: (n: number) => string;
+}
 
 // ─── Section / StatCard (existing) ──────────────────────────────────
 
@@ -96,22 +105,35 @@ export function CompanySelector({
 export function BatchPageHeader({
   title,
   description,
+  icon,
+  badge,
+  breadcrumb,
+  stats,
 }: {
   title: string;
   description: string;
+  icon?: LucideIcon;
+  badge?: string;
+  breadcrumb?: readonly string[];
+  stats?: readonly HeroStat[];
 }) {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex flex-col gap-4">
       <Link
         to="/contracts"
-        className="rounded-lg border border-border p-2 transition-colors hover:bg-muted"
+        className="inline-flex w-fit items-center gap-2 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary/30 hover:bg-card hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" />
+        <ArrowLeft className="h-3.5 w-3.5" />
+        契約一覧へ戻る
       </Link>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
-      </div>
+      <BatchPageShell
+        title={title}
+        subtitle={description}
+        icon={icon ?? Layers}
+        badge={badge ?? "BATCH MODE"}
+        breadcrumb={breadcrumb ?? ["契約", title]}
+        stats={stats}
+      />
     </div>
   );
 }

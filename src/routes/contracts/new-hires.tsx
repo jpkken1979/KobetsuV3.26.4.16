@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCompanies } from "@/lib/hooks/use-companies";
+import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import {
   useNewHiresPreview,
   useNewHiresCreate,
@@ -71,6 +72,7 @@ export const Route = createFileRoute("/contracts/new-hires")({
 
 function NewHiresBatch() {
   const { data: companies } = useCompanies();
+  const { data: dashboardStats } = useDashboardStats();
   const newHiresPreview = useNewHiresPreview();
   const newHiresCreate = useNewHiresCreate();
   const batchGenerateDocs = useBatchGenerateDocuments();
@@ -285,6 +287,14 @@ function NewHiresBatch() {
       <BatchPageHeader
         title="新規入社一括作成"
         description="入社日で新規入社者を検出し、個別契約書・通知書・管理台帳を一括作成します"
+        icon={UserPlus}
+        badge="NEW HIRES"
+        breadcrumb={["契約", "新規入社一括"]}
+        stats={[
+          { label: "派遣先", value: dashboardStats?.companies ?? 0 },
+          { label: "稼働社員", value: dashboardStats?.activeEmployees ?? 0 },
+          { label: "稼働契約", value: dashboardStats?.activeContracts ?? 0 },
+        ]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_400px]">

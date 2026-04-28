@@ -1,8 +1,6 @@
 import { BatchPageShell } from "@/components/ui/batch-page-shell";
 import { BentoStatsGrid, type BentoStat } from "@/components/ui/bento-stats-grid";
-import { api } from "@/lib/api";
-import { queryKeys } from "@/lib/query-keys";
-import { useQuery } from "@tanstack/react-query";
+import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import { createFileRoute } from "@tanstack/react-router";
 import { Hash, IdCard, ScanSearch, Users } from "lucide-react";
 import { IdGenerator } from "./-id-generator";
@@ -12,10 +10,7 @@ export const Route = createFileRoute("/documents/batch-ids")({
 });
 
 function BatchIdsPage() {
-  const { data: stats } = useQuery({
-    queryKey: queryKeys.dashboard.stats(30),
-    queryFn: () => api.getDashboardStats(30),
-  });
+  const { data: stats } = useDashboardStats();
 
   const heroStats = [
     { label: "稼働社員", value: stats?.activeEmployees ?? 0 },

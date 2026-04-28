@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCompanies } from "@/lib/hooks/use-companies";
+import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import { useFactoryCascade } from "@/lib/hooks/use-factories";
 import { useEmployees } from "@/lib/hooks/use-employees";
 import {
@@ -73,6 +74,7 @@ export const Route = createFileRoute("/contracts/batch")({
 
 function BatchCreate() {
   const { data: companies } = useCompanies();
+  const { data: dashboardStats } = useDashboardStats();
   const batchCreate = useBatchCreateContracts();
   const batchPreview = useBatchPreviewContracts();
   const batchGenerateDocs = useBatchGenerateDocuments();
@@ -282,6 +284,14 @@ function BatchCreate() {
       <BatchPageHeader
         title="一括作成"
         description="企業を選択して、全ライン・社員の契約を一括で作成します"
+        icon={Zap}
+        badge="BULK CREATE"
+        breadcrumb={["契約", "一括作成"]}
+        stats={[
+          { label: "派遣先", value: dashboardStats?.companies ?? 0 },
+          { label: "工場ライン", value: dashboardStats?.factories ?? 0 },
+          { label: "稼働契約", value: dashboardStats?.activeContracts ?? 0 },
+        ]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
