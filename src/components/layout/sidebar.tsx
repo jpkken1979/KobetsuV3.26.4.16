@@ -12,6 +12,7 @@ import {
     Hash,
     History,
     LayoutDashboard,
+    ListChecks,
     Package,
     ScrollText,
     Settings,
@@ -120,6 +121,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       items: [
         { name: "ダッシュボード", href: "/", icon: LayoutDashboard },
         { name: "契約管理", href: "/contracts", icon: FileText },
+        { name: "ラインで個別選択", href: "/contracts/by-line", icon: ListChecks, indent: true, badge: "NEW" },
       ],
     },
     {

@@ -9,6 +9,7 @@ import {
   Archive,
   Building2,
   Check,
+  CheckSquare,
   ChevronDown,
   ClipboardList,
   Download,
@@ -16,6 +17,7 @@ import {
   Layers,
   Loader2,
   Sparkles,
+  Square,
   Users,
 } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -102,12 +104,38 @@ function DocDiagram({ kobetsuCopies, contractCount = 1, employeeCount = 1 }: Doc
   );
 }
 
+// ─── Helpers ─────────────────────────────────────────────────────────
+
+interface FactoryGroup {
+  factoryName: string;
+  factories: Factory[];
+}
+
+function groupFactoriesByName(factories: Factory[]): FactoryGroup[] {
+  const map = new Map<string, Factory[]>();
+  for (const f of factories) {
+    const key = f.factoryName ?? "(未指定)";
+    const arr = map.get(key) ?? [];
+    arr.push(f);
+    map.set(key, arr);
+  }
+  return Array.from(map.entries())
+    .map(([factoryName, list]) => ({
+      factoryName,
+      factories: list.sort((a, b) =>
+        `${a.department ?? ""}/${a.lineName ?? ""}`.localeCompare(`${b.department ?? ""}/${b.lineName ?? ""}`)
+      ),
+    }))
+    .sort((a, b) => a.factoryName.localeCompare(b.factoryName));
+}
+
 // ─── Main factory generator component ────────────────────────────────
 
 export function FactoryGenerator() {
   const shouldReduceMotion = useReducedMotion();
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
-  const [selectedFactoryId, setSelectedFactoryId] = useState<number | null>(null);
+  const [selectedFactoryIds, setSelectedFactoryIds] = useState<Set<number>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [kobetsuCopies, setKobetsuCopies] = useState<1 | 2>(1);
   const [result, setResult] = useState<GenerateFactoryResult | null>(null);
 
@@ -128,13 +156,12 @@ export function FactoryGenerator() {
     [selectedCompany]
   );
 
-  const selectedFactory = useMemo(
-    () => availableFactories.find((f: Factory) => f.id === selectedFactoryId),
-    [availableFactories, selectedFactoryId]
-  );
+  const factoryGroups = useMemo(() => groupFactoriesByName(availableFactories), [availableFactories]);
+
+  const factoryIdArray = useMemo(() => Array.from(selectedFactoryIds), [selectedFactoryIds]);
 
   const generateMutation = useMutation({
-    mutationFn: () => api.generateFactory(selectedFactoryId!, kobetsuCopies),
+    mutationFn: () => api.generateFactory(factoryIdArray, kobetsuCopies),
     onSuccess: async (data) => {
       setResult(data);
       toast.success("工場一括生成完了", {
@@ -153,11 +180,65 @@ export function FactoryGenerator() {
     },
   });
 
-  const canGenerate = !!selectedFactoryId && !generateMutation.isPending;
+  const canGenerate = factoryIdArray.length > 0 && !generateMutation.isPending;
 
-  // Estimate counts for diagram
-  const diagContractCount = selectedFactory ? 1 : 1; // backend finds actives — show "1+" placeholder
+  // Counts for diagram (best-effort placeholders — backend filters actives)
+  const diagContractCount = factoryIdArray.length;
   const diagEmployeeCount = 1;
+
+  const toggleFactoryId = (id: number) => {
+    setSelectedFactoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+    setResult(null);
+  };
+
+  const toggleGroup = (group: FactoryGroup) => {
+    const groupIds = group.factories.map((f) => f.id);
+    const allSelected = groupIds.every((id) => selectedFactoryIds.has(id));
+    setSelectedFactoryIds((prev) => {
+      const next = new Set(prev);
+      if (allSelected) {
+        for (const id of groupIds) next.delete(id);
+      } else {
+        for (const id of groupIds) next.add(id);
+      }
+      return next;
+    });
+    setResult(null);
+  };
+
+  const toggleCollapse = (factoryName: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(factoryName)) next.delete(factoryName);
+      else next.add(factoryName);
+      return next;
+    });
+  };
+
+  // Build label for the generate button
+  const generateLabel = useMemo(() => {
+    if (factoryIdArray.length === 0) return "工場一括生成";
+    const selectedFactories = availableFactories.filter((f) => selectedFactoryIds.has(f.id));
+    const distinctFactoryNames = new Set(selectedFactories.map((f) => f.factoryName));
+    if (selectedFactories.length === 1) {
+      const f = selectedFactories[0];
+      return `${[f.factoryName, f.department, f.lineName].filter(Boolean).join(" / ")} — 一括生成`;
+    }
+    if (distinctFactoryNames.size === 1) {
+      const name = distinctFactoryNames.values().next().value as string;
+      const totalInFactory = availableFactories.filter((f) => f.factoryName === name).length;
+      const isWhole = selectedFactories.length === totalInFactory;
+      return isWhole
+        ? `${name} 工場全体 (${selectedFactories.length}ライン) — 一括生成`
+        : `${name} (${selectedFactories.length}/${totalInFactory}ライン) — 一括生成`;
+    }
+    return `${selectedFactories.length}ライン選択 — 一括生成`;
+  }, [factoryIdArray, availableFactories, selectedFactoryIds]);
 
   return (
     <div className="space-y-4">
@@ -179,7 +260,8 @@ export function FactoryGenerator() {
                 key={company.id}
                 onClick={() => {
                   setSelectedCompanyId(company.id);
-                  setSelectedFactoryId(null);
+                  setSelectedFactoryIds(new Set());
+                  setCollapsedGroups(new Set());
                   setResult(null);
                 }}
                 className={cn(
@@ -196,7 +278,7 @@ export function FactoryGenerator() {
         )}
       </div>
 
-      {/* Step 2 — Factory (only after company selected) */}
+      {/* Step 2 — Factory groups + lines (multi-select) */}
       <AnimatePresence>
         {selectedCompanyId && availableFactories.length > 0 && (
           <motion.div
@@ -205,37 +287,109 @@ export function FactoryGenerator() {
             exit={shouldReduceMotion ? undefined : { opacity: 0, y: -4 }}
             className="rounded-xl border border-border/60 bg-card p-4 shadow-[var(--shadow-card)]"
           >
-            <div className="mb-3 flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">2</span>
-              <h3 className="text-sm font-semibold">工場・ラインを選択</h3>
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">2</span>
+                <h3 className="text-sm font-semibold">工場・ラインを選択（複数可）</h3>
+              </div>
+              {factoryIdArray.length > 0 && (
+                <button
+                  onClick={() => {
+                    setSelectedFactoryIds(new Set());
+                    setResult(null);
+                  }}
+                  className="text-[10px] font-medium text-muted-foreground/70 hover:text-foreground"
+                >
+                  クリア
+                </button>
+              )}
             </div>
-            <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
-              {availableFactories.map((factory: Factory) => {
-                const label = [factory.factoryName, factory.department, factory.lineName]
-                  .filter(Boolean)
-                  .join(" / ");
+
+            <div className="max-h-[420px] overflow-y-auto space-y-2 pr-1">
+              {factoryGroups.map((group) => {
+                const groupIds = group.factories.map((f) => f.id);
+                const selectedInGroup = groupIds.filter((id) => selectedFactoryIds.has(id)).length;
+                const allSelected = selectedInGroup === groupIds.length;
+                const someSelected = selectedInGroup > 0 && !allSelected;
+                const isCollapsed = collapsedGroups.has(group.factoryName);
+
                 return (
-                  <button
-                    key={factory.id}
-                    onClick={() => {
-                      setSelectedFactoryId(factory.id);
-                      setResult(null);
-                    }}
+                  <div
+                    key={group.factoryName}
                     className={cn(
-                      "btn-press flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-all",
-                      selectedFactoryId === factory.id
-                        ? "bg-primary/10 text-primary ring-1 ring-primary/20 dark:bg-primary/15"
-                        : "hover:bg-muted/40"
+                      "rounded-lg border transition-colors",
+                      allSelected
+                        ? "border-primary/40 bg-primary/5 dark:bg-primary/10"
+                        : someSelected
+                          ? "border-primary/25 bg-muted/30"
+                          : "border-border/60"
                     )}
                   >
-                    <Layers className="h-3.5 w-3.5 shrink-0 opacity-50" />
-                    <span className="truncate">{label}</span>
-                    {factory.hourlyRate && (
-                      <span className="ml-auto shrink-0 text-[10px] tabular-nums text-blue-500 dark:text-blue-400">
-                        ¥{factory.hourlyRate.toLocaleString()}
-                      </span>
+                    {/* Group header — toggles entire factory */}
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <button
+                        onClick={() => toggleGroup(group)}
+                        className="btn-press flex flex-1 items-center gap-2 text-left"
+                      >
+                        {allSelected ? (
+                          <CheckSquare className="h-4 w-4 shrink-0 text-primary" />
+                        ) : someSelected ? (
+                          <CheckSquare className="h-4 w-4 shrink-0 text-primary/50" />
+                        ) : (
+                          <Square className="h-4 w-4 shrink-0 text-muted-foreground/40" />
+                        )}
+                        <Building2 className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                        <span className="text-sm font-semibold">{group.factoryName}</span>
+                        <span className="text-[10px] tabular-nums text-muted-foreground/60">
+                          {selectedInGroup}/{groupIds.length}ライン
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => toggleCollapse(group.factoryName)}
+                        className="btn-press rounded p-1 text-muted-foreground/50 hover:text-foreground"
+                        aria-label={isCollapsed ? "展開" : "折りたたむ"}
+                      >
+                        <ChevronDown
+                          className={cn("h-4 w-4 transition-transform", isCollapsed && "-rotate-90")}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Lines list */}
+                    {!isCollapsed && (
+                      <div className="border-t border-border/40 px-2 py-1.5">
+                        {group.factories.map((factory) => {
+                          const isSelected = selectedFactoryIds.has(factory.id);
+                          const label = [factory.department, factory.lineName].filter(Boolean).join(" / ") || "(ライン名なし)";
+                          return (
+                            <button
+                              key={factory.id}
+                              onClick={() => toggleFactoryId(factory.id)}
+                              className={cn(
+                                "btn-press flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-all",
+                                isSelected
+                                  ? "bg-primary/10 text-primary dark:bg-primary/15"
+                                  : "hover:bg-muted/40"
+                              )}
+                            >
+                              {isSelected ? (
+                                <CheckSquare className="h-3.5 w-3.5 shrink-0 text-primary" />
+                              ) : (
+                                <Square className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />
+                              )}
+                              <Layers className="h-3 w-3 shrink-0 opacity-50" />
+                              <span className="truncate">{label}</span>
+                              {factory.hourlyRate && (
+                                <span className="ml-auto shrink-0 text-[10px] tabular-nums text-blue-500 dark:text-blue-400">
+                                  ¥{factory.hourlyRate.toLocaleString()}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -245,7 +399,7 @@ export function FactoryGenerator() {
 
       {/* Step 3 — Options (kobetsuCopies) */}
       <AnimatePresence>
-        {selectedFactoryId && (
+        {factoryIdArray.length > 0 && (
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -297,7 +451,7 @@ export function FactoryGenerator() {
 
       {/* Diagram — what gets generated */}
       <AnimatePresence>
-        {selectedFactoryId && (
+        {factoryIdArray.length > 0 && (
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -310,7 +464,7 @@ export function FactoryGenerator() {
 
       {/* Generate button */}
       <AnimatePresence>
-        {selectedFactoryId && (
+        {factoryIdArray.length > 0 && (
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -329,9 +483,7 @@ export function FactoryGenerator() {
               ) : (
                 <>
                   <Sparkles className="h-5 w-5" />
-                  {selectedFactory
-                    ? `${[selectedFactory.factoryName, selectedFactory.department, selectedFactory.lineName].filter(Boolean).join(" / ")} — 一括生成`
-                    : "工場一括生成"}
+                  {generateLabel}
                 </>
               )}
             </button>
@@ -355,6 +507,7 @@ export function FactoryGenerator() {
               <div>
                 <h3 className="font-semibold text-[var(--color-status-ok)]">生成完了</h3>
                 <p className="text-xs text-[color-mix(in_srgb,var(--color-status-ok)_70%,transparent)]">
+                  {result.lineCount && result.lineCount > 1 ? `${result.lineCount}ライン / ` : ""}
                   {result.contractCount}契約 / {result.employeeCount}名 / {result.fileCount}ファイル
                 </p>
               </div>

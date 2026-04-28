@@ -12,6 +12,7 @@ import {
   executeNewHiresCreate,
   executeMidHiresCreate,
   executeIndividualBatchCreate,
+  executeByLineCreate,
 } from "../services/batch-contracts.js";
 
 // Re-export types used by other route files (documents-generate.ts)
@@ -72,6 +73,17 @@ const individualBatchSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   billingRate: z.number().int().positive().optional(),
   generateDocs: z.boolean().optional(),
+});
+
+const byLineSchema = z.object({
+  companyId: z.number().int().positive(),
+  factoryId: z.number().int().positive(),
+  employees: z.array(z.object({
+    employeeId: z.number().int().positive(),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "startDate must be YYYY-MM-DD"),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
+  })).min(1, "At least 1 employee required"),
+  generatePdf: z.boolean().optional(),
 });
 
 // ── POST /api/contracts/batch/preview ───────────────────────────────
@@ -377,6 +389,44 @@ contractsBatchRouter.post("/batch/individual", async (c) => {
     }, 201);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Individual batch creation failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// ── POST /api/contracts/batch/by-line ────────────────────────────────
+// Selección granular: empleados de una sola línea con startDate/endDate
+// individuales por persona. El servicio agrupa por (rate, startDate, endDate)
+// y crea N contratos en una transacción.
+
+contractsBatchRouter.post("/batch/by-line", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = byLineSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+
+    const { companyId, factoryId, employees, generatePdf } = parsed.data;
+
+    for (const e of employees) {
+      if (e.startDate > e.endDate) {
+        return c.json({ error: `社員ID ${e.employeeId}: 開始日が終了日より後です` }, 400);
+      }
+    }
+
+    const { contracts: created, groups } = executeByLineCreate({
+      companyId,
+      factoryId,
+      employees,
+    });
+
+    return c.json({
+      created: created.length,
+      contracts: created,
+      contractIds: created.map((r) => r.id),
+      groups,
+      generatePdf: generatePdf || false,
+    }, 201);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "By-line batch creation failed";
     return c.json({ error: message }, 500);
   }
 });

@@ -482,14 +482,60 @@ export interface MidHiresCreateResult {
   pdfFiles?: BatchDocumentResult["files"];
 }
 
+// ─── By-Line Batch (selección manual + fechas individuales) ─────────
+
+export interface ByLineEmployeeInput {
+  employeeId: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface ByLineBatchPayload {
+  companyId: number;
+  factoryId: number;
+  employees: ByLineEmployeeInput[];
+  generatePdf?: boolean;
+}
+
+export interface ByLineGroup {
+  rate: number;
+  startDate: string;
+  endDate: string;
+  count: number;
+}
+
+export interface ByLineCreatedContract {
+  id: number;
+  contractNumber: string;
+  factoryName: string | null;
+  department: string | null;
+  lineName: string | null;
+  hourlyRate: number;
+  startDate: string;
+  endDate: string;
+  employees: { id: number; fullName: string | null; individualStartDate: string }[];
+  employeeCount: number;
+}
+
+export interface ByLineBatchResult {
+  created: number;
+  contracts: ByLineCreatedContract[];
+  contractIds: number[];
+  groups: ByLineGroup[];
+  generatePdf: boolean;
+  pdfFiles?: BatchDocumentResult["files"];
+}
+
 // ─── Factory-level document generation ──────────────────────────────
 
 export interface GenerateFactoryResult {
   success: boolean;
   factoryId: number;
+  factoryIds?: number[];
   factoryName: string;
   department: string | null;
   lineName: string | null;
+  lineCount?: number;
   contractCount: number;
   employeeCount: number;
   fileCount: number;

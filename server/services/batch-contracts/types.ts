@@ -112,3 +112,29 @@ export interface IndividualBatchParams {
   endDate: string;
   billingRate?: number;
 }
+
+// ─── By-Line batch (selección manual + fechas individuales) ─────────
+
+export interface ByLineEmployeeInput {
+  employeeId: number;
+  startDate: string;
+  endDate: string;
+}
+
+export interface ByLineParams {
+  companyId: number;
+  factoryId: number;
+  employees: ByLineEmployeeInput[];
+}
+
+export interface ByLineGroup {
+  rate: number;
+  startDate: string;
+  endDate: string;
+  count: number;
+}
+
+export interface ByLineCreateResult {
+  contracts: HiresCreateResult[];
+  groups: ByLineGroup[];
+}

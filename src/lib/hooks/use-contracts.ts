@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { Contract, BatchCreateResult, BatchDocumentResult } from "@/lib/api";
+import type { Contract, BatchCreateResult, BatchDocumentResult, ByLineBatchResult } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { onMutationError } from "@/lib/mutation-helpers";
 import { toast } from "sonner";
@@ -129,6 +129,19 @@ export function useMidHiresCreate() {
       toast.success("途中入社一括作成完了: " + data.created + "件の契約を作成", {
         description: data.skipped > 0 ? data.skipped + "件スキップ" : undefined,
       });
+    },
+    onError: (err: unknown) => onMutationError(err),
+  });
+}
+
+export function useByLineBatchCreate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.byLineBatchCreate,
+    onSuccess: (data: ByLineBatchResult) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.invalidateAll });
+      toast.success("ライン個別作成完了: " + data.created + "件の契約を作成");
     },
     onError: (err: unknown) => onMutationError(err),
   });

@@ -4,7 +4,7 @@ import { z } from "zod";
 import path from "node:path";
 import { db } from "../db/index.js";
 import { contracts, factories, auditLog } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { generateKobetsuPDF } from "../pdf/kobetsu-pdf.js";
 import { generateTsuchishoPDF } from "../pdf/tsuchisho-pdf.js";
 import { generateHakensakiKanriDaichoPDF } from "../pdf/hakensakikanridaicho-pdf.js";
@@ -36,10 +36,15 @@ import { mergePdfs } from "./documents-generate-batch-utils.js";
 import { recordPdfVersion } from "../services/pdf-versioning.js";
 import { readFile } from "node:fs/promises";
 
-const generateFactorySchema = z.object({
-  factoryId: z.number().int().positive("factoryId must be a positive integer"),
-  kobetsuCopies: z.union([z.literal(1), z.literal(2)]).optional(),
-});
+const generateFactorySchema = z
+  .object({
+    factoryId: z.number().int().positive().optional(),
+    factoryIds: z.array(z.number().int().positive()).min(1).optional(),
+    kobetsuCopies: z.union([z.literal(1), z.literal(2)]).optional(),
+  })
+  .refine((d) => d.factoryId !== undefined || (d.factoryIds && d.factoryIds.length > 0), {
+    message: "factoryId or factoryIds is required",
+  });
 
 // ─── POST /api/documents/generate-factory ────────────────────────────
 export async function handleGenerateFactory(c: Context) {
@@ -49,22 +54,38 @@ export async function handleGenerateFactory(c: Context) {
       return c.json({ error: "Invalid request body", details: parsed.error.flatten() }, 400);
     }
 
-    const { factoryId } = parsed.data;
+    const targetFactoryIds: number[] = parsed.data.factoryIds && parsed.data.factoryIds.length > 0
+      ? Array.from(new Set(parsed.data.factoryIds))
+      : [parsed.data.factoryId!];
     const kobetsuCopies: 1 | 2 = parsed.data.kobetsuCopies === 2 ? 2 : 1;
 
-    // Verify factory exists
-    const factory = await db.query.factories.findFirst({
-      where: eq(factories.id, factoryId),
+    // Verify all factories exist (and load company for koritsu detection / labels)
+    const targetFactories = await db.query.factories.findMany({
+      where: inArray(factories.id, targetFactoryIds),
       with: { company: true },
     });
 
-    if (!factory) {
+    if (targetFactories.length === 0) {
       return c.json({ error: "Factory not found" }, 404);
     }
+    if (targetFactories.length !== targetFactoryIds.length) {
+      const found = new Set(targetFactories.map((f) => f.id));
+      const missing = targetFactoryIds.filter((id) => !found.has(id));
+      return c.json({ error: `Factories not found: ${missing.join(", ")}` }, 404);
+    }
 
-    // Get all contracts for this factory (filter active/draft in JS below)
+    // All factories must belong to the same company (we ZIP under one company context)
+    const companyIds = new Set(targetFactories.map((f) => f.companyId));
+    if (companyIds.size > 1) {
+      return c.json({ error: "選択した工場は同一の派遣先である必要があります" }, 400);
+    }
+
+    // Use the first factory as the canonical "factory" for legacy fields in the response
+    const factory = targetFactories[0];
+
+    // Get all contracts for these factories (filter active/draft in JS below)
     const activeContracts = await db.query.contracts.findMany({
-      where: eq(contracts.factoryId, factoryId),
+      where: inArray(contracts.factoryId, targetFactoryIds),
       with: {
         company: true,
         factory: true,
@@ -83,9 +104,22 @@ export async function handleGenerateFactory(c: Context) {
     const isKoritsu = (factory.company?.name ?? "").includes("コーリツ");
     const outputDir = isKoritsu ? KORITSU_OUTPUT_DIR : KOBETSU_OUTPUT_DIR;
     const timestamp = toLocalDateStr(new Date());
-    const factoryLabel = sanitizeFilename(
-      [factory.factoryName, factory.department, factory.lineName].filter(Boolean).join("_")
-    );
+
+    // Smart factory label for ZIP / merged filenames:
+    //   - 1 line  → factoryName_department_lineName (legacy)
+    //   - all lines belong to same factoryName → factoryName_工場全体
+    //   - mixed factories → Nライン (count)
+    const factoryNames = new Set(targetFactories.map((f) => f.factoryName));
+    let factoryLabel: string;
+    if (targetFactories.length === 1) {
+      factoryLabel = sanitizeFilename(
+        [factory.factoryName, factory.department, factory.lineName].filter(Boolean).join("_")
+      );
+    } else if (factoryNames.size === 1) {
+      factoryLabel = sanitizeFilename(`${factory.factoryName}_工場全体`);
+    } else {
+      factoryLabel = sanitizeFilename(`${targetFactories.length}ライン`);
+    }
 
     // File buckets by type (standard only — koritsu keeps individual files)
     const bucketKobetsuHakensaki: string[] = []; // 個別契約書_派遣先用 per contract
@@ -258,21 +292,26 @@ export async function handleGenerateFactory(c: Context) {
     const zipFilename = `工場一括_${factoryLabel}_${timestamp}.zip`;
     await createZipArchive(zipFilename, allFiles, outputDir);
 
-    // Audit log
+    // Audit log — use first factory as entityId (legacy), detail summarizes all
+    const lineCountLabel = targetFactories.length === 1
+      ? `${factory.factoryName}${factory.department ? "/" + factory.department : ""}${factory.lineName ? "/" + factory.lineName : ""}`
+      : `${factory.factoryName} (${targetFactories.length}ライン)`;
     db.insert(auditLog).values({
       action: "export",
       entityType: "document",
-      entityId: factoryId,
-      detail: `工場一括PDF生成: ${factory.factoryName} / ${filteredContracts.length}契約 / ${totalEmployees}名 / ${allFiles.length}ファイル`,
+      entityId: factory.id,
+      detail: `工場一括PDF生成: ${lineCountLabel} / ${filteredContracts.length}契約 / ${totalEmployees}名 / ${allFiles.length}ファイル`,
       userName: "system",
     }).run();
 
     return c.json({
       success: true,
-      factoryId,
+      factoryId: factory.id,
+      factoryIds: targetFactoryIds,
       factoryName: factory.factoryName,
       department: factory.department,
       lineName: factory.lineName,
+      lineCount: targetFactories.length,
       contractCount: filteredContracts.length,
       employeeCount: totalEmployees,
       fileCount: allFiles.length,

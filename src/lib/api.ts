@@ -19,6 +19,8 @@ import type {
   NewHiresCreateResult,
   MidHiresPreviewResult,
   MidHiresCreateResult,
+  ByLineBatchPayload,
+  ByLineBatchResult,
   GenerateFactoryResult,
   PreviewByIdsResult,
   GenerateByIdsResult,
@@ -201,14 +203,24 @@ export const api = {
   midHiresCreate: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string; generateDocs?: boolean }) =>
     request<MidHiresCreateResult>("/contracts/batch/mid-hires", { method: "POST", body: JSON.stringify(data) }),
 
+  // By-Line Batch (selección granular por línea, fechas individuales)
+  byLineBatchCreate: (data: ByLineBatchPayload) =>
+    request<ByLineBatchResult>("/contracts/batch/by-line", { method: "POST", body: JSON.stringify(data) }),
+
   bulkDeleteContracts: (ids: number[]) =>
     request<{ success: boolean; deleted: number }>("/contracts/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) }),
 
   // Documents
   generateContractDocuments: (contractId: number, options?: { kobetsuCopies?: 1 | 2; includeShugyojoken?: boolean }) =>
     request<{ files: { filename: string; path: string }[] }>(`/documents/generate/${contractId}`, { method: "POST", body: JSON.stringify(options ?? {}) }),
-  generateFactory: (factoryId: number, kobetsuCopies: 1 | 2 = 1) =>
-    request<GenerateFactoryResult>("/documents/generate-factory", { method: "POST", body: JSON.stringify({ factoryId, kobetsuCopies }) }, 120000),
+  generateFactory: (factoryIds: number | number[], kobetsuCopies: 1 | 2 = 1) => {
+    const ids = Array.isArray(factoryIds) ? factoryIds : [factoryIds];
+    return request<GenerateFactoryResult>(
+      "/documents/generate-factory",
+      { method: "POST", body: JSON.stringify({ factoryIds: ids, kobetsuCopies }) },
+      120000
+    );
+  },
   previewByIds: (ids: string[], idType: "hakensaki" | "hakenmoto", contractStart: string, contractEnd: string) =>
     request<PreviewByIdsResult>("/contracts/preview-by-ids", { method: "POST", body: JSON.stringify({ ids, idType, contractStart, contractEnd }) }),
   generateByIds: (ids: string[], idType: "hakensaki" | "hakenmoto", contractStart: string, contractEnd: string, kobetsuCopies: 1 | 2 = 1) =>
