@@ -9,6 +9,14 @@ export default defineConfig({
     },
   },
   test: {
+    // Excluir tests E2E de Playwright (corren con `npm run test:e2e`).
+    // Vitest los descubriría por la extensión .spec.ts y fallaría
+    // al intentar resolver `@playwright/test`.
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/tests/e2e/**",
+    ],
     coverage: {
       provider: "v8",
       include: [

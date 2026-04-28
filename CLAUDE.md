@@ -84,6 +84,12 @@ npm run test:pdf-snapshots:update # Regenerates PDF golden snapshots
                                  # Use UPDATE_PDF_SNAPSHOTS=1 env var when you intentionally change PDF generators
                                  # Re-run after modifying any server/pdf/*.ts file
 
+npm run test:e2e                 # Playwright E2E tests (smoke: dashboard, contracts list, smart-batch)
+                                 # Pre-requisito (una sola vez): npx playwright install chromium
+                                 # Levanta dev server automático, headless, serial.
+npm run test:e2e:ui              # UI Mode interactivo (browseable test runner)
+npm run test:e2e:headed          # Misma suite con browser visible (debugging)
+
 npm run lint                     # ESLint: checks src/ and server/ for style violations
 
 npm run typecheck                # TypeScript: tsc --noEmit (no emit, just type checking)
@@ -259,6 +265,7 @@ src/
 | `/contracts/batch` | Batch contract generation |
 | `/contracts/new-hires` | Batch creation for new hires (preview → confirm) |
 | `/contracts/mid-hires` | Batch creation for mid-hires (preview → confirm) |
+| `/contracts/smart-batch` | Smart ikkatsu: multi-factory, auto-clasifica 継続/途中入社者 por nyushabi |
 | `/shouheisha` | Recruitment bulk for 外国人材 — creates employees + contract + PDFs in one flow |
 | `/documents` | PDF generation/download (tabs: 契約別/工場一括/ID指定) |
 | `/import` | Excel employee import |
@@ -472,8 +479,23 @@ Rate multipliers per 労働基準法: OT 125%, holiday 135%, 60h+ 150%, night +2
 ### Contract API
 
 POST/PUT `/api/contracts` accepts:
-- **Preferred:** `employeeAssignments: [{ employeeId: number, hourlyRate?: number }]`
-- **Legacy:** `employeeIds: number[]`
+- **Preferred:** `employeeAssignments: [{ employeeId: number, hourlyRate?: number, individualStartDate?: string, individualEndDate?: string, isIndefinite?: boolean }]`
+- **Legacy:** `employeeIds: number[]` — **deprecated**
+
+`POST /api/contracts/batch/individual` también acepta ambos payloads (mismo patrón de deprecación).
+
+#### Deprecación de `employeeIds`
+
+Cuando un cliente envía solo `employeeIds` (sin `employeeAssignments`), la response incluye headers de deprecación estándar:
+
+```
+Deprecation: true
+Warning: 299 - "employeeIds is deprecated; use employeeAssignments: [{employeeId, hourlyRate?}] instead"
+```
+
+El audit log también marca el contrato con `[legacy employeeIds payload]`. Tests en `server/__tests__/employeeids-deprecation.test.ts` validan los headers en ambos endpoints.
+
+**Plan de retirada:** mantener back-compat por al menos 6 meses tras el 2026-04-28. Frontend ya migrado completamente (wizard, batch pages, smart-batch envían `employeeAssignments`). MCP-server y scripts no usan el endpoint con `employeeIds`. Eliminación final cuando audit logs no muestren `[legacy employeeIds payload]` por 90 días consecutivos.
 
 ### Business Day Calculations
 
@@ -490,6 +512,28 @@ Different format from all other companies — 3 separate generators in `server/p
 - Uses per-side borders (`bT`/`bB`/`bL`/`bR`) via `moveTo/lineTo` — NOT `rect().stroke()`
 - Output: `output/koritsu/` (separate from `output/kobetsu/`)
 - 派遣元管理台帳 reuses standard `hakenmotokanridaicho-pdf.ts`
+
+### Document Generation Flows — 9 ways to build the bundle
+
+The contract bundle (個別契約書 + 通知書 + 派遣先台帳 + 派遣元台帳) can be triggered from 9 distinct UI entry points. All converge on the same 5 PDF generators (`server/pdf/`), but each flow has its own backend handler and contract-creation strategy. When changing PDF logic, sanity-check at least one flow per group:
+
+| # | Flow (UI) | Page | Frontend API | Backend endpoint |
+|---|-----------|------|--------------|------------------|
+| 1 | **Single** (one contract) | `/contracts/:contractId`, `/documents` tab 契約別 | `generateContractDocuments` | `POST /documents/generate/:contractId` |
+| 2 | **Set / 一括** (multi-select, same factory/line) | `/contracts` (multi-select toolbar) | `generateSet` | `POST /documents/generate-set` |
+| 3 | **Batch bundles** (1 ZIP per contract, re-generate history) | `/history` | `generateBatchDocuments` | `POST /documents/generate-batch` |
+| 4 | **Factory 一括** (all active contracts of a factory) | `/documents` tab 工場一括 | `generateFactory` | `POST /documents/generate-factory` |
+| 5 | **ID指定** (派遣先/派遣元 ID list) | `/documents` tab ID指定 | `generateByIds` | `POST /documents/generate-by-ids` |
+| 6 | **新規入社者** (new hires) | `/contracts/new-hires` | `newHiresCreate` → `generateBatchDocuments` | `POST /contracts/batch/new-hires` then `/documents/generate-batch` |
+| 7 | **途中入社者** (tochuunyusha / mid-hires) | `/contracts/mid-hires` | `midHiresCreate` → `generateBatchDocuments` | `POST /contracts/batch/mid-hires` then `/documents/generate-batch` |
+| 8 | **召聘者 / 外国人材 recruiting** | `/shouheisha` | `generateContractDocuments` (loop per employee) | `POST /documents/generate/:contractId` |
+| 9 | **Smart-Batch** (multi-factory, auto-clasifica 継続/途中入社者 por nyushabi) | `/contracts/smart-batch` | `smartBatchCreate` → `generateBatchDocuments` | `POST /contracts/batch/smart-by-factory` then `/documents/generate-batch` |
+
+Notes:
+- Flow 6 / 7 / 9 also expose `generateDocs: boolean` toggles in the UI — when off, the contract is created but no PDF is generated.
+- **Flow 9 (Smart-Batch)** combina ikkatsu multi-factory con clasificación automática: dado `globalStartDate/globalEndDate`, los empleados con `effectiveHireDate < globalStartDate` (o null) reciben contrato `globalStartDate → globalEndDate` (継続); los empleados con `globalStartDate ≤ effectiveHireDate ≤ globalEndDate` reciben contrato `effectiveHireDate → globalEndDate` (途中入社者); los empleados con `effectiveHireDate > globalEndDate` se descartan (future-skip). `effectiveHireDate = actualHireDate ?? hireDate`. Reusa `executeByLineCreate` por factoryId para la creación atómica.
+- `POST /contracts/batch/by-line` (used by `/contracts/batch`) classifies employees as 継続/新規/未配属 then internally falls into one of the flows above for the actual PDF generation.
+- `POST /documents/keiyakusho/:employeeNumber` and `/documents/shugyojoken/:employeeNumber` are **per-employee** documents (労働契約書 / 就業条件明示書), not part of the bundle — they don't count among the 9.
 
 ## UI Theme (LUNARIS v2 Design System)
 
@@ -518,6 +562,22 @@ Different format from all other companies — 3 separate generators in `server/p
 - ESLint 10 flat config: `no-explicit-any: warn`, `no-unused-vars: warn` with `_` prefix, `no-irregular-whitespace: off` (Japanese full-width spaces)
 - Vite code splitting: separate chunks for recharts, motion, @tanstack, exceljs
 - TanStack Router plugin: `autoCodeSplitting: true` — every route is lazy-loaded
+
+### ESM Import Extensions — CRITICAL (server only)
+
+The server runs as native ESM via `tsx` (`"type": "module"` in package.json). Relative imports inside `server/` MUST end in `.js` even when the source file is `.ts`:
+
+```typescript
+// ✅ Correct (server/routes/companies.ts):
+import { db } from "../db/index.js";
+import { clientCompanies } from "../db/schema.js";
+
+// ❌ Wrong — runtime error "Cannot find module":
+import { db } from "../db/index";
+import { clientCompanies } from "../db/schema";
+```
+
+This applies ONLY to `server/` files. Frontend code under `src/` uses Vite's bundler resolution and omits extensions normally. Mixing styles between layers is intentional, not a bug.
 
 ### Naming Conventions
 
@@ -580,6 +640,17 @@ Detailed TypeScript/React standards are in `.claude/rules/typescript.md` (auto-i
   ```bash
   npm run lint && npm run typecheck && npm run build && npm run test:run
   ```
+
+- **E2E (Playwright):** `tests/e2e/*.spec.ts` — smoke tests del shell de la app:
+  - `dashboard.spec.ts`: el dashboard carga y la sidebar funciona
+  - `contracts-list.spec.ts`: `/contracts` carga, navegación al wizard
+  - `smart-batch.spec.ts`: `/contracts/smart-batch` carga inputs y reglas 継続/途中入社者 visibles
+  - **No están en `tsconfig.json`** — Playwright usa su propio resolver
+  - Pre-requisito una vez: `npx playwright install chromium`
+  - Correr: `npm run test:e2e` (headless serial, dev server auto-arranca)
+  - `npm run test:e2e:ui` para modo interactivo
+  - Configurado en `playwright.config.ts`: workers=1 (SQLite), retry en CI, baseURL `http://localhost:3026`
+  - Tests deben ser **idempotentes** — usan la DB de prod local (`data/kobetsu.db`), NO escriben datos
 
 ## Additional Context & Rules
 

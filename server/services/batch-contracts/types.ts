@@ -138,3 +138,42 @@ export interface ByLineCreateResult {
   contracts: HiresCreateResult[];
   groups: ByLineGroup[];
 }
+
+// ─── Smart-Batch (auto-clasifica 継続 / 途中入社者 por nyushabi) ──────
+
+export type SmartBatchEmpKind = "continuation" | "mid-hire" | "future-skip";
+
+export interface SmartBatchEmployee {
+  id: number;
+  fullName: string | null;
+  employeeNumber: string | null;
+  billingRate: number | null;
+  hourlyRate: number | null;
+  effectiveHireDate: string | null; // null si el empleado no tiene hireDate
+  kind: SmartBatchEmpKind;
+  contractStartDate: string; // fecha que se usará para crear el contrato (== globalStart o == effectiveHireDate)
+  contractEndDate: string;   // == globalEnd
+}
+
+export interface SmartBatchLine {
+  factory: Factory;
+  globalStartDate: string;
+  globalEndDate: string;
+  continuation: SmartBatchEmployee[];
+  midHires: SmartBatchEmployee[];
+  futureSkip: SmartBatchEmployee[];
+  totalEligible: number; // continuation + midHires (los que se van a crear)
+  estimatedContracts: number; // groupBy (rate, startDate, endDate)
+}
+
+export interface SmartBatchResult {
+  lines: SmartBatchLine[];
+  skipped: SkipRecord[];
+}
+
+export interface SmartBatchParams {
+  companyId: number;
+  factoryIds?: number[];
+  globalStartDate: string;
+  globalEndDate: string;
+}

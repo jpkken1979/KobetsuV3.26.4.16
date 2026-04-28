@@ -48,6 +48,7 @@ Puertos por default:
 - `npm run typecheck`: `tsc --noEmit`
 - `npm run test:run`: seed + tests (serial para evitar race en sqlite)
 - `npm run test:coverage`: seed + coverage
+- `npm run test:e2e`: tests E2E con Playwright (requiere `npx playwright install chromium` la primera vez)
 - `npm run build`: build de producción
 
 ## Seguridad admin
@@ -55,6 +56,23 @@ Puertos por default:
 - En producción, si `ADMIN_TOKEN` no está definido, `/api/admin/*` queda deshabilitado.
 - Si `ADMIN_TOKEN` está definido, se requiere header `x-admin-token`.
 - El frontend puede enviarlo guardando `adminApiToken` en `localStorage`.
+
+## Flujos de creación de contratos + bundle PDF
+
+El bundle (個別契約書 + 通知書 + 派遣先台帳 + 派遣元台帳) se puede generar desde
+9 entry points distintos en la UI:
+
+1. **Single** — `/contracts/:id` y `/documents` tab 契約別
+2. **Set / 一括** — `/contracts` selección múltiple
+3. **Batch bundles** (re-generar histórico) — `/history`
+4. **Factory 一括** — `/documents` tab 工場一括
+5. **ID指定** (派遣先/派遣元) — `/documents` tab ID指定
+6. **新規入社者** — `/contracts/new-hires`
+7. **途中入社者** — `/contracts/mid-hires`
+8. **召聘者 / 外国人材** — `/shouheisha`
+9. **Smart-Batch** (multi-factory + auto-clasifica 継続/途中入社者 por nyushabi) — `/contracts/smart-batch`
+
+Detalle técnico en `CLAUDE.md` y `docs/architecture.md`.
 
 ## Documentación de ejecución
 

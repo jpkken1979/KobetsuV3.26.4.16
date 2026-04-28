@@ -6,7 +6,7 @@
 - Drizzle ORM + better-sqlite3 (WAL mode)
 - PDFKit + NotoSansJP / BIZ UD Mincho / MSGothic fonts
 
-## Rutas (32 archivos)
+## Rutas (31 archivos)
 
 ### Domain CRUD (13)
 
@@ -16,7 +16,7 @@
 | `factories.ts` | CRUD de fábricas / líneas |
 | `employees.ts` | CRUD de empleados |
 | `contracts.ts` | CRUD de contratos individuales |
-| `contracts-batch.ts` | Batch update de contratos |
+| `contracts-batch.ts` | Batch creation: ikkatsu, new-hires, mid-hires, by-line, smart-by-factory |
 | `documents.ts` | CRUD de documentos generados |
 | `shift-templates.ts` | CRUD de patrones de turno/descanso |
 | `calendars.ts` | CRUD de calendarios laborales por fábrica |
@@ -26,19 +26,18 @@
 | `factory-yearly-config.ts` | Config anual por línea (就業日/休日/指揮命令者) |
 | `company-yearly-config.ts` | Config anual por empresa (休日/休暇処理) |
 
-### Document Generation (9)
+### Document Generation (8)
 
 | Archivo | Descripción |
 |---------|-------------|
 | `documents-generate.ts` | Router principal de generación PDF |
-| `documents-generate-individual.ts` | Generación por contrato individual |
-| `documents-generate-single.ts` | Generación single-shot por ID |
-| `documents-generate-batch.ts` | Generación batch por filtros |
+| `documents-generate-individual.ts` | Generación por empleado (keiyakusho/shugyojoken) |
+| `documents-generate-single.ts` | Generación de un contrato (bundle completo) |
+| `documents-generate-batch-bundle.ts` | Bundle ZIP por contrato (handleGenerateBatch) |
 | `documents-generate-batch-factory.ts` | Batch por fábrica completa |
-| `documents-generate-batch-ids.ts` | Batch por IDs de contrato |
-| `documents-generate-batch-set.ts` | Batch por set predefinido |
-| `documents-generate-batch-bundle.ts` | Bundle ZIP de múltiples PDFs |
-| `documents-generate-batch-utils.ts` | Utilidades compartidas de batch |
+| `documents-generate-batch-ids.ts` | Batch por IDs de hakensaki/hakenmoto |
+| `documents-generate-batch-set.ts` | Set combinado por mismo factory/line |
+| `documents-generate-batch-utils.ts` | Utilidades compartidas (mergePdfs, etc.) |
 
 ### Imports (3)
 
@@ -60,14 +59,15 @@
 | `admin-backup.ts` | Backup manual y listado de snapshots |
 | `admin-reset.ts` | DELETE atómico de todos los datos operativos |
 
-## Servicios (26 módulos)
+## Servicios (33 módulos)
 
 | Módulo | Descripción |
 |--------|-------------|
 | `admin-sql.ts` | SELECT safe con regex blocklist |
 | `admin-stats.ts` | Métricas agregadas del sistema |
+| `audit-context.ts` | Contexto de auditoría para mutaciones |
 | `backup.ts` | Backup manual con snapshots |
-| `batch-contracts.ts` | Creación de contratos en lote |
+| `batch-contracts.ts` | Creación de contratos en lote (ikkatsu/new-hires/mid-hires/by-line/smart-batch) |
 | `batch-helpers.ts` | Helpers compartidos para batch |
 | `completeness.ts` | Matriz de completitud de datos |
 | `contract-assignment.ts` | Asignación de empleados a contratos |
@@ -90,8 +90,10 @@
 | `import-utils.ts` | Utilidades compartidas de importación |
 | `koritsu-excel-parser.ts` | Parser Excel específico コーリツ |
 | `koritsu-pdf-parser.ts` | Parser de PDFs anuales コーリツ |
+| `koritsu-types.ts` | Tipos compartidos de コーリツ |
 | `pdf-data-builders.ts` | Construcción de datos para PDFs |
 | `pdf-versioning.ts` | Versionado y trazabilidad de PDFs |
+| `shift-sort.ts` | Ordenamiento canónico de turnos |
 | `takao-detection.ts` | Detección de 高雄 事業所 |
 | `validation.ts` | Validaciones de dominio |
 

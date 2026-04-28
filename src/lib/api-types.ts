@@ -526,6 +526,70 @@ export interface ByLineBatchResult {
   pdfFiles?: BatchDocumentResult["files"];
 }
 
+// ─── Smart-Batch (ikkatsu por fábrica + auto-clasificación) ─────────
+
+export type SmartBatchEmpKind = "continuation" | "mid-hire" | "future-skip";
+
+export interface SmartBatchEmployee {
+  id: number;
+  fullName: string | null;
+  employeeNumber: string | null;
+  billingRate: number | null;
+  hourlyRate: number | null;
+  effectiveHireDate: string | null;
+  kind: SmartBatchEmpKind;
+  contractStartDate: string;
+  contractEndDate: string;
+}
+
+export interface SmartBatchPreviewLine {
+  factory: Factory;
+  globalStartDate: string;
+  globalEndDate: string;
+  continuation: SmartBatchEmployee[];
+  midHires: SmartBatchEmployee[];
+  futureSkip: SmartBatchEmployee[];
+  totalEligible: number;
+  estimatedContracts: number;
+}
+
+export interface SmartBatchPreviewResult {
+  lines: SmartBatchPreviewLine[];
+  skipped: { factoryId?: number; factoryName: string; lineName?: string; reason: string }[];
+  totals: {
+    contracts: number;
+    continuation: number;
+    midHires: number;
+    futureSkip: number;
+  };
+}
+
+export interface SmartBatchPerFactory {
+  factoryId: number;
+  factoryName: string | null;
+  continuationCount: number;
+  midHireCount: number;
+  contractsCreated: number;
+}
+
+export interface SmartBatchCreateResult {
+  created: number;
+  contracts: ByLineCreatedContract[];
+  contractIds: number[];
+  perFactory: SmartBatchPerFactory[];
+  skippedDetails: { factoryId?: number; factoryName: string; lineName?: string; reason: string }[];
+  generateDocs: boolean;
+  pdfFiles?: BatchDocumentResult["files"];
+}
+
+export interface SmartBatchPayload {
+  companyId: number;
+  factoryIds?: number[];
+  globalStartDate: string;
+  globalEndDate: string;
+  generateDocs?: boolean;
+}
+
 // ─── Factory-level document generation ──────────────────────────────
 
 export interface GenerateFactoryResult {

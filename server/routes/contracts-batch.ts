@@ -7,12 +7,14 @@ import {
   analyzeBatch,
   analyzeNewHires,
   analyzeMidHires,
+  analyzeSmartBatch,
   groupEmployeesByIds,
   executeBatchCreate,
   executeNewHiresCreate,
   executeMidHiresCreate,
   executeIndividualBatchCreate,
   executeByLineCreate,
+  executeSmartBatch,
 } from "../services/batch-contracts.js";
 
 // Re-export types used by other route files (documents-generate.ts)
@@ -65,15 +67,27 @@ const previewByIdsSchema = z.object({
   contractEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "contractEnd must be YYYY-MM-DD"),
 });
 
-const individualBatchSchema = z.object({
-  companyId: z.number().int().positive(),
-  factoryId: z.number().int().positive(),
-  employeeIds: z.array(z.number().int().positive()).min(1, "At least 1 employee required"),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  billingRate: z.number().int().positive().optional(),
-  generateDocs: z.boolean().optional(),
-});
+const individualBatchSchema = z
+  .object({
+    companyId: z.number().int().positive(),
+    factoryId: z.number().int().positive(),
+    // Modern: employeeAssignments con info por empleado (preferido).
+    // Legacy: employeeIds plano (deprecated, queda para back-compat).
+    employeeIds: z.array(z.number().int().positive()).optional(),
+    employeeAssignments: z
+      .array(z.object({ employeeId: z.number().int().positive() }))
+      .optional(),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    billingRate: z.number().int().positive().optional(),
+    generateDocs: z.boolean().optional(),
+  })
+  .refine(
+    (d) =>
+      (d.employeeAssignments && d.employeeAssignments.length > 0) ||
+      (d.employeeIds && d.employeeIds.length > 0),
+    { message: "At least 1 employee required (employeeAssignments or employeeIds)" },
+  );
 
 const byLineSchema = z.object({
   companyId: z.number().int().positive(),
@@ -84,6 +98,14 @@ const byLineSchema = z.object({
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
   })).min(1, "At least 1 employee required"),
   generatePdf: z.boolean().optional(),
+});
+
+const smartBatchSchema = z.object({
+  companyId: z.number().int().positive(),
+  factoryIds: z.array(z.number().int().positive()).optional(),
+  globalStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "globalStartDate must be YYYY-MM-DD"),
+  globalEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "globalEndDate must be YYYY-MM-DD"),
+  generateDocs: z.boolean().optional(),
 });
 
 // ── POST /api/contracts/batch/preview ───────────────────────────────
@@ -378,8 +400,30 @@ contractsBatchRouter.post("/batch/individual", async (c) => {
     const parsed = individualBatchSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryId, employeeIds, startDate, endDate, billingRate, generateDocs } = parsed.data;
-    const result = executeIndividualBatchCreate({ companyId, factoryId, employeeIds, startDate, endDate, billingRate });
+    const { companyId, factoryId, employeeAssignments, employeeIds, startDate, endDate, billingRate, generateDocs } = parsed.data;
+
+    // Detectar payload legacy: solo employeeIds, sin employeeAssignments.
+    const usesLegacyEmployeeIdsPayload = !employeeAssignments && Array.isArray(employeeIds);
+
+    // Resolver IDs efectivos: preferir employeeAssignments, fallback a employeeIds.
+    const effectiveIds: number[] = employeeAssignments
+      ? employeeAssignments.map((a) => a.employeeId)
+      : (employeeIds ?? []);
+
+    const result = executeIndividualBatchCreate({
+      companyId,
+      factoryId,
+      employeeIds: effectiveIds,
+      startDate,
+      endDate,
+      billingRate,
+    });
+
+    // Deprecation notice (RFC 7234 Warning + draft Deprecation header)
+    if (usesLegacyEmployeeIdsPayload) {
+      c.header("Deprecation", "true");
+      c.header("Warning", '299 - "employeeIds is deprecated; use employeeAssignments: [{employeeId}] instead"');
+    }
 
     return c.json({
       created: result.length,
@@ -427,6 +471,89 @@ contractsBatchRouter.post("/batch/by-line", async (c) => {
     }, 201);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "By-line batch creation failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// ── POST /api/contracts/batch/smart-by-factory/preview ──────────────
+// Smart-batch: ikkatsu por fábrica con auto-clasificación 継続/途中入社者.
+// Devuelve el detalle por factory para que la UI muestre quién entra como
+// continuación, quién como mid-hire, y quién se descarta (future-skip).
+
+contractsBatchRouter.post("/batch/smart-by-factory/preview", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = smartBatchSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+
+    const { companyId, factoryIds, globalStartDate, globalEndDate } = parsed.data;
+    if (globalStartDate > globalEndDate) {
+      return c.json({ error: "開始日が終了日より後です" }, 400);
+    }
+
+    const { lines, skipped } = await analyzeSmartBatch({
+      companyId,
+      factoryIds,
+      globalStartDate,
+      globalEndDate,
+    });
+
+    const totalContracts = lines.reduce((s, l) => s + l.estimatedContracts, 0);
+    const totalContinuation = lines.reduce((s, l) => s + l.continuation.length, 0);
+    const totalMidHires = lines.reduce((s, l) => s + l.midHires.length, 0);
+    const totalFutureSkip = lines.reduce((s, l) => s + l.futureSkip.length, 0);
+
+    return c.json({
+      lines,
+      skipped,
+      totals: {
+        contracts: totalContracts,
+        continuation: totalContinuation,
+        midHires: totalMidHires,
+        futureSkip: totalFutureSkip,
+      },
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Smart-batch preview failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// ── POST /api/contracts/batch/smart-by-factory ──────────────────────
+// Crea los contratos a partir del análisis. Re-corre analyzeSmartBatch
+// (no aceptamos el preview del cliente para evitar drift de estado)
+// y delega a executeSmartBatch.
+
+contractsBatchRouter.post("/batch/smart-by-factory", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = smartBatchSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+
+    const { companyId, factoryIds, globalStartDate, globalEndDate, generateDocs } = parsed.data;
+    if (globalStartDate > globalEndDate) {
+      return c.json({ error: "開始日が終了日より後です" }, 400);
+    }
+
+    const { lines, skipped } = await analyzeSmartBatch({
+      companyId,
+      factoryIds,
+      globalStartDate,
+      globalEndDate,
+    });
+
+    const result = executeSmartBatch(lines);
+
+    return c.json({
+      created: result.contracts.length,
+      contracts: result.contracts,
+      contractIds: result.contractIds,
+      perFactory: result.perFactory,
+      skippedDetails: skipped,
+      generateDocs: generateDocs || false,
+    }, 201);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Smart-batch creation failed";
     return c.json({ error: message }, 500);
   }
 });

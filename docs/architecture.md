@@ -370,6 +370,61 @@ Evita mezclar condiciones económicas incompatibles en el mismo documento.
 
 ---
 
+## 5.9.1 Mid-hires (途中入社者)
+
+### Archivos
+
+- `src/routes/contracts/mid-hires.tsx`
+- `server/routes/contracts-batch.ts` (`/batch/mid-hires/preview`, `/batch/mid-hires`)
+- `server/services/batch-contracts/read.ts` (`analyzeMidHires`)
+- `server/services/batch-contracts/write.ts` (`executeMidHiresCreate`)
+
+### Qué hace
+
+- carga empleados activos cuyo `actualHireDate ?? hireDate` cae en `[periodStart, today]`
+- `periodStart = startDateOverride ?? subtractMonths(conflictDate, contractPeriod)`
+- crea contratos con `startDate = earliestHire` por rate group y `endDate = conflictDate - 1`
+- excluye empleados sin `hireDate`
+
+---
+
+## 5.9.2 Smart-Batch (auto-clasificación 継続/途中入社者)
+
+### Archivos
+
+- `src/routes/contracts/smart-batch.tsx`
+- `server/routes/contracts-batch.ts` (`/batch/smart-by-factory/preview`, `/batch/smart-by-factory`)
+- `server/services/batch-contracts/read.ts` (`analyzeSmartBatch`)
+- `server/services/batch-contracts/write.ts` (`executeSmartBatch`)
+
+### Qué hace
+
+Resuelve el caso "ikkatsu de fábrica entera con un rango global, queremos
+que los antiguos firmen el rango completo y los tochuunyusha empiecen en
+su nyushabi real".
+
+- recibe `companyId`, `factoryIds[]`, `globalStartDate`, `globalEndDate`
+- carga empleados activos por factory; clasifica cada uno por
+  `effectiveHireDate = actualHireDate ?? hireDate`:
+  - `effectiveHireDate < globalStartDate` (o null) → **継続**: contrato `[globalStartDate, globalEndDate]`
+  - `globalStartDate ≤ effectiveHireDate ≤ globalEndDate` → **途中入社者**: contrato `[effectiveHireDate, globalEndDate]`
+  - `effectiveHireDate > globalEndDate` → **future-skip**: aparece en preview, no se crea contrato
+- preview muestra totales (continuation, midHires, futureSkip, contracts)
+  y desglose por factory
+- creación reusa `executeByLineCreate` por factoryId — agrupa por
+  `(rate, startDate, endDate)` y crea contratos atomicamente
+- `executeByLineCreate` descarta empleados sin rate efectivo (consistente
+  con la primitiva ya existente)
+- multi-factory en una sola operación (loop interno por factory)
+
+### No hace
+
+- no aplica cap automático por 抵触日 — caller decide endDate
+- no valida overlap con contratos previos (consistente con mid-hires)
+- no procesa empleados con `factoryId IS NULL` o `status != 'active'`
+
+---
+
 ## 5.10 Generación documental
 
 ### Archivos
@@ -503,7 +558,7 @@ Actualizar esta arquitectura cada vez que cambie alguno de estos ejes:
 
 - schema
 - rutas
-- workflow batch/new-hires
+- workflow batch/new-hires/mid-hires/smart-batch
 - importers
 - branching documental
 - cliente vertical especial

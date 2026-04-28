@@ -1,6 +1,107 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (C-2 cerrado — seeds anonimizados, PII fuera del HEAD)
+> Última actualización: 2026-04-28 (smart-batch — 9° flujo de generación con auto-clasificación 継続/途中入社者)
+
+## Sesión 2026-04-28h — Smart-Batch: ikkatsu por fábrica con auto-clasificación 継続/途中入社者
+
+**Feature nueva — flujo #9 de generación de bundle.**
+
+### Problema que resuelve
+
+Caso real reportado por el usuario: hacer ikkatsu de toda una fábrica con un
+rango global (ej. `2025/10/1 → 2026/9/30`) y que el sistema **automáticamente**:
+
+- A los empleados antiguos (`hireDate < 2025/10/1`) les genere contrato del
+  rango completo (継続).
+- A los empleados que entraron a mitad del rango (ej. `hireDate = 2025/12/15`)
+  les genere contrato `2025/12/15 → 2026/9/30` (途中入社者), no el rango completo.
+
+Antes había que hacer dos operaciones separadas: ikkatsu para los antiguos y
+luego mid-hires para los tochuunyusha. Ahora una sola operación clasifica
+automáticamente.
+
+### Implementación
+
+**Backend:**
+- `server/services/batch-contracts/types.ts`: tipos `SmartBatchEmployee`,
+  `SmartBatchLine`, `SmartBatchResult`, `SmartBatchParams`,
+  `SmartBatchEmpKind = "continuation" | "mid-hire" | "future-skip"`.
+- `server/services/batch-contracts/read.ts`: `analyzeSmartBatch()` carga
+  empleados activos por factory, normaliza `actualHireDate ?? hireDate`
+  (acepta formato `YYYY-MM-DD` y `YYYY年MM月DD日`), clasifica cada empleado
+  contra `[globalStartDate, globalEndDate]`, devuelve preview con totales.
+- `server/services/batch-contracts/write.ts`: `executeSmartBatch()` reusa
+  `executeByLineCreate` por factoryId — agrupa por `(rate, startDate, endDate)`
+  y crea contratos atomicamente.
+- `server/routes/contracts-batch.ts`: endpoints
+  `POST /batch/smart-by-factory/preview` y `POST /batch/smart-by-factory`.
+
+**Frontend:**
+- `src/routes/contracts/smart-batch.tsx`: page nueva con selector
+  multi-fábrica, inputs `globalStartDate/globalEndDate`, preview con
+  desglose visual por factory (継続 / 途中入社者 / future-skip), confirmación
+  modal con stats, auto-PDF al final.
+- `src/lib/api-types.ts`: tipos `SmartBatchPayload`, `SmartBatchPreviewResult`,
+  `SmartBatchCreateResult`, `SmartBatchPerFactory`.
+- `src/lib/api.ts`: `smartBatchPreview()` + `smartBatchCreate()`.
+- `src/lib/hooks/use-contracts.ts`: `useSmartBatchPreview` + `useSmartBatchCreate`.
+
+### Reglas de clasificación
+
+| Caso | Condición | startDate del contrato | endDate del contrato |
+|---|---|---|---|
+| **継続** | `effectiveHireDate < globalStartDate` o `null` | `globalStartDate` | `globalEndDate` |
+| **途中入社者** | `globalStartDate ≤ effectiveHireDate ≤ globalEndDate` | `effectiveHireDate` | `globalEndDate` |
+| **future-skip** | `effectiveHireDate > globalEndDate` | — | — (no se crea) |
+
+Donde `effectiveHireDate = actualHireDate ?? hireDate`. `actualHireDate` tiene
+prioridad consistente con el resto del módulo (mid-hires line 256 read.ts).
+
+### Decisiones de diseño
+
+1. `hireDate IS NULL` → se trata como 継続 (asumir que es antiguo). Distinto
+   de mid-hires que excluye a los empleados sin fecha.
+2. NO se aplica cap automático por 抵触日. Si el caller quiere capear, lo
+   hace en la UI antes de enviar (consistente con `by-line`).
+3. Multi-factory en una sola operación: loop interno por `factoryId`
+   llamando `executeByLineCreate` (cada factory tiene su propia transacción).
+4. NO valida overlap con contratos previos (consistente con mid-hires).
+5. Preview obligatorio antes de crear (mismo patrón que mid-hires/new-hires).
+
+### Tests
+
+- `server/__tests__/smart-batch.test.ts`: 12 tests cubriendo firma, errores,
+  clasificación 継続/途中/future-skip, prioridad `actualHireDate ?? hireDate`,
+  `hireDate null` como continuation, totales por línea, creación end-to-end
+  con cleanup automático de empleados modificados y contratos creados (date
+  prefix `2099-*`).
+
+### Calidad
+
+- `npm run test:run`: **793/793** tests pasando (44 archivos)
+- `npm run lint`: limpio
+- `npx tsc --noEmit`: 0 errores
+- Drift guard: 31 routes / 33 services sin cambios (smart-batch entró en
+  archivos existentes)
+
+### Archivos tocados
+
+```
+M  CLAUDE.md                                  (+13/−6)
+M  server/routes/contracts-batch.ts           (+93)
+M  server/services/batch-contracts/read.ts    (+148)
+M  server/services/batch-contracts/types.ts   (+39)
+M  server/services/batch-contracts/write.ts   (+61)
+M  src/lib/api-types.ts                       (+64)
+M  src/lib/api.ts                             (+9)
+M  src/lib/hooks/use-contracts.ts             (+28)
+A  server/__tests__/smart-batch.test.ts       (+360)
+A  src/routes/contracts/smart-batch.tsx       (+489)
+```
+
+Commit: `e028199` en branch `claude/add-claude-documentation-68xJu`.
+
+---
 
 ## Sesión 2026-04-28g — C-2: anonimización de seeds (PII fuera del HEAD)
 

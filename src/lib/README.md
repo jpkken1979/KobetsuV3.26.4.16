@@ -1,6 +1,6 @@
 # lib/ — Helpers y Hooks compartidos
 
-## Hooks React Query (21 archivos)
+## Hooks React Query (23 archivos)
 
 ### Dominio — CRUD
 
@@ -9,7 +9,7 @@
 | `use-companies.ts` | Companies CRUD + lista con fábricas embebidas |
 | `use-factories.ts` | Factories CRUD + bulk roles/calendars |
 | `use-employees.ts` | Employees CRUD + filtro por fábrica |
-| `use-contracts.ts` | Contracts CRUD + operaciones batch |
+| `use-contracts.ts` | Contracts CRUD + batch (ikkatsu/new-hires/mid-hires/by-line/smart-batch) |
 | `use-data-check.ts` | Matriz de completitud de datos |
 | `use-shift-templates.ts` | Shift pattern CRUD |
 | `use-company-yearly-config.ts` | Config anual por empresa |
@@ -38,6 +38,7 @@
 | `use-debounce.ts` | Utility debounced value |
 | `use-unsaved-warning.ts` | Guard against accidental navigation with unsaved changes |
 | `use-reduced-motion.ts` | Respeta `prefers-reduced-motion` para animaciones |
+| `use-dashboard-stats.ts` | Stats agregadas para hero spotlight + bento grid |
 
 ## Helpers
 
