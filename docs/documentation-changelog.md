@@ -1,5 +1,25 @@
 # Documentation Changelog
 
+## 2026-04-28
+
+### Cambios
+
+- agregado **flujo #9 Smart-Batch** a la documentación de generación de bundle:
+  - `CLAUDE.md`: tabla de "Document Generation Flows" pasa de 8 a 9 entries; nueva entry `/contracts/smart-batch` en lista de routes
+  - `docs/architecture.md`: nuevas secciones 5.9.1 (Mid-hires) y 5.9.2 (Smart-Batch) con archivos, lógica de clasificación y decisiones de diseño
+  - `README.md`: nueva sección "Flujos de creación de contratos + bundle PDF" listando los 9 entry points
+  - `server/README.md`: actualizados counts a 31 routes y 33 services; descripciones de `contracts-batch.ts` y `batch-contracts.ts` mencionan los 5 sub-flujos
+  - `src/lib/README.md`: count de hooks actualizado a 23, agregado `use-dashboard-stats.ts`
+  - `ESTADO_PROYECTO.md`: nueva sesión 2026-04-28h con detalle de la implementación
+- agregado documentación de gotcha "ESM Import Extensions" (server requiere `.js` aún en imports `.ts`) en `CLAUDE.md`
+
+### Motivo
+
+Smart-Batch resuelve el caso de ikkatsu por fábrica con auto-clasificación
+継続/途中入社者 según `nyushabi`. Antes había que hacer dos operaciones separadas
+(ikkatsu + mid-hires); ahora una sola operación clasifica automáticamente y
+genera el bundle. La documentación reflejaba 8 flujos; ahora son 9.
+
 ## 2026-03-25
 
 ### Cambios
