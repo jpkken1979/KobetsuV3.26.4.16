@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Japanese labor dispatch contract management system (人材派遣個別契約書管理) for **ユニバーサル企画株式会社 (Universal Kikaku KK)**. Manages dispatch worker contracts, employee records, factory configurations, and generates legally compliant PDF documents per 派遣法第26条.
 
-- **Version:** 26.4.16 (ver `ESTADO_PROYECTO.md` para el número canónico y el changelog)
+- **Version:** 26.4.16 (canonical version lives in `ESTADO_PROYECTO.md` — this is the source of truth for changelog and current project status)
 - **Language:** Full-stack TypeScript (ESM modules)
 - **Database:** SQLite (WAL mode) at `data/kobetsu.db`
 - **Usage:** Internal/local-first admin application — public-web hardening is not the main focus, but mutating API routes do use rate limiting via `server/middleware/security.ts`
@@ -52,27 +52,63 @@ Read these first when you need repo-specific context:
 
 ```bash
 npm install
-npm run dev                      # API (8026) + web (3026) via concurrently (tsx loads .env via --env-file)
-npm run dev:server               # API only (tsx watch --env-file .env server/index.ts) — fallback Windows si concurrently falla
-npm run dev:client               # Vite only — correr en una segunda terminal junto con dev:server
-npm run build                    # Production build
-npm run test                     # Runs test:prepare first (drops/recreates data/kobetsu.test.db), then Vitest watch
-npm run test:prepare             # Force-seed data/kobetsu.test.db (never touches data/kobetsu.db)
-npm run test:run                 # Seed + single pass against test DB (serial — --no-file-parallelism)
-npm run test:coverage            # Seed + coverage (globals 50/50/50/50; per-file: contract-dates 95, batch-helpers 85, koritsu-pdf-parser 80)
-npm run test:pdf-snapshots:update # Regenerate PDF snapshot fixtures (UPDATE_PDF_SNAPSHOTS=1) after changing generators
-npm run lint                     # ESLint on src/ and server/
-npm run typecheck                # tsc --noEmit
-npm run db:push                  # Push schema to SQLite (dev shortcut)
-npm run db:studio                # Drizzle Studio GUI
+npm run dev                      # Starts API (port 8026) + web (port 3026) via concurrently
+                                 # - API: tsx watch --env-file .env server/index.ts
+                                 # - Web: Vite dev server with /api proxy
+                                 # Note: --env-file .env is REQUIRED — without it, ADMIN_TOKEN and env vars won't load
+                                 # Fallback for Windows if concurrently fails: run dev:server + dev:client in separate terminals
+
+npm run dev:server               # API server only (tsx watch --env-file .env server/index.ts)
+                                 # Use when dev:client in separate terminal or to avoid concurrently issues on Windows
+
+npm run dev:client               # Vite dev server only (port 3026)
+                                 # Run in a second terminal alongside dev:server if using split setup
+
+npm run build                    # Production build: Vite compiles src/ → dist/ (static files)
+
+npm run test                     # Watch mode: runs test:prepare, then Vitest in watch mode
+                                 # test:prepare is DESTRUCTIVE: drops/recreates data/kobetsu.test.db
+                                 # Production DB (data/kobetsu.db) is NEVER touched
+
+npm run test:prepare             # Drops and recreates test DB with seed data
+                                 # Safe to run standalone; production DB is completely isolated
+                                 # Uses DATABASE_PATH=data/kobetsu.test.db via cross-env
+
+npm run test:run                 # Single-pass test execution: test:prepare + Vitest run (serial)
+                                 # Use in CI or for one-off test runs
+
+npm run test:coverage            # Coverage report: test:prepare + Vitest with --coverage
+                                 # Thresholds: globals 50/50/50/50; per-file: contract-dates 95%, batch-helpers 85%, koritsu-pdf-parser 80%
+
+npm run test:pdf-snapshots:update # Regenerates PDF golden snapshots
+                                 # Use UPDATE_PDF_SNAPSHOTS=1 env var when you intentionally change PDF generators
+                                 # Re-run after modifying any server/pdf/*.ts file
+
+npm run lint                     # ESLint: checks src/ and server/ for style violations
+
+npm run typecheck                # TypeScript: tsc --noEmit (no emit, just type checking)
+                                 # Run before commits to catch type errors
+
+npm run db:push                  # Drizzle: pushes schema.ts changes → data/kobetsu.db
+                                 # Dev shortcut; CI/prod uses migrations instead
+
+npm run db:studio                # Drizzle Studio: GUI explorer for SQLite at http://localhost:3000
+                                 # Useful for inspecting DB state during development
 ```
 
 ### Running Individual Tests
 
 ```bash
 npx vitest run server/__tests__/fixes.test.ts           # Single test file
-npx vitest run -t "calculates OT rates"                 # By test name pattern
-npx vitest run server/__tests__/batch-helpers.test.ts -t "groupEmployeesByRate"  # File + name
+npx vitest run -t "calculates OT rates"                 # By test name pattern (any test matching string)
+npx vitest run server/__tests__/batch-helpers.test.ts -t "groupEmployeesByRate"  # File + name filter
+
+# Drift guard test (validates CLAUDE.md counts)
+npx vitest run server/__tests__/claude-md-drift.test.ts # Checks route and service file counts vs CLAUDE.md
+                                                        # Fails if counts drift; forces doc update alongside code changes
+
+# All tests with coverage (one-shot)
+npm run test:run                                        # Serial execution avoiding SQLite race conditions
 ```
 
 ### PDF Test Scripts
@@ -240,14 +276,39 @@ src/
 - Destructive actions use `ConfirmDialog` (not `window.confirm()`)
 - `src/routeTree.gen.ts` is **auto-generated** by TanStack Router — never edit manually
 
+### Drift Guard Test
+
+A **drift guard test** (`server/__tests__/claude-md-drift.test.ts`) automatically validates that CLAUDE.md counts match the actual number of files:
+
+**What it checks:**
+- `Route files (N` count in CLAUDE.md vs actual `.ts` files in `server/routes/` (first level only)
+- `Service modules (N` count in CLAUDE.md vs actual `.ts` files in `server/services/` (first level only)
+
+**Why it exists:**
+Historical issue: v1↔v3 audit found CLAUDE.md was **lying** (17 vs 30 routes, 21 vs 25 services). Future Claude sessions got misled.
+
+**When it fails:**
+If you add/remove a route or service file without updating CLAUDE.md, `npm run test:run` will fail:
+```
+Drift: server/routes/ has 32 .ts files but CLAUDE.md says 31. Update the doc.
+```
+
+**How to fix:**
+Update the count in CLAUDE.md: `Route files (32` and re-run tests. This forces documentation to stay honest.
+
+**Important notes:**
+- Only counts first-level files (e.g., `server/routes/factories.ts`), NOT subdirs (e.g., `server/routes/factories/`)
+- Helper subdirectories with `factories.ts` + `factories/` are expected; the drift guard counts only top-level `.ts` files
+- Update CLAUDE.md **at the same time** you add/remove routes or services
+
 ### Large Files Warning
+
 - Several route/component files exceed 500 lines. Consider splitting when adding features (line counts are approximate — verify before quoting):
   - Largest route files: `shouheisha.tsx` (foreign recruitment), `employees/index.tsx`, `contracts/index.tsx`, `companies/koritsu.tsx`, `settings/index.tsx`, `import/-import-page.tsx`, `contracts/batch.tsx`
   - Large admin: `admin/-contract-manager.tsx`, `admin/-employee-table.tsx`, `admin/-stats-dashboard.tsx`, `admin/-audit-explorer.tsx`
   - Large contracts: `contracts/mid-hires.tsx`, `contracts/new-hires.tsx`, `contracts/$contractId.tsx`, `contracts/new.tsx`, `history/index.tsx`
   - Large shared: `src/lib/api-types.ts` — interfaces grouped by domain; split if navigation becomes cumbersome
   - Large server: `routes/factories.ts`, `services/batch-contracts.ts`, `services/koritsu-pdf-parser.ts`, `services/import-factories-service.ts`
-  - A **drift guard test** (`claude-md-drift.test.ts`) validates route and service file counts against this section — update counts alongside any add/remove
 - Extract sub-components to separate `-*.tsx` files to keep route files manageable
 - Sheet drawers with custom header buttons: use `hideClose` prop on `SheetContent` + `<SheetClose asChild>` for the custom X button (built-in Radix Close overlaps header buttons)
 - `closingDayText` and `paymentDayText` are free text (`"当月末"`, `"翌月20日"`), NOT numbers — use the `*Text` schema fields in all UI and API
@@ -255,7 +316,28 @@ src/
 
 ### Adding New Routes
 
-TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g., `src/routes/my-page.tsx`) and the route is auto-registered. Use `-` prefix for non-route components (e.g., `-my-component.tsx`). The dev server auto-regenerates `routeTree.gen.ts`.
+TanStack Router uses file-based routing in `src/routes/`. The routing is **automatic** based on file paths:
+
+**File-to-Route Mapping:**
+- `src/routes/index.tsx` → `/`
+- `src/routes/employees.tsx` → `/employees`
+- `src/routes/contracts/$contractId.tsx` → `/contracts/:contractId` (`:contractId` is a param)
+- `src/routes/contracts/-edit-dialog.tsx` → NOT a route (prefix `-` marks it as non-route component)
+
+**Workflow:**
+1. Create new file in `src/routes/` (e.g., `src/routes/my-page.tsx`)
+2. Export a React component as default
+3. Dev server automatically regenerates `src/routeTree.gen.ts` (auto-generated — **never edit manually**)
+4. Route becomes live immediately
+
+**Sub-components and Helpers:**
+- Use `-` prefix for non-route files: `-my-component.tsx`, `-form-section.tsx`
+- These files are importable by routes but do NOT create their own routes
+- Keep route files organized by domain: `contracts/`, `employees/`, `documents/`, etc.
+
+**Important:**
+- `src/routeTree.gen.ts` is **auto-generated** — any manual edits will be overwritten on next dev server restart
+- Each top-level route file should export a single default component
 
 ### Adding New PDF Generators
 
@@ -269,13 +351,25 @@ TanStack Router uses file-based routing in `src/routes/`. Create a new file (e.g
 
 For tasks that touch 3+ files, new features, or architectural changes, use the **SDD workflow** (Spec-Driven Development):
 
-| Command | Phase |
-|---------|-------|
-| `/sdd` | Full 9-phase orchestration |
-| `/sdd-explore` | Phase 1 only (exploration) |
-| `/sdd-propose` | Phase 2 only (proposal) |
+| Command | Phase | Purpose |
+|---------|-------|---------|
+| `/sdd` | Full 9-phase orchestration | Complete workflow: explore → propose → spec → plan → implement → test → review → document → finalize |
+| `/sdd-explore` | Phase 1 only | Investigation: understand requirements, constraints, edge cases |
+| `/sdd-propose` | Phase 2 only | Propose solution: architecture, file structure, API contract |
 
-SDD is defined in `WORKFLOW_RULES.md` and follows 9 phases: Explore → Propose → Spec → Plan → Implement → Test → Review → Document → Finalize.
+**When to use:**
+- Feature request spanning 3+ files
+- Architectural decision (new table, new service layer, new workflow)
+- Refactors with behavioral impact
+- Complex domain logic changes
+
+**When NOT needed:**
+- Bug fixes in a single file
+- Simple additions (new route, new util function)
+- Documentation-only changes
+- Dependency updates
+
+SDD is defined in `WORKFLOW_RULES.md` and follows 9 phases. See that file for detailed workflow and expectations.
 
 ## Database (11 Tables)
 
@@ -413,26 +507,74 @@ Different format from all other companies — 3 separate generators in `server/p
 - **TypeScript:** `camelCase` for variables/functions, `PascalCase` for types/components
 - **Contract numbers:** `KOB-YYYYMM-XXXX` format (e.g., `KOB-202604-0001`)
 
+### TypeScript Standards
+
+Detailed TypeScript/React standards are in `.claude/rules/typescript.md` (auto-injected). Key points:
+
+- **Strict mode:** `noUnusedLocals`, `noUnusedParameters`, `erasableSyntaxOnly` enabled
+- **No `any`:** Use `unknown` + type narrowing instead
+- **Functional components:** Use hooks (`useCallback`, `useRef`, `useMemo`)
+- **Motion variants:** Extract outside component bodies (e.g., `Button-variants.ts`)
+- **Tailwind v4:** Utility-first, no inline styles. Tokens in `src/index.css` via `@theme {}`
+
+**Note:** These standards apply to this project (KobetsuV3). If working in `nexus-app/`, see `nexus-app/` for Electron-specific requirements.
+
 ## Testing
 
 - **Framework:** Vitest (uses `vite.config.ts` implicitly — no separate config)
-- **Serial execution:** all test scripts pass `--no-file-parallelism` to avoid SQLite race conditions
-- **Test DB isolation:** `DATABASE_PATH=data/kobetsu.test.db` via `cross-env`. `test:prepare` drops/recreates it before every run — `data/kobetsu.db` (production) is never touched by tests
-- **Coverage thresholds:** globals 50/50/50/50 (lines/functions/statements/branches), per-file raised: `contract-dates.ts` 95, `batch-helpers.ts` 85, `koritsu-pdf-parser.ts` 80. Coverage include list is scoped to `server/services/**` + `src/routes/companies/-table-*.tsx`
-- **Server tests:** `server/__tests__/` (unit + integration with real SQLite)
-- **Frontend tests:** colocated with components
-- **Drift guard:** `server/__tests__/claude-md-drift.test.ts` counts `.ts` files in `server/routes/` and `server/services/`, then asserts the numbers match the `Route files (N` and `Service modules (N` counts declared in this file. If either count drifts, the test fails — forcing a doc update alongside any code change that adds/removes routes or services.
-- **CI Pipeline:** `.github/workflows/ci.yml` — verify locally with `npm run lint && npm run typecheck && npm run build && npm run test:run`
-- **PDF smoke tests:** standalone scripts in project root (see PDF Test Scripts above). Regenerate golden snapshots with `npm run test:pdf-snapshots:update` after changing any generator
-- Mocks only for external dependencies — prefer real SQLite for integration tests
+- **Serial execution:** all test scripts pass `--no-file-parallelism` to avoid SQLite race conditions on concurrent writes
+- **Test DB isolation:** `DATABASE_PATH=data/kobetsu.test.db` via `cross-env`
+  - `test:prepare` drops/recreates test DB with seed data before every run
+  - **Production DB** (`data/kobetsu.db`) is **NEVER touched** by tests
+  - Safe to run tests while the dev server is running
+
+- **Coverage thresholds:** 
+  - Globals: 50/50/50/50 (lines/functions/statements/branches)
+  - Per-file raised: `contract-dates.ts` 95%, `batch-helpers.ts` 85%, `koritsu-pdf-parser.ts` 80%
+  - Coverage include list scoped to: `server/services/**` + `src/routes/companies/-table-*.tsx`
+  - Run `npm run test:coverage` to generate report
+
+- **Test organization:**
+  - **Server tests:** `server/__tests__/` — unit + integration with real SQLite
+  - **Frontend tests:** colocated with components (e.g., `Button.test.tsx` next to `Button.tsx`)
+  - **Drift guard:** `server/__tests__/claude-md-drift.test.ts` — see section above
+
+- **Common test commands:**
+  ```bash
+  npm run test                          # Watch mode
+  npm run test:run                      # Single pass (CI-friendly)
+  npm run test:coverage                 # Coverage report
+  npm run test:pdf-snapshots:update     # Regenerate PDF golden files
+  npx vitest run -t "contract dates"    # Single test by name pattern
+  ```
+
+- **PDF smoke tests:** 
+  - Standalone scripts in project root: `test-pdf.ts`, `test-keiyakusho-shugyojoken.ts`, etc.
+  - Regenerate golden snapshots with `npm run test:pdf-snapshots:update` after modifying any `server/pdf/*.ts` generator
+  - Output: `output/` directory with generated PDFs
+
+- **Mocking philosophy:**
+  - Mocks only for external dependencies (APIs, file system if unavoidable)
+  - Prefer real SQLite for integration tests — ensures prod-like behavior
+  - Database schema and queries are best tested against real DB, not mocks
+
+- **CI Pipeline:** `.github/workflows/ci.yml` — locally verify with:
+  ```bash
+  npm run lint && npm run typecheck && npm run build && npm run test:run
+  ```
 
 ## Additional Context & Rules
 
 ### Auto-Injected Rules (`.claude/rules/`)
 
-These rules are injected into every session automatically. When they conflict with generic guidance, rules win.
+Every Claude Code session **automatically injects** rules from `.claude/rules/*.md`. When they conflict with generic guidance, **rules always win**.
 
-**Específicas del dominio (críticas para este proyecto):**
+**How it works:**
+1. `.claude/rules/` files are read at session start
+2. Rules override Claude Code default behavior
+3. User-provided rules take priority over global system rules
+
+**Project-specific rules (critical for this project):**
 
 | Rule file | Scope |
 |-----------|-------|
@@ -441,7 +583,10 @@ These rules are injected into every session automatically. When they conflict wi
 | `commits.md` | `<type>(<scope>): <description>` format en español |
 | `language.md` | Respuestas en español, código en inglés, commits en español |
 
-> El resto de reglas (`security.md`, `typescript.md`, `python.md`, `architecture.md`, `memory-engine.md`, `memory-sync.md`, `proactive-memory.md`, `skills-discovery.md`, `ecosystem-usage.md`, `user-identity.md`, etc.) se auto-inyectan en cada sesión desde `.claude/rules/` y `~/.claude/rules/`. Listarlas todas duplica lo que ya está en contexto.
+**Global rules** (also auto-injected from `~/.claude/rules/`):
+Additional rules for security, TypeScript standards, Python standards, architecture, memory engines, and more are automatically loaded. See `.claude/rules/` directory for complete list — these are not repeated here to avoid duplication.
+
+**Note:** If you need to check what rules are in effect, see the `.claude/rules/` directory or look at CLAUDE.md's "Additional Context & Rules" section above.
 
 ### Reference Files
 
