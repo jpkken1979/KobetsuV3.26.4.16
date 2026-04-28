@@ -49,6 +49,11 @@ __pycache__/
 .worktrees/
 .zed/
 
+# Playwright artifacts
+playwright-report/
+test-results/
+playwright/.cache/
+
 # Temporary/debug
 *.log
 db_out*.json

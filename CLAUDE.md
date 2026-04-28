@@ -84,6 +84,12 @@ npm run test:pdf-snapshots:update # Regenerates PDF golden snapshots
                                  # Use UPDATE_PDF_SNAPSHOTS=1 env var when you intentionally change PDF generators
                                  # Re-run after modifying any server/pdf/*.ts file
 
+npm run test:e2e                 # Playwright E2E tests (smoke: dashboard, contracts list, smart-batch)
+                                 # Pre-requisito (una sola vez): npx playwright install chromium
+                                 # Levanta dev server automático, headless, serial.
+npm run test:e2e:ui              # UI Mode interactivo (browseable test runner)
+npm run test:e2e:headed          # Misma suite con browser visible (debugging)
+
 npm run lint                     # ESLint: checks src/ and server/ for style violations
 
 npm run typecheck                # TypeScript: tsc --noEmit (no emit, just type checking)
@@ -634,6 +640,17 @@ Detailed TypeScript/React standards are in `.claude/rules/typescript.md` (auto-i
   ```bash
   npm run lint && npm run typecheck && npm run build && npm run test:run
   ```
+
+- **E2E (Playwright):** `tests/e2e/*.spec.ts` — smoke tests del shell de la app:
+  - `dashboard.spec.ts`: el dashboard carga y la sidebar funciona
+  - `contracts-list.spec.ts`: `/contracts` carga, navegación al wizard
+  - `smart-batch.spec.ts`: `/contracts/smart-batch` carga inputs y reglas 継続/途中入社者 visibles
+  - **No están en `tsconfig.json`** — Playwright usa su propio resolver
+  - Pre-requisito una vez: `npx playwright install chromium`
+  - Correr: `npm run test:e2e` (headless serial, dev server auto-arranca)
+  - `npm run test:e2e:ui` para modo interactivo
+  - Configurado en `playwright.config.ts`: workers=1 (SQLite), retry en CI, baseURL `http://localhost:3026`
+  - Tests deben ser **idempotentes** — usan la DB de prod local (`data/kobetsu.db`), NO escriben datos
 
 ## Additional Context & Rules
 

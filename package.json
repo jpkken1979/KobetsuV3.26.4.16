@@ -21,6 +21,9 @@
     "test:run": "npm run test:prepare && cross-env DATABASE_PATH=data/kobetsu.test.db vitest run --no-file-parallelism",
     "test:coverage": "npm run test:prepare && cross-env DATABASE_PATH=data/kobetsu.test.db vitest run --no-file-parallelism --coverage",
     "test:pdf-snapshots:update": "cross-env UPDATE_PDF_SNAPSHOTS=1 vitest run server/__tests__/pdf-snapshots.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
     "lint": "eslint src/ server/",
     "typecheck": "tsc --noEmit"
   },
@@ -61,6 +64,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4.2.4",
     "@tailwindcss/vite": "^4.2.4",
     "@tanstack/router-devtools": "^1.166.9",

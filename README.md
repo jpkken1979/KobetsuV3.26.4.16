@@ -48,6 +48,7 @@ Puertos por default:
 - `npm run typecheck`: `tsc --noEmit`
 - `npm run test:run`: seed + tests (serial para evitar race en sqlite)
 - `npm run test:coverage`: seed + coverage
+- `npm run test:e2e`: tests E2E con Playwright (requiere `npx playwright install chromium` la primera vez)
 - `npm run build`: build de producción
 
 ## Seguridad admin
