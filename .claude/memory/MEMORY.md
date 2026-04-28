@@ -13,3 +13,4 @@
 - [Sesion 2026-04-28b — Exponer batch factory e IDs como rutas dedicadas](session_2026-04-28b.md) — Crear rutas /documents/batch-factory y /documents/batch-ids con sidebar entries
 - [Sesion 2026-04-28c — Showcase UI/UX batch pages](session_2026-04-28c.md) — BatchPageShell con spotlight + BentoStatsGrid + AnimatedNumber + ParticleBurst + sidebar batch group
 - [Sesion 2026-04-28d — Showcase aplicado a contracts batch + hook DRY](session_2026-04-28d.md) — BatchPageHeader envuelve BatchPageShell, 3 rutas contracts batch heredan showcase, useDashboardStats reusable
+- [Bugfix PDF shift detector uniforme 2026-04-28](bugfix_pdf_shift_detector_2026_04_28.md) — 六甲 con separador 、 perdía 4 turnos; reemplazado split-by-whitespace por detector regex de nombres de turno; 781 tests OK; sin regresión en 高雄/コーリツ

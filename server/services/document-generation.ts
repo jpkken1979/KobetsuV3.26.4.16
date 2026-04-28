@@ -192,17 +192,29 @@ export function buildCommonData(
   const company = c.company;
   const factory = c.factory;
 
-  // Build comprehensive workHours string — prefer full-text workHours if it has more shifts
+  // ─── Shift detection helpers ────────────────
+  // Detect named shifts (昼勤①, 交替勤務②, A勤務, シフト1...) followed by a time pattern.
+  // Works regardless of separator (、 / 　 / \n) — replaces the old whitespace-only heuristic.
+  const NAMED_SHIFT_RE = /(?:[A-Za-z]+|[\u4e00-\u9fff]+[勤直務番])[①-⑩\d\uff10-\uff19]*\s*[：:]?\s*\d{1,2}\s*[時:：]\s*\d{2}/g;
+  const countNamedShifts = (text: string): number => {
+    if (!text) return 0;
+    return (text.match(NAMED_SHIFT_RE) || []).length;
+  };
+  // Normalize separators to \n so renderMultiShift puts one shift per line.
+  // Only kicks in when the text already has named shifts — leaves single-shift text alone.
+  const normalizeShiftText = (text: string): string => {
+    if (!text || text.includes("\n")) return text || "";
+    if (countNamedShifts(text) < 2) return text;
+    return text.replace(/、/g, "\n").trim();
+  };
+
+  // Build comprehensive workHours string — prefer canonical workHours when it has named shifts.
   let workHours = "";
   const fullWorkHours = factory.workHours || "";
-  const fullShiftCount = fullWorkHours.split(/[　\s]+/).filter(s => /[：～]/.test(s)).length;
-  if (fullShiftCount > 2 && fullWorkHours) {
-    // Factory has 3+ shifts stored in free-text field
-    // Split into separate lines by shift name for multi-column PDF layout
-    // "A勤務：7:00～15:30　B勤務：15:30～0:00" → "A勤務：...\nB勤務：..."
-    workHours = fullWorkHours.includes("\n")
-      ? fullWorkHours
-      : fullWorkHours.replace(/　+/g, "\n").trim();
+  const namedShiftCount = countNamedShifts(fullWorkHours);
+  if (namedShiftCount >= 2) {
+    // Canonical multi-shift text (六甲: "昼勤①…、交替勤務②…", 高雄: "A勤務：…　B勤務：…")
+    workHours = normalizeShiftText(fullWorkHours);
   } else if (factory.workHoursDay || factory.workHoursNight) {
     const parts: string[] = [];
     if (factory.workHoursDay) parts.push(`【昼勤】${factory.workHoursDay}`);
@@ -214,30 +226,26 @@ export function buildCommonData(
     workHours = fullWorkHours;
   }
 
-  // Fix #2: Build comprehensive breakTime string with all shifts
-  // Extract shift names from workHours text (e.g., "A勤務：..." → ["A勤務", "D勤務"])
-  const shiftNames: string[] = [];
-  const snRe = /([A-Za-z\u4e00-\u9fff\d]+[勤直務]|シフト\d?)：/g;
-  let snMatch;
-  while ((snMatch = snRe.exec(fullWorkHours)) !== null) shiftNames.push(snMatch[1]);
-
+  // Build comprehensive breakTime string — same detection strategy.
   let breakTime = "";
-  if (factory.breakTimeDay || factory.breakTimeNight) {
-    const hasName = (text: string) => /^[A-Za-z\u4e00-\u9fff\d]+[勤直務]：/.test(text);
-    // If breakTimeDay already contains multi-shift breaks (3+ shifts stored as single field), use as-is
-    const dayText = factory.breakTimeDay || "";
-    const nightText = factory.breakTimeNight || "";
-    if (dayText.includes("\n") || (hasName(dayText) && !nightText)) {
-      // All breaks in one field (3+ shifts) — use directly
-      breakTime = dayText;
-    } else {
-      const parts: string[] = [];
-      const dayLabel = shiftNames[0] || "昼勤";
-      const nightLabel = shiftNames[1] || "夜勤";
-      if (dayText) parts.push(hasName(dayText) ? dayText : `【${dayLabel}】${dayText}`);
-      if (nightText) parts.push(hasName(nightText) ? nightText : `【${nightLabel}】${nightText}`);
-      breakTime = parts.join("\n");
-    }
+  const breakDayText = factory.breakTimeDay || "";
+  const breakNightText = factory.breakTimeNight || "";
+  const breakDayCount = countNamedShifts(breakDayText);
+  const breakNightCount = countNamedShifts(breakNightText);
+
+  if (breakDayCount >= 2) {
+    // Canonical multi-shift breaks live in breakTimeDay (六甲, 高雄).
+    // Ignore breakTimeNight to avoid duplicating the legacy 2-shift fallback.
+    breakTime = normalizeShiftText(breakDayText);
+  } else if (breakDayCount + breakNightCount >= 2) {
+    // Multi-shift split across both legacy fields (rare).
+    breakTime = normalizeShiftText([breakDayText, breakNightText].filter(Boolean).join("\n"));
+  } else if (breakDayText || breakNightText) {
+    // Plain 2-shift legacy (no shift names in text) — wrap with explicit labels.
+    const parts: string[] = [];
+    if (breakDayText) parts.push(`【昼勤】${breakDayText}`);
+    if (breakNightText) parts.push(`【夜勤】${breakNightText}`);
+    breakTime = parts.join("\n");
   } else if (c.breakMinutes) {
     breakTime = `${c.breakMinutes}分`;
   } else if (factory.breakTime) {
