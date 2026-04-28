@@ -7,12 +7,14 @@ import {
   analyzeBatch,
   analyzeNewHires,
   analyzeMidHires,
+  analyzeSmartBatch,
   groupEmployeesByIds,
   executeBatchCreate,
   executeNewHiresCreate,
   executeMidHiresCreate,
   executeIndividualBatchCreate,
   executeByLineCreate,
+  executeSmartBatch,
 } from "../services/batch-contracts.js";
 
 // Re-export types used by other route files (documents-generate.ts)
@@ -84,6 +86,14 @@ const byLineSchema = z.object({
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "endDate must be YYYY-MM-DD"),
   })).min(1, "At least 1 employee required"),
   generatePdf: z.boolean().optional(),
+});
+
+const smartBatchSchema = z.object({
+  companyId: z.number().int().positive(),
+  factoryIds: z.array(z.number().int().positive()).optional(),
+  globalStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "globalStartDate must be YYYY-MM-DD"),
+  globalEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "globalEndDate must be YYYY-MM-DD"),
+  generateDocs: z.boolean().optional(),
 });
 
 // ── POST /api/contracts/batch/preview ───────────────────────────────
@@ -427,6 +437,89 @@ contractsBatchRouter.post("/batch/by-line", async (c) => {
     }, 201);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "By-line batch creation failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// ── POST /api/contracts/batch/smart-by-factory/preview ──────────────
+// Smart-batch: ikkatsu por fábrica con auto-clasificación 継続/途中入社者.
+// Devuelve el detalle por factory para que la UI muestre quién entra como
+// continuación, quién como mid-hire, y quién se descarta (future-skip).
+
+contractsBatchRouter.post("/batch/smart-by-factory/preview", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = smartBatchSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+
+    const { companyId, factoryIds, globalStartDate, globalEndDate } = parsed.data;
+    if (globalStartDate > globalEndDate) {
+      return c.json({ error: "開始日が終了日より後です" }, 400);
+    }
+
+    const { lines, skipped } = await analyzeSmartBatch({
+      companyId,
+      factoryIds,
+      globalStartDate,
+      globalEndDate,
+    });
+
+    const totalContracts = lines.reduce((s, l) => s + l.estimatedContracts, 0);
+    const totalContinuation = lines.reduce((s, l) => s + l.continuation.length, 0);
+    const totalMidHires = lines.reduce((s, l) => s + l.midHires.length, 0);
+    const totalFutureSkip = lines.reduce((s, l) => s + l.futureSkip.length, 0);
+
+    return c.json({
+      lines,
+      skipped,
+      totals: {
+        contracts: totalContracts,
+        continuation: totalContinuation,
+        midHires: totalMidHires,
+        futureSkip: totalFutureSkip,
+      },
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Smart-batch preview failed";
+    return c.json({ error: message }, 500);
+  }
+});
+
+// ── POST /api/contracts/batch/smart-by-factory ──────────────────────
+// Crea los contratos a partir del análisis. Re-corre analyzeSmartBatch
+// (no aceptamos el preview del cliente para evitar drift de estado)
+// y delega a executeSmartBatch.
+
+contractsBatchRouter.post("/batch/smart-by-factory", async (c) => {
+  try {
+    const raw = await c.req.json();
+    const parsed = smartBatchSchema.safeParse(raw);
+    if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
+
+    const { companyId, factoryIds, globalStartDate, globalEndDate, generateDocs } = parsed.data;
+    if (globalStartDate > globalEndDate) {
+      return c.json({ error: "開始日が終了日より後です" }, 400);
+    }
+
+    const { lines, skipped } = await analyzeSmartBatch({
+      companyId,
+      factoryIds,
+      globalStartDate,
+      globalEndDate,
+    });
+
+    const result = executeSmartBatch(lines);
+
+    return c.json({
+      created: result.contracts.length,
+      contracts: result.contracts,
+      contractIds: result.contractIds,
+      perFactory: result.perFactory,
+      skippedDetails: skipped,
+      generateDocs: generateDocs || false,
+    }, 201);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Smart-batch creation failed";
     return c.json({ error: message }, 500);
   }
 });

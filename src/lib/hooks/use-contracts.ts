@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { Contract, BatchCreateResult, BatchDocumentResult, ByLineBatchResult } from "@/lib/api";
+import type { Contract, BatchCreateResult, BatchDocumentResult, ByLineBatchResult, SmartBatchCreateResult } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import { onMutationError } from "@/lib/mutation-helpers";
 import { toast } from "sonner";
@@ -142,6 +142,32 @@ export function useByLineBatchCreate() {
       queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.invalidateAll });
       toast.success("ライン個別作成完了: " + data.created + "件の契約を作成");
+    },
+    onError: (err: unknown) => onMutationError(err),
+  });
+}
+
+// ─── Smart-Batch (ikkatsu por fábrica + auto-clasificación) ─────────
+
+export function useSmartBatchPreview() {
+  return useMutation({
+    mutationFn: api.smartBatchPreview,
+    onError: (err: unknown) => onMutationError(err),
+  });
+}
+
+export function useSmartBatchCreate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: api.smartBatchCreate,
+    onSuccess: (data: SmartBatchCreateResult) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.contracts.invalidateAll });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.invalidateAll });
+      const midHires = data.perFactory.reduce((s, f) => s + f.midHireCount, 0);
+      const continuation = data.perFactory.reduce((s, f) => s + f.continuationCount, 0);
+      toast.success("一括作成完了: " + data.created + "件の契約", {
+        description: "継続 " + continuation + "名 / 途中入社 " + midHires + "名",
+      });
     },
     onError: (err: unknown) => onMutationError(err),
   });

@@ -31,6 +31,26 @@ import {
 } from "../contract-dates.js";
 import type { MidHiresLine, ByIdsGroup } from "./types.js";
 import type { MidHiresResult } from "./types.js";
+import type {
+  SmartBatchEmployee,
+  SmartBatchLine,
+  SmartBatchResult,
+  SmartBatchParams,
+} from "./types.js";
+
+/**
+ * Normaliza un valor de fecha proveniente de la DB a YYYY-MM-DD.
+ * Acepta formatos: "YYYY-MM-DD" (passthrough) o "YYYY年MM月DD日" (legacy seed).
+ * Devuelve null si no es parseable.
+ */
+function normalizeHireDate(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+  const m = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日$/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  return null;
+}
 
 /** Shared batch analysis logic (used by both preview and create) */
 export async function analyzeBatch(
@@ -375,4 +395,132 @@ export async function groupEmployeesByIds(
   }
 
   return { groups: [...groupMap.values()], notFoundIds };
+}
+
+// ─── Smart-Batch: ikkatsu por fábrica con auto-clasificación 継続/途中 ───
+
+/**
+ * Analiza una fábrica (o varias) y clasifica cada empleado activo según su
+ * 入社日 (effectiveHireDate = actualHireDate ?? hireDate) contra el rango
+ * solicitado [globalStartDate, globalEndDate]:
+ *
+ *   • effectiveHireDate < globalStartDate (o null)   → "continuation" (継続)
+ *       contractStart = globalStartDate
+ *   • globalStartDate ≤ effectiveHireDate ≤ globalEndDate → "mid-hire" (途中入社者)
+ *       contractStart = effectiveHireDate
+ *   • effectiveHireDate > globalEndDate              → "future-skip"
+ *       no se incluye en la creación, queda en preview como warning
+ *
+ * En todos los casos contractEnd = globalEndDate. NO aplica cap automático
+ * por 抵触日 — si el caller quiere ese cap, lo hace antes de llamar.
+ *
+ * Empleados sin factoryId asignado (未配属) o con status != "active" no
+ * aparecen en el resultado (los filtra getActiveEmployeesByFactories).
+ */
+export async function analyzeSmartBatch(
+  params: SmartBatchParams,
+): Promise<SmartBatchResult> {
+  const { companyId, factoryIds, globalStartDate, globalEndDate } = params;
+
+  if (globalStartDate > globalEndDate) {
+    throw new Error("globalStartDate debe ser <= globalEndDate");
+  }
+
+  const { targetFactories } = await buildBatchContext(companyId, globalStartDate, factoryIds);
+  const lines: SmartBatchLine[] = [];
+  const skipped: SkipRecord[] = [];
+
+  const allFactoryIds = targetFactories.map((f) => f.id);
+  const empsByFactory = await getActiveEmployeesByFactories(allFactoryIds);
+
+  for (const factory of targetFactories) {
+    const factoryEmps = empsByFactory.get(factory.id) ?? [];
+
+    if (factoryEmps.length === 0) {
+      skipped.push(createSkipRecord(factory, "社員なし"));
+      continue;
+    }
+
+    const continuation: SmartBatchEmployee[] = [];
+    const midHires: SmartBatchEmployee[] = [];
+    const futureSkip: SmartBatchEmployee[] = [];
+
+    for (const emp of factoryEmps) {
+      const effectiveHireDate =
+        normalizeHireDate(emp.actualHireDate) ?? normalizeHireDate(emp.hireDate);
+
+      // future-skip: hireDate posterior al fin del rango → no se crea contrato
+      if (effectiveHireDate && effectiveHireDate > globalEndDate) {
+        futureSkip.push({
+          id: emp.id,
+          fullName: emp.fullName,
+          employeeNumber: emp.employeeNumber,
+          billingRate: emp.billingRate,
+          hourlyRate: emp.hourlyRate,
+          effectiveHireDate,
+          kind: "future-skip",
+          contractStartDate: globalStartDate, // no se usa, pero el tipo lo requiere
+          contractEndDate: globalEndDate,
+        });
+        continue;
+      }
+
+      // mid-hire: hireDate dentro del rango → contrato truncado al ingreso
+      if (effectiveHireDate && effectiveHireDate >= globalStartDate) {
+        midHires.push({
+          id: emp.id,
+          fullName: emp.fullName,
+          employeeNumber: emp.employeeNumber,
+          billingRate: emp.billingRate,
+          hourlyRate: emp.hourlyRate,
+          effectiveHireDate,
+          kind: "mid-hire",
+          contractStartDate: effectiveHireDate,
+          contractEndDate: globalEndDate,
+        });
+        continue;
+      }
+
+      // continuation: hireDate < globalStart o null → contrato del rango completo
+      continuation.push({
+        id: emp.id,
+        fullName: emp.fullName,
+        employeeNumber: emp.employeeNumber,
+        billingRate: emp.billingRate,
+        hourlyRate: emp.hourlyRate,
+        effectiveHireDate,
+        kind: "continuation",
+        contractStartDate: globalStartDate,
+        contractEndDate: globalEndDate,
+      });
+    }
+
+    const totalEligible = continuation.length + midHires.length;
+    if (totalEligible === 0) {
+      skipped.push(createSkipRecord(factory, "対象期間に該当する社員なし"));
+      continue;
+    }
+
+    // Estimación de contratos: agrupando por (rate, startDate, endDate).
+    // Replicamos la cadena de prioridad de executeByLineCreate para preview.
+    const groupKeys = new Set<string>();
+    for (const e of [...continuation, ...midHires]) {
+      const rate = e.billingRate ?? e.hourlyRate ?? factory.hourlyRate ?? 0;
+      if (!rate) continue; // executeByLineCreate descarta empleados sin rate
+      groupKeys.add(`${rate}|${e.contractStartDate}|${e.contractEndDate}`);
+    }
+
+    lines.push({
+      factory,
+      globalStartDate,
+      globalEndDate,
+      continuation,
+      midHires,
+      futureSkip,
+      totalEligible,
+      estimatedContracts: groupKeys.size,
+    });
+  }
+
+  return { lines, skipped };
 }

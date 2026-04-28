@@ -21,6 +21,9 @@ import type {
   MidHiresCreateResult,
   ByLineBatchPayload,
   ByLineBatchResult,
+  SmartBatchPayload,
+  SmartBatchPreviewResult,
+  SmartBatchCreateResult,
   GenerateFactoryResult,
   PreviewByIdsResult,
   GenerateByIdsResult,
@@ -206,6 +209,12 @@ export const api = {
   // By-Line Batch (selección granular por línea, fechas individuales)
   byLineBatchCreate: (data: ByLineBatchPayload) =>
     request<ByLineBatchResult>("/contracts/batch/by-line", { method: "POST", body: JSON.stringify(data) }),
+
+  // Smart Batch (ikkatsu por fábrica con auto-clasificación 継続/途中入社者)
+  smartBatchPreview: (data: SmartBatchPayload) =>
+    request<SmartBatchPreviewResult>("/contracts/batch/smart-by-factory/preview", { method: "POST", body: JSON.stringify(data) }, 60000),
+  smartBatchCreate: (data: SmartBatchPayload) =>
+    request<SmartBatchCreateResult>("/contracts/batch/smart-by-factory", { method: "POST", body: JSON.stringify(data) }, 120000),
 
   bulkDeleteContracts: (ids: number[]) =>
     request<{ success: boolean; deleted: number }>("/contracts/bulk-delete", { method: "POST", body: JSON.stringify({ ids }) }),
