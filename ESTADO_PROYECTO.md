@@ -1,6 +1,47 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (SET生成 error logging fix + deleteMissing flag completada)
+> Última actualización: 2026-04-28 (auditoría profesional aplicada — 13 hallazgos resueltos + drift `.env` cerrado)
+
+## Sesión 2026-04-28f — Auditoría profesional aplicada (13 fixes + B-1)
+
+**3 commits (1f53cb7, 749e480, en curso):**
+
+Audit completa contra OWASP Top 10 + calidad. Resultado: 2 críticos, 4 altos, 6 medios, 7 bajos. **13 hallazgos resueltos** (los 2 restantes son C-2 y B-1, este último cerrado en este mismo bloque).
+
+### Hardening seguridad (commit `1f53cb7`)
+
+- **C-1 (CRÍTICO) — Bypass admin via localhost cerrado**: `server/middleware/security.ts` ahora exige `X-Admin-Token` para TODA mutación POST/PUT/PATCH/DELETE en `/api/admin/*`, incluso desde `127.0.0.1`. GETs siguen permitidos sin token solo en dev+localhost para no romper el panel admin del frontend; en producción todo requiere token.
+- **A-1 — Parser closingDay/paymentDay unificado**: `import-factories/parser.ts` deriva `closingDayText`/`paymentDayText` desde el numérico cuando solo este se provee. Antes, importar Excel con `締め日: "当月末"` perdía el dato silenciosamente.
+- **A-2 — bodyLimit por ruta**: `/api/import/*` ahora acepta hasta 25MB (Koritsu workbooks reales con imágenes). Resto sigue acotado a 5MB. El check de 20MB en `import-koritsu.ts` ya no es código muerto.
+- **A-3 — Zod en admin-rows**: schema completo para query params; reemplaza la validación ad-hoc previa.
+- **A-4 — Cubierto por C-1**: reset-all ahora exige token siempre.
+- **M-3 — IP+UA en audit log**: nuevo helper `services/audit-context.ts` con `buildAuditDetail(c, message, payload?)` que envuelve detail con `{message, ip, userAgent, ts, payload}`. Aplicado en `admin-crud` y `admin-reset` para forensics. Test `admin-reset.test.ts` actualizado para validar el nuevo formato.
+
+### Calidad y mantenibilidad (commit `749e480`)
+
+- **M-1 — Paths absolutos no se filtran**: `factories/excel.ts` y `data-check.ts` ahora devuelven `./DataTotal/${filename}` en lugar de la ruta absoluta del FS del servidor.
+- **M-2 — SQL dump correcto**: `admin-backup/export-sql` ya no escapa `\\` (sqlite no lo interpreta como escape; el output anterior se reimportaba corrupto). Bytes binarios ahora serializados como `X'hex'`.
+- **M-4 — Match exacto first**: `resolveOrCreateCompany` detecta ambigüedad. Si el fuzzy match encuentra >1 candidato, retorna `null` y agrega warning. Antes, el primer hit ganaba según orden de iteración del Map → re-asignaciones silenciosas a empresas equivocadas.
+- **M-5 — Modelo de autorización documentado**: `/documents/download` queda intencionalmente público en local-first; receta para hardening (URLs firmadas, ownership check) si se expone fuera de localhost.
+- **M-6 — Safeguard `db:seed:force`**: aborta si la DB target tiene >100 contratos sin flag `--i-know-what-im-doing`. Test DBs (`*.test.*`) están eximidas. Protege contra wipe accidental.
+- **B-2 — Invariante de `contract-number` documentado**: toda llamada a `generateContractNumber` debe estar dentro de `sqlite.transaction()`. Verificados los 6 call sites actuales (`contracts.ts`, `batch-contracts/write.ts` ×5, `documents-generate-batch-ids.ts`).
+- **B-5 — CLAUDE.md actualizado**: admin-sql usa `stmt.reader` (no regex blocklist); service modules pasan a 33 con `audit-context` agregado.
+
+### Drift `.env` cerrado (este bloque)
+
+- **B-1 — `.env` NO se versiona**: `.gitignore:14-17` excluye `.env` y `.env.*`. Solo `.env.example` queda en git. Política realineada con la realidad operativa después de oscilaciones documentadas en `session_2026-04-21.md`. Actualizados:
+  - `.claude/rules/security.md` — regla activa
+  - `.claude/rules/best-practices.md` — sección Git
+  - `CLAUDE.md` — sección "Files NOT to Commit"
+  - Agregado `data/seed/*.json` a la lista de no-commit (preparación para C-2)
+
+### Pendiente (siguiente sesión)
+
+- **C-2 — Anonimizar `data/seed/*.json`**: 233 KB con PII real de empleados (`THAI HUY DUC`, fechas de nacimiento, nacionalidad). Plan acordado: (1) generar `seed/*.example.json` con datos sintéticos manteniendo invariantes (14 companies / 76 factories / 392 employees para no romper tests); (2) gitignorear `seed/*.json` reales; (3) commit separado para `git filter-repo` del histórico (destructivo, requiere coordinación con clones existentes).
+
+**Estado**: Typecheck ✓ · Lint ✓ · 781 tests ✓ · Postura de seguridad: 6.5/10 → ~8.5/10
+
+---
 
 ## Sesión 2026-04-28e — SET生成 error logging fix
 

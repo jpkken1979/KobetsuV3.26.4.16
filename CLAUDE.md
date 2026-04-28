@@ -601,9 +601,12 @@ Additional rules for security, TypeScript standards, Python standards, architect
 
 ## Files NOT to Commit
 
-`data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `.env.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
+`data/kobetsu.db*`, `data/seed/*.json` (PII real — usar `*.example.json` ficticio), `output/*.pdf`, `node_modules/`, `dist/`, `.env`, `.env.*`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
 
-> **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (decisión explícita — único desarrollador/usuario). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens. Ver `.claude/rules/security.md`.
+> **Política `.env`:** NO se versiona (`.gitignore:14-17`). Solo `.env.example`
+> con placeholders queda en git. Cada developer mantiene su `.env` local con
+> `ADMIN_TOKEN`, etc. Si encontrás un `.env` rastreado: `git rm --cached .env`
+> + **rotar todos los tokens** expuestos. Ver `.claude/rules/security.md`.
 
 ---
 
