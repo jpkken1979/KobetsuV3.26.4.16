@@ -9,3 +9,4 @@
 - [Contract wizard split 既存/新規入社 2026-04-23](decision_contract_wizard_split_2026_04_23.md) — Step 2 divide empleados por hireDate vs startDate, filtros status (active/onLeave/inactive), agrupación por (rate, effectiveStart)
 - [Bug 高雄/HUB calendario PDF 2026-04-27](bugfix_takao_yearly_config_cascade.md) — yearly_config.sagyobiText gana sobre factory.calendar; 74 filas FY 2024/2025 con texto roto limpiadas a NULL; cascada cae correctamente
 - [Factories con punto final NO son duplicados](feedback_factories_punto_final_intencional.md) — `1次旋係.` vs `1次旋係` codifica jobDescription distinto; nunca dedupe/merge/corregir typo del punto. Regla auto-inyectada en `.claude/rules/factories-line-name-punto-final.md`
+- [Sesion 2026-04-28 — Expansión de CLAUDE.md con 8 mejoras](session_2026-04-28.md) — Quick Start expandido, Testing mejorado, TypeScript Standards, SDD guidance, Drift Guard documentado, Auto-Injected Rules

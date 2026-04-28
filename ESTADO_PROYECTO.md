@@ -1,6 +1,26 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-27 (CLAUDE.md drift de hooks + bugfix masivo calendario PDF en factory_yearly_config)
+> Última actualización: 2026-04-28 (expansión de CLAUDE.md con 8 mejoras: Quick Start, Testing, TypeScript Standards, SDD, Drift Guard)
+
+## Sesión 2026-04-28 — Expansión de CLAUDE.md con 8 mejoras de documentación
+
+**1 docs commit:**
+
+- **CLAUDE.md expandido con 8 mejoras** (commit `d742fc5`):
+  1. **Quick Start** — explicación detallada de cada comando npm, notas de seguridad (`--env-file .env` requerido), fallback Windows `dev:server`/`dev:client`
+  2. **Testing** — sección mejorada: Vitest, serial execution, DB isolation, coverage thresholds per-file, PDF snapshots, mocking philosophy
+  3. **TypeScript Standards** — nueva sección resolviendo confusión path-scoping (reglas en `.claude/rules/typescript.md` aplican SOLO a `nexus-app/`)
+  4. **Adding New Routes** — TanStack file-based routing, `-` prefix, `routeTree.gen.ts` auto-generado
+  5. **Drift Guard Test** — documenta test que valida route/service counts vs CLAUDE.md
+  6. **Auto-Injected Rules** — explica mecanismo de inyección automática en sesión
+  7. **SDD Workflow** — guidance cuando usar (3+ files) / cuando no usar (simple fixes)
+  8. **Nota de Seguridad** — `--env-file .env` es CRÍTICO para `npm run dev` — sin él, `ADMIN_TOKEN` no carga
+
+**Estatísticas**: +181 insertions, -36 deletions. Typecheck ✓ · Lint ✓ · 770 tests ✓
+
+**Impacto**: futuras sesiones de Claude Code tendrán documentación más clara sobre comandos, testing strategy, y workflow recommendations.
+
+---
 
 ## Sesión 2026-04-27 — CLAUDE.md drift de hooks + bugfix masivo calendario PDF (高雄/HUB)
 
