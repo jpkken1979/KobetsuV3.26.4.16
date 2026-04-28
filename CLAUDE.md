@@ -151,7 +151,7 @@ server/
 
 **Route files (31 files, grouped by purpose):**
 - **Domain CRUD (13):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`, `factory-yearly-config.ts`, `company-yearly-config.ts`
-- **Document generation (9):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
+- **Document generation (8):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
 - **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
 - **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically)
 
@@ -201,12 +201,12 @@ src/
 │   └── ui-prefs.ts         # Zustand: UI preferences (densidad, filtros persistidos, etc.)
 ├── components/
 │   ├── layout/             # root-layout, sidebar, header, command-palette
-│   ├── ui/                 # 19 reusable primitives (alert, animated, badge, button, card, confirm-dialog, dialog, empty-state, error-boundary, input, page-header, select, skeleton, status-badge, switch, table, tabs, textarea, tooltip)
+│   ├── ui/                 # 23 reusable primitives (alert, animated, animated-number, badge, batch-page-shell, bento-stats-grid, button, card, confirm-dialog, dialog, empty-state, error-boundary, input, page-header, particle-burst, select, skeleton, status-badge, switch, table, tabs, textarea, tooltip)
 │   └── contract/           # 8 wizard step components (batch-shared, cascading-select, contract-form, contract-preview, date-calculator, employee-selector, rate-preview, work-conditions)
 └── routes/                 # TanStack file-based routes (see table below)
 ```
 
-**React Query + utility hooks (`src/lib/hooks/`, 22 archivos):**
+**React Query + utility hooks (`src/lib/hooks/`, 23 archivos):**
 
 > El drift guard automatizado solo cubre `server/routes/` y `server/services/`. Esta tabla de hooks se mantiene a mano — actualizarla al agregar/quitar archivos en `src/lib/hooks/`.
 
@@ -243,6 +243,7 @@ src/
 | `use-debounce.ts` | Debounced value utility |
 | `use-unsaved-warning.ts` | Unsaved changes guard (beforeunload + TanStack Router) |
 | `use-reduced-motion.ts` | Respeta `prefers-reduced-motion` para todos los `motion` |
+| `use-dashboard-stats.ts` | Stats agregadas para hero spotlight + bento grid de páginas batch |
 
 **Frontend routes (`src/routes/`):**
 | Path | Purpose |
