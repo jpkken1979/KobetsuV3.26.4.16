@@ -519,6 +519,22 @@ Different format from all other companies — 3 separate generators in `server/p
 - Vite code splitting: separate chunks for recharts, motion, @tanstack, exceljs
 - TanStack Router plugin: `autoCodeSplitting: true` — every route is lazy-loaded
 
+### ESM Import Extensions — CRITICAL (server only)
+
+The server runs as native ESM via `tsx` (`"type": "module"` in package.json). Relative imports inside `server/` MUST end in `.js` even when the source file is `.ts`:
+
+```typescript
+// ✅ Correct (server/routes/companies.ts):
+import { db } from "../db/index.js";
+import { clientCompanies } from "../db/schema.js";
+
+// ❌ Wrong — runtime error "Cannot find module":
+import { db } from "../db/index";
+import { clientCompanies } from "../db/schema";
+```
+
+This applies ONLY to `server/` files. Frontend code under `src/` uses Vite's bundler resolution and omits extensions normally. Mixing styles between layers is intentional, not a bug.
+
 ### Naming Conventions
 
 - **Database columns:** `snake_case` (Drizzle maps to camelCase in TS)
