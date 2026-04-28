@@ -142,7 +142,7 @@ server/
 │   ├── schema.ts           # 11 tables + relations + indexes
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
 ├── routes/                 # 31 route files (CRUD, docs, batch, imports, admin)
-├── services/               # Business logic (32 modules)
+├── services/               # Business logic (33 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
 ```
@@ -151,9 +151,9 @@ server/
 
 **Route files (31 files, grouped by purpose):**
 - **Domain CRUD (13):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`, `factory-yearly-config.ts`, `company-yearly-config.ts`
-- **Document generation (9):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
+- **Document generation (8):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
 - **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
-- **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically)
+- **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only via `stmt.reader` flag de better-sqlite3 — sin parsing de SQL ni regex), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically). Token obligatorio para TODA mutación (incluso desde localhost) tras hardening C-1 (audit 2026-04-28).
 
 **PDF generators (9 generators + utilities):**
 | Module | Document |
@@ -170,7 +170,7 @@ server/
 | `helpers.ts` | Grid functions, font registration, `getTakaoJigyosho()` |
 | `types.ts` | Shared type definitions for PDF data |
 
-**Service modules (32):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `koritsu-types`, `pdf-data-builders`, `pdf-versioning`, `shift-sort`, `takao-detection`, `validation` (verified: 32 modules)
+**Service modules (33):** `admin-sql`, `admin-stats`, `audit-context`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `koritsu-types`, `pdf-data-builders`, `pdf-versioning`, `shift-sort`, `takao-detection`, `validation` (verified: 33 modules — `audit-context` agregado en C-1/M-3 audit 2026-04-28).
 
 **Conventions:**
 - Routes use `try/catch (err: unknown)` with JSON error responses `{ error: string }`
@@ -201,12 +201,12 @@ src/
 │   └── ui-prefs.ts         # Zustand: UI preferences (densidad, filtros persistidos, etc.)
 ├── components/
 │   ├── layout/             # root-layout, sidebar, header, command-palette
-│   ├── ui/                 # 19 reusable primitives (alert, animated, badge, button, card, confirm-dialog, dialog, empty-state, error-boundary, input, page-header, select, skeleton, status-badge, switch, table, tabs, textarea, tooltip)
+│   ├── ui/                 # 23 reusable primitives (alert, animated, animated-number, badge, batch-page-shell, bento-stats-grid, button, card, confirm-dialog, dialog, empty-state, error-boundary, input, page-header, particle-burst, select, skeleton, status-badge, switch, table, tabs, textarea, tooltip)
 │   └── contract/           # 8 wizard step components (batch-shared, cascading-select, contract-form, contract-preview, date-calculator, employee-selector, rate-preview, work-conditions)
 └── routes/                 # TanStack file-based routes (see table below)
 ```
 
-**React Query + utility hooks (`src/lib/hooks/`, 22 archivos):**
+**React Query + utility hooks (`src/lib/hooks/`, 23 archivos):**
 
 > El drift guard automatizado solo cubre `server/routes/` y `server/services/`. Esta tabla de hooks se mantiene a mano — actualizarla al agregar/quitar archivos en `src/lib/hooks/`.
 
@@ -243,6 +243,7 @@ src/
 | `use-debounce.ts` | Debounced value utility |
 | `use-unsaved-warning.ts` | Unsaved changes guard (beforeunload + TanStack Router) |
 | `use-reduced-motion.ts` | Respeta `prefers-reduced-motion` para todos los `motion` |
+| `use-dashboard-stats.ts` | Stats agregadas para hero spotlight + bento grid de páginas batch |
 
 **Frontend routes (`src/routes/`):**
 | Path | Purpose |
@@ -410,6 +411,23 @@ Schema defined in `server/db/schema.ts`. Drizzle config in `drizzle.config.ts`.
 - `npm run db:seed` is **blocked** by default — requires `--force` flag
 - `npm run db:seed:force` is **DESTRUCTIVE** (drop/recreate all tables)
 - Before any destructive DB operation: `POST /api/backup` or copy `data/kobetsu.db*`
+
+### Seed Data Policy — CRITICAL
+
+`data/seed/*.json` (reales) tienen PII (nombres, fechas de nacimiento, direcciones, visa)
+y están **gitignored**. Solo se versionan `data/seed/*.example.json` con datos sintéticos.
+
+- **Tu PC tiene los `.json` reales** localmente (ignorados por git)
+- **Otros devs / CI** solo tienen los `.example.json`; el `seed.ts` hace fallback automático
+  con un warning `[seed] X.json not found, using X.example.json (synthetic data)`
+- **Para regenerar los `.example`** desde tus `.json` reales (ej. después de actualizar
+  el shape o agregar empresas): `node scripts/anonymize-seeds.cjs`
+- **Los `.example` mantienen** los `companyName` reales (`高雄`, `瑞陵精機株式会社`, etc.)
+  porque la lógica de detección R11 en `takao-detection.ts` y varios tests dependen de
+  esos strings exactos. Solo se anonimiza PII de personas físicas.
+- **Histórico previo**: hasta el commit que introdujo esta política, los `.json` con PII
+  estuvieron en git. Para purgarlos del histórico se requiere `git filter-repo`
+  (destructivo — coordinar con clones existentes). Ver ESTADO_PROYECTO.md sesión 2026-04-28g.
 
 ### Employee Assignment Integrity
 
@@ -600,9 +618,12 @@ Additional rules for security, TypeScript standards, Python standards, architect
 
 ## Files NOT to Commit
 
-`data/kobetsu.db*`, `output/*.pdf`, `node_modules/`, `dist/`, `*.local`, `.env.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
+`data/kobetsu.db*`, `data/seed/*.json` (PII real — usar `*.example.json` ficticio), `output/*.pdf`, `node_modules/`, `dist/`, `.env`, `.env.*`, `*.local`, `src/routeTree.gen.ts`, `.agent/memory/`, `.agent/metrics/`, `__pycache__/`
 
-> **`.env` excepción:** este repo es **privado**, por lo que `.env` SÍ se versiona (decisión explícita — único desarrollador/usuario). En forks o mirrors públicos, sacar inmediatamente con `git rm --cached .env` y rotar todos los tokens. Ver `.claude/rules/security.md`.
+> **Política `.env`:** NO se versiona (`.gitignore:14-17`). Solo `.env.example`
+> con placeholders queda en git. Cada developer mantiene su `.env` local con
+> `ADMIN_TOKEN`, etc. Si encontrás un `.env` rastreado: `git rm --cached .env`
+> + **rotar todos los tokens** expuestos. Ver `.claude/rules/security.md`.
 
 ---
 

@@ -242,10 +242,15 @@ adminBackupRouter.post("/export-sql", async (c) => {
           if (typeof val === "number") return String(val);
           if (typeof val === "bigint") return String(val);
           if (typeof val === "boolean") return val ? "1" : "0";
-          // String or other — escape and quote
-          const escaped = String(val)
-            .replace(/'/g, "''")
-            .replace(/\\/g, "\\\\");
+          // BLOBs (Buffer/Uint8Array) → notación X'hex...' que sí soporta sqlite.
+          if (val instanceof Uint8Array) {
+            return `X'${Buffer.from(val).toString("hex")}'`;
+          }
+          // Strings: solo escapar comilla simple. NO escapar backslash:
+          // sqlite no interpreta \\ como escape — el \\\\ del export anterior
+          // se reimportaba como literal \\, corrompiendo los datos
+          // (M-2, audit 2026-04-28).
+          const escaped = String(val).replace(/'/g, "''");
           return `'${escaped}'`;
         });
 

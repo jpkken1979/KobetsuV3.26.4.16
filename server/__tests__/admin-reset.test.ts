@@ -175,11 +175,18 @@ describe("POST /reset-all — lógica de negocio", () => {
     expect(resetEntry?.userName).toBe("admin");
     expect(resetEntry?.detail).toBeTruthy();
 
-    // detail debe ser JSON con los conteos
+    // detail es JSON envuelto por buildAuditDetail (M-3, audit 2026-04-28):
+    // { message, ip, userAgent, ts, payload: { clientCompanies, employees, ... } }
     if (!resetEntry?.detail) throw new Error("resetEntry or detail missing");
-    const detail = JSON.parse(resetEntry.detail) as Record<string, number>;
-    expect(detail).toHaveProperty("clientCompanies");
-    expect(detail).toHaveProperty("employees");
+    const detail = JSON.parse(resetEntry.detail) as {
+      message: string;
+      ip: string;
+      ts: string;
+      payload: Record<string, number>;
+    };
+    expect(detail.message).toBe("Admin reset-all");
+    expect(detail.payload).toHaveProperty("clientCompanies");
+    expect(detail.payload).toHaveProperty("employees");
   });
 
   it("does NOT delete pre-existing audit_log entries", async () => {

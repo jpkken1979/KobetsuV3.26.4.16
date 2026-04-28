@@ -49,7 +49,14 @@ api.use(
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
-api.use("*", bodyLimit({ maxSize: 5 * 1024 * 1024 })); // 5MB max (Excel imports actuales < 100KB)
+// bodyLimit por ruta: imports Excel pueden superar 5MB con imágenes embebidas
+// (Koritsu workbooks reales). Resto de endpoints siguen acotados a 5MB para
+// limitar superficie de DoS local. Ver A-2 en auditoría 2026-04-28.
+const importBodyLimit = bodyLimit({ maxSize: 25 * 1024 * 1024 });
+const defaultBodyLimit = bodyLimit({ maxSize: 5 * 1024 * 1024 });
+api.use("*", async (c, next) =>
+  (c.req.path.startsWith("/api/import/") ? importBodyLimit : defaultBodyLimit)(c, next),
+);
 api.use("*", securityHeadersMiddleware);
 api.use("*", adminGuardMiddleware);
 

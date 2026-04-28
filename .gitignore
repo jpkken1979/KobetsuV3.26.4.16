@@ -11,6 +11,13 @@ data/kobetsu.db*
 data/kobetsu-auto-*.db
 data/backups/
 
+# Seed data: los .json reales tienen PII (nombres reales, fechas de nacimiento,
+# direcciones, números de visa). Solo se versionan los .example.json con datos
+# sintéticos generados por scripts/anonymize-seeds.cjs. Cada developer mantiene
+# su .json real local; el seed.ts hace fallback a .example.json si el real no existe.
+data/seed/*.json
+!data/seed/*.example.json
+
 # Env and local config
 .env
 .env.*
