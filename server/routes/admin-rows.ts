@@ -6,9 +6,10 @@
  */
 
 import { Hono } from "hono";
+import { z } from "zod";
 import { sqlite } from "../db/index.js";
 
-const VALID_TABLES = new Set([
+const VALID_TABLES = [
   "client_companies",
   "factories",
   "employees",
@@ -17,7 +18,17 @@ const VALID_TABLES = new Set([
   "factory_calendars",
   "shift_templates",
   "audit_log",
-]);
+] as const;
+
+const COLUMN_NAME_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+const querySchema = z.object({
+  table: z.enum(VALID_TABLES),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(25),
+  sortBy: z.string().regex(COLUMN_NAME_RE).optional(),
+  sortDir: z.enum(["asc", "desc"]).default("asc"),
+});
 
 export const adminRowsRouter = new Hono();
 
@@ -34,30 +45,27 @@ export const adminRowsRouter = new Hono();
  * Returns { rows, total, columns, page, pageSize }
  */
 adminRowsRouter.get("/", async (c) => {
-  const table = c.req.query("table");
-  const page = Math.max(1, Number(c.req.query("page") ?? 1));
-  const pageSize = Math.min(100, Math.max(1, Number(c.req.query("pageSize") ?? 25)));
-  const sortBy = c.req.query("sortBy") ?? "";
-  const sortDir = c.req.query("sortDir") === "desc" ? "desc" : "asc";
+  const parsed = querySchema.safeParse({
+    table: c.req.query("table"),
+    page: c.req.query("page"),
+    pageSize: c.req.query("pageSize"),
+    sortBy: c.req.query("sortBy") || undefined,
+    sortDir: c.req.query("sortDir"),
+  });
 
-  if (!table || !VALID_TABLES.has(table)) {
-    return c.json({ error: "Invalid or missing table name" }, 400);
+  if (!parsed.success) {
+    return c.json({ error: "Invalid query parameters", details: parsed.error.issues }, 400);
   }
+
+  const { table, page, pageSize, sortBy, sortDir } = parsed.data;
 
   try {
     // Get total count
     const countResult = sqlite.prepare(`SELECT COUNT(*) as count FROM "${table}"`).get() as { count: number };
     const total = countResult?.count ?? 0;
 
-    // Build ORDER BY clause
-    let orderClause = "";
-    if (sortBy) {
-      // Validate column name (simple alphanumeric + underscore check)
-      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(sortBy)) {
-        return c.json({ error: "Invalid sortBy column" }, 400);
-      }
-      orderClause = ` ORDER BY "${sortBy}" ${sortDir.toUpperCase()}`;
-    }
+    // Build ORDER BY clause (sortBy ya validado por Zod regex)
+    const orderClause = sortBy ? ` ORDER BY "${sortBy}" ${sortDir.toUpperCase()}` : "";
 
     // Build pagination
     const offset = (page - 1) * pageSize;

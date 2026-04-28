@@ -87,23 +87,39 @@ export async function adminGuardMiddleware(c: Context, next: Next) {
   const path = c.req.path;
 
   if (isAdminPath(path)) {
-    // App local-only: si la request viene de localhost, siempre permitir.
-    if (isLocalhost(c)) {
-      await next();
-      return;
-    }
+    const isProd = process.env.NODE_ENV === "production";
+    const isMutation = isMutationMethod(method);
 
-    // Acceso remoto: requiere ADMIN_TOKEN.
+    // ADMIN_TOKEN debe estar configurado siempre que se exponga el panel.
     if (!ADMIN_TOKEN) {
-      return c.json(
-        { error: "Admin routes are disabled: ADMIN_TOKEN is not configured." },
-        503,
-      );
-    }
+      // En producción: bloquear todo /api/admin/*.
+      // En dev: permitir solo GETs desde localhost para no romper flujo, pero
+      // bloquear cualquier mutación (no se puede destruir DB sin token jamás).
+      if (isProd || isMutation || !isLocalhost(c)) {
+        return c.json(
+          { error: "Admin routes are disabled: ADMIN_TOKEN is not configured." },
+          503,
+        );
+      }
+      // dev + GET + localhost → continuar sin token
+    } else {
+      // Con ADMIN_TOKEN configurado: política depende del método.
+      //
+      // - Mutaciones (POST/PUT/PATCH/DELETE): token OBLIGATORIO siempre,
+      //   incluso desde localhost. Esto cierra C-1 (bypass total via
+      //   localhost) y previene CSRF same-origin desde el browser del usuario.
+      //
+      // - Lecturas (GET): token obligatorio en producción; en dev se permite
+      //   desde localhost para que el admin panel sea utilizable sin
+      //   configurar localStorage en cada sesión.
+      const requiresToken = isMutation || isProd || !isLocalhost(c);
 
-    const provided = c.req.header("x-admin-token")?.trim();
-    if (!provided || !safeCompare(provided, ADMIN_TOKEN)) {
-      return c.json({ error: "Unauthorized admin access." }, 401);
+      if (requiresToken) {
+        const provided = c.req.header("x-admin-token")?.trim();
+        if (!provided || !safeCompare(provided, ADMIN_TOKEN)) {
+          return c.json({ error: "Unauthorized admin access." }, 401);
+        }
+      }
     }
   }
 

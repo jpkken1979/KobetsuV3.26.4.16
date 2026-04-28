@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { db, sqlite } from "../db/index.js";
+import { buildAuditDetail } from "../services/audit-context.js";
 import {
   contractEmployees,
   pdfVersions,
@@ -75,13 +76,13 @@ adminResetRouter.post("/", async (c) => {
       db.delete(clientCompanies).run();
     })();
 
-    // Registrar en audit_log (post-transacción)
+    // Registrar en audit_log (post-transacción) con IP+UA para forensics.
     db.insert(auditLog)
       .values({
         action: "delete",
         entityType: "ALL_TABLES",
         entityId: null,
-        detail: JSON.stringify(deletedCounts),
+        detail: buildAuditDetail(c, "Admin reset-all", deletedCounts),
         userName: "admin",
       })
       .run();

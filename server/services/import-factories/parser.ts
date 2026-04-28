@@ -90,10 +90,25 @@ export function buildFactoryData(
     conflictDate: normalizeDateValue(row["抵触日"] ?? row.conflictDate),
     contractPeriod: s("契約期間") || s("contractPeriod") || null,
     calendar: s("カレンダー") || s("calendar") || null,
+    // closingDay/paymentDay: el campo *Text es la fuente de verdad ("当月末",
+    // "翌月20日"). Si el Excel solo provee numérico, derivamos el texto como
+    // `${n}日` para no perder el dato. Ver A-1 en auditoría 2026-04-28.
     closingDay: parseIntVal(row["締め日"] ?? row.closingDay),
-    closingDayText: s("締め日テキスト") || s("closingDayText") || null,
+    closingDayText:
+      s("締め日テキスト") ||
+      s("closingDayText") ||
+      (() => {
+        const n = parseIntVal(row["締め日"] ?? row.closingDay);
+        return n != null ? `${n}日` : null;
+      })(),
     paymentDay: parseIntVal(row["支払日"] ?? row.paymentDay),
-    paymentDayText: s("支払日テキスト") || s("paymentDayText") || null,
+    paymentDayText:
+      s("支払日テキスト") ||
+      s("paymentDayText") ||
+      (() => {
+        const n = parseIntVal(row["支払日"] ?? row.paymentDay);
+        return n != null ? `${n}日` : null;
+      })(),
     bankAccount: s("銀行口座") || s("bankAccount") || null,
     timeUnit: s("時間単位") || s("timeUnit") || null,
     workerClosingDay: s("作業者締め日") || s("workerClosingDay") || null,

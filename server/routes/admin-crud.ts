@@ -7,9 +7,10 @@
  * Drizzle only for the audit-log insert.
  */
 
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { getTableColumns } from "drizzle-orm";
 import { db, sqlite } from "../db/index.js";
+import { buildAuditDetail } from "../services/audit-context.js";
 import {
   auditLog,
   clientCompanies,
@@ -77,12 +78,18 @@ function getValidColumns(tableName: string): Set<string> {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function writeAuditLog(action: "create" | "update" | "delete", entityType: string, entityId: number, detail: string) {
+function writeAuditLog(
+  c: Context,
+  action: "create" | "update" | "delete",
+  entityType: string,
+  entityId: number,
+  message: string,
+) {
   db.insert(auditLog).values({
     action,
     entityType,
     entityId,
-    detail,
+    detail: buildAuditDetail(c, message),
     userName: "admin",
   }).run();
 }
@@ -147,7 +154,7 @@ adminCrudRouter.post("/:table", async (c) => {
       return c.json({ error: "Insert returned no rows" }, 500);
     }
 
-    writeAuditLog("create", ENTITY_TYPE[tableName], inserted.id as number, `Admin created ${ENTITY_TYPE[tableName]} via CRUD panel`);
+    writeAuditLog(c, "create", ENTITY_TYPE[tableName], inserted.id as number, `Admin created ${ENTITY_TYPE[tableName]} via CRUD panel`);
 
     return c.json(inserted, 201);
   } catch (err: unknown) {
@@ -229,7 +236,7 @@ adminCrudRouter.put("/:table/:id", async (c) => {
       return c.json({ error: "Update returned no rows" }, 500);
     }
 
-    writeAuditLog("update", ENTITY_TYPE[tableName], id, `Admin updated ${ENTITY_TYPE[tableName]} id=${id} via CRUD panel`);
+    writeAuditLog(c, "update", ENTITY_TYPE[tableName], id, `Admin updated ${ENTITY_TYPE[tableName]} id=${id} via CRUD panel`);
 
     return c.json(updated);
   } catch (err: unknown) {
@@ -272,7 +279,7 @@ adminCrudRouter.delete("/:table/:id", async (c) => {
 
     sqlite.prepare(`DELETE FROM "${tableName}" WHERE id = ?`).run(id);
 
-    writeAuditLog("delete", ENTITY_TYPE[tableName], id, `Admin deleted ${ENTITY_TYPE[tableName]} id=${id} via CRUD panel`);
+    writeAuditLog(c, "delete", ENTITY_TYPE[tableName], id, `Admin deleted ${ENTITY_TYPE[tableName]} id=${id} via CRUD panel`);
 
     return c.json({ deleted: true, id });
   } catch (err: unknown) {
