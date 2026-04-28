@@ -473,8 +473,23 @@ Rate multipliers per 労働基準法: OT 125%, holiday 135%, 60h+ 150%, night +2
 ### Contract API
 
 POST/PUT `/api/contracts` accepts:
-- **Preferred:** `employeeAssignments: [{ employeeId: number, hourlyRate?: number }]`
-- **Legacy:** `employeeIds: number[]`
+- **Preferred:** `employeeAssignments: [{ employeeId: number, hourlyRate?: number, individualStartDate?: string, individualEndDate?: string, isIndefinite?: boolean }]`
+- **Legacy:** `employeeIds: number[]` — **deprecated**
+
+`POST /api/contracts/batch/individual` también acepta ambos payloads (mismo patrón de deprecación).
+
+#### Deprecación de `employeeIds`
+
+Cuando un cliente envía solo `employeeIds` (sin `employeeAssignments`), la response incluye headers de deprecación estándar:
+
+```
+Deprecation: true
+Warning: 299 - "employeeIds is deprecated; use employeeAssignments: [{employeeId, hourlyRate?}] instead"
+```
+
+El audit log también marca el contrato con `[legacy employeeIds payload]`. Tests en `server/__tests__/employeeids-deprecation.test.ts` validan los headers en ambos endpoints.
+
+**Plan de retirada:** mantener back-compat por al menos 6 meses tras el 2026-04-28. Frontend ya migrado completamente (wizard, batch pages, smart-batch envían `employeeAssignments`). MCP-server y scripts no usan el endpoint con `employeeIds`. Eliminación final cuando audit logs no muestren `[legacy employeeIds payload]` por 90 días consecutivos.
 
 ### Business Day Calculations
 

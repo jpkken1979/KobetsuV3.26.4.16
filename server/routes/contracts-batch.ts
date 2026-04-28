@@ -67,15 +67,27 @@ const previewByIdsSchema = z.object({
   contractEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "contractEnd must be YYYY-MM-DD"),
 });
 
-const individualBatchSchema = z.object({
-  companyId: z.number().int().positive(),
-  factoryId: z.number().int().positive(),
-  employeeIds: z.array(z.number().int().positive()).min(1, "At least 1 employee required"),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  billingRate: z.number().int().positive().optional(),
-  generateDocs: z.boolean().optional(),
-});
+const individualBatchSchema = z
+  .object({
+    companyId: z.number().int().positive(),
+    factoryId: z.number().int().positive(),
+    // Modern: employeeAssignments con info por empleado (preferido).
+    // Legacy: employeeIds plano (deprecated, queda para back-compat).
+    employeeIds: z.array(z.number().int().positive()).optional(),
+    employeeAssignments: z
+      .array(z.object({ employeeId: z.number().int().positive() }))
+      .optional(),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    billingRate: z.number().int().positive().optional(),
+    generateDocs: z.boolean().optional(),
+  })
+  .refine(
+    (d) =>
+      (d.employeeAssignments && d.employeeAssignments.length > 0) ||
+      (d.employeeIds && d.employeeIds.length > 0),
+    { message: "At least 1 employee required (employeeAssignments or employeeIds)" },
+  );
 
 const byLineSchema = z.object({
   companyId: z.number().int().positive(),
@@ -388,8 +400,30 @@ contractsBatchRouter.post("/batch/individual", async (c) => {
     const parsed = individualBatchSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryId, employeeIds, startDate, endDate, billingRate, generateDocs } = parsed.data;
-    const result = executeIndividualBatchCreate({ companyId, factoryId, employeeIds, startDate, endDate, billingRate });
+    const { companyId, factoryId, employeeAssignments, employeeIds, startDate, endDate, billingRate, generateDocs } = parsed.data;
+
+    // Detectar payload legacy: solo employeeIds, sin employeeAssignments.
+    const usesLegacyEmployeeIdsPayload = !employeeAssignments && Array.isArray(employeeIds);
+
+    // Resolver IDs efectivos: preferir employeeAssignments, fallback a employeeIds.
+    const effectiveIds: number[] = employeeAssignments
+      ? employeeAssignments.map((a) => a.employeeId)
+      : (employeeIds ?? []);
+
+    const result = executeIndividualBatchCreate({
+      companyId,
+      factoryId,
+      employeeIds: effectiveIds,
+      startDate,
+      endDate,
+      billingRate,
+    });
+
+    // Deprecation notice (RFC 7234 Warning + draft Deprecation header)
+    if (usesLegacyEmployeeIdsPayload) {
+      c.header("Deprecation", "true");
+      c.header("Warning", '299 - "employeeIds is deprecated; use employeeAssignments: [{employeeId}] instead"');
+    }
 
     return c.json({
       created: result.length,
