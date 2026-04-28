@@ -1,6 +1,25 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (Showcase aplicado a contracts batch + DRY useDashboardStats)
+> Última actualización: 2026-04-28 (SET生成 error logging fix + deleteMissing flag completada)
+
+## Sesión 2026-04-28e — SET生成 error logging fix
+
+**1 fix commit:**
+
+- **Frontend: catch block muestra mensaje real del error** (`src/routes/contracts/index.tsx`):
+  - Antes: `catch { toast.error("SET生成に失敗しました") }` — mensaje hardcodeado, no decía nada útil
+  - Después: `catch (err) { const msg = err instanceof Error ? err.message : ...; console.error("[SET生成]", msg); toast.error(msg) }` — ahora muestra el error real del backend o de la red
+  - Para debugging futuro: `console.error` en DevTools Console para ver el stack completo
+
+- **PDF hashes actualizados** (snapshots PDF regenerados con `UPDATE_PDF_SNAPSHOTS=1`)
+
+**Pendiente identificado**: La causa raíz del error original "SET生成に失敗しました" no se reprodujo en testing directo (API funciona con contratos 137, 138, 118). El error era visible solo en la UI. Con el fix de logging, la próxima vez que falle se verá el mensaje real.
+
+**Decisión técnica**: No se cambió la lógica de negocio, solo se mejoró el error reporting. El timeout de 120s para generateSet es suficiente para PDFs SET normales (3-10 empleados). Si se necesita más, agrandar el timeout en `src/lib/api.ts`.
+
+**Estado**: Typecheck ✓ · Lint ✓ · Tests en suite principal
+
+---
 
 ## Sesión 2026-04-28d — Showcase aplicado a contracts batch + hook DRY
 

@@ -262,8 +262,10 @@ function ContractsList() {
         const zipName = `SET_${parts}.zip`;
         await downloadZip(filenames, zipName);
       }
-    } catch {
-      toast.error("SET生成に失敗しました", { id: "set-gen" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "SET生成に失敗しました";
+      console.error("[SET生成]", msg);
+      toast.error(msg, { id: "set-gen" });
     }
   }, []);
 
