@@ -10,3 +10,4 @@
 - [Bug 高雄/HUB calendario PDF 2026-04-27](bugfix_takao_yearly_config_cascade.md) — yearly_config.sagyobiText gana sobre factory.calendar; 74 filas FY 2024/2025 con texto roto limpiadas a NULL; cascada cae correctamente
 - [Factories con punto final NO son duplicados](feedback_factories_punto_final_intencional.md) — `1次旋係.` vs `1次旋係` codifica jobDescription distinto; nunca dedupe/merge/corregir typo del punto. Regla auto-inyectada en `.claude/rules/factories-line-name-punto-final.md`
 - [Sesion 2026-04-28 — Expansión de CLAUDE.md con 8 mejoras](session_2026-04-28.md) — Quick Start expandido, Testing mejorado, TypeScript Standards, SDD guidance, Drift Guard documentado, Auto-Injected Rules
+- [Sesion 2026-04-28b — Exponer batch factory e IDs como rutas dedicadas](session_2026-04-28b.md) — Crear rutas /documents/batch-factory y /documents/batch-ids con sidebar entries

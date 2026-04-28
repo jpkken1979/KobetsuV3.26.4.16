@@ -1,6 +1,24 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (expansión de CLAUDE.md con 8 mejoras: Quick Start, Testing, TypeScript Standards, SDD, Drift Guard)
+> Última actualización: 2026-04-28 (batch factory e IDs como rutas dedicadas + sidebar)
+
+## Sesión 2026-04-28b — Exponer batch factory e IDs como rutas dedicadas en sidebar
+
+**1 feat commit:**
+
+- **Rutas dedicadas + sidebar entries** (commit `7906823`):
+  - Crear `/documents/batch-factory` (`src/routes/documents/batch-factory.tsx`) — wrapper que monta `FactoryGenerator` con `PageHeader("工場一括生成", ...)`
+  - Crear `/documents/batch-ids` (`src/routes/documents/batch-ids.tsx`) — wrapper que monta `IdGenerator` con `PageHeader("ID指定一括生成", ...)`
+  - Actualizar sidebar (`src/components/layout/sidebar.tsx`) — agregar 2 items bajo "業務ツール": "工場一括" → `/documents/batch-factory` (icon: Package), "ID指定" → `/documents/batch-ids` (icon: Hash)
+  - TanStack Router auto-genera `routeTree.gen.ts` — ambas rutas registradas correctamente
+  - Componentes `FactoryGenerator` e `IdGenerator` reutilizados sin modificación
+  - Tabs originales en `/documents` siguen funcionando (backward compatible)
+
+**Estatísticas**: +40 insertions (2 nuevos route files de 20 líneas cada uno), 2 items sidebar. Typecheck ✓ · Lint ✓ · 776 tests ✓ · drift guard ✓
+
+**Impacto**: Las dos formas "ocultas" de generar PDFs en batch (por factory y por IDs) ahora son **discoverables desde el sidebar** como rutas independientes. Mejora UX eliminando necesidad de navegar a tabs dentro de `/documents`.
+
+---
 
 ## Sesión 2026-04-28 — Expansión de CLAUDE.md con 8 mejoras de documentación
 
