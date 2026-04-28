@@ -1,6 +1,27 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (Showcase UI/UX para batch pages — Opción 3 Avanzada)
+> Última actualización: 2026-04-28 (Showcase aplicado a contracts batch + DRY useDashboardStats)
+
+## Sesión 2026-04-28d — Showcase aplicado a contracts batch + hook DRY
+
+**1 feat commit:**
+
+- **5 rutas batch ahora unificadas con showcase consistente** (commit `2640882`):
+  - **Hook reusable nuevo**: `src/lib/hooks/use-dashboard-stats.ts` (7 líneas) — wrapper de `useQuery` sobre `getDashboardStats`
+  - **`BatchPageHeader`** (en `batch-shared.tsx`) ahora envuelve `BatchPageShell` internamente; mantiene back link "契約一覧へ戻る" arriba; acepta props opcionales (icon/badge/breadcrumb/stats) con defaults sensatos
+  - **3 rutas contracts batch heredan showcase**:
+    - `/contracts/batch` → icon `Zap`, badge `BULK CREATE`, stats `[派遣先, 工場ライン, 稼働契約]`
+    - `/contracts/new-hires` → icon `UserPlus`, badge `NEW HIRES`, stats `[派遣先, 稼働社員, 稼働契約]`
+    - `/contracts/mid-hires` → icon `UserCheck`, badge `MID HIRES`, stats igual a new-hires
+  - **2 rutas documents refactorizadas DRY**: `batch-factory.tsx` y `batch-ids.tsx` consumen el nuevo `useDashboardStats()` hook (eliminando imports inline de useQuery/api/queryKeys)
+
+**Estatísticas**: +74 insertions, -21 deletions. Typecheck ✓ · Lint ✓ · 776 tests ✓
+
+**Impacto**: Las 5 rutas batch del sistema ahora tienen identidad visual showcase consistente — gradient title 135deg, spotlight mouse-tracking, breadcrumb, badge mono, stats inline animados con datos en vivo. Hook DRY listo para reusar en futuras rutas que necesiten dashboard stats.
+
+**Decisión técnica clave**: refactorizar `BatchPageHeader` (compartido) en lugar de duplicar `BatchPageShell` en cada ruta de contracts. Resultado: 3 rutas mejoradas con cambios mínimos por archivo (solo agregan props específicos del dominio).
+
+---
 
 ## Sesión 2026-04-28c — Showcase UI/UX batch pages (BatchPageShell + Bento + Particles)
 
