@@ -49,7 +49,26 @@ function openFolderInOs(dir: string) {
 }
 
 // ─── GET /api/documents/download/:filename ──────────────────────────
-
+//
+// Modelo de autorización (M-5, audit 2026-04-28):
+//
+//   Esta ruta es INTENCIONALMENTE pública (sin auth) en el contexto local-first
+//   actual. Cualquier usuario con acceso al puerto 8026 puede descargar
+//   cualquier PDF generado en `output/{kobetsu,koritsu,roudou}` con sólo
+//   adivinar el nombre de archivo.
+//
+//   Defensa actual:
+//     - `isSafeDownloadFilename`: bloquea `..`, `/`, `\`, NUL, etc.
+//     - `resolveDownloadFilePath`: confina la búsqueda a directorios whitelist.
+//     - Filenames son `KOB-YYYYMM-NNNN_*.pdf`: difíciles de adivinar a ciegas
+//       pero NO criptográficamente impredecibles.
+//
+//   Si en el futuro la app se expone fuera de localhost:
+//     1. Agregar middleware de auth (tipo admin token o JWT por usuario).
+//     2. Validar que el usuario tiene permiso sobre el contrato dueño del PDF
+//        (parsear el contractNumber del filename, lookup contracts.id, check
+//        ownership/role).
+//     3. Considerar URLs firmadas con expiración corta para downloads.
 documentsRouter.get("/download/:filename", async (c) => {
   try {
     const filename = decodeURIComponent(c.req.param("filename")).replace(/\0/g, "");

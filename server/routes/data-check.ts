@@ -241,7 +241,9 @@ dataCheckRouter.post("/export", async (c) => {
       userName: "system",
     }).run();
 
-    return c.json({ success: true, filename, path: filepath, count: results.length });
+    // path relativo al export dir — evita filtrar la ruta absoluta del FS
+    // del servidor en la respuesta (M-1, audit 2026-04-28).
+    return c.json({ success: true, filename, path: `./DataTotal/${filename}`, count: results.length });
   } catch (err: unknown) {
     return c.json({ error: err instanceof Error ? err.message : "Export failed" }, 500);
   }

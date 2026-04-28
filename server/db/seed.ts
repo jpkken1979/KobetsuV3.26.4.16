@@ -54,6 +54,40 @@ function hasForceFlag(): boolean {
   return process.argv.includes("--force") || process.env.FORCE_SEED === "true";
 }
 
+function hasOverrideFlag(): boolean {
+  return (
+    process.argv.includes("--i-know-what-im-doing") ||
+    process.env.SEED_OVERRIDE_PRODUCTION === "true"
+  );
+}
+
+/**
+ * Safeguard adicional (M-6, audit 2026-04-28): si la DB target tiene una
+ * cantidad significativa de datos operativos, asumimos que es producción y
+ * exigimos doble flag para evitar wipes accidentales.
+ *
+ * El check se hace SOLO si la tabla `contracts` ya existe (DB inicializada).
+ */
+function checkProductionGuard(): { isProduction: boolean; reason?: string } {
+  try {
+    const tableExists = sqlite
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='contracts'")
+      .get() as { name?: string } | undefined;
+    if (!tableExists?.name) return { isProduction: false };
+
+    const result = sqlite.prepare("SELECT COUNT(*) as n FROM contracts").get() as { n: number };
+    if (result.n > 100) {
+      return {
+        isProduction: true,
+        reason: `DB target contiene ${result.n} contratos (> 100). Parece producción.`,
+      };
+    }
+    return { isProduction: false };
+  } catch {
+    return { isProduction: false };
+  }
+}
+
 async function seed() {
   console.log("[seed] Starting database seed...");
   console.log(`[seed] DB path: ${dbPath}`);
@@ -64,6 +98,23 @@ async function seed() {
     );
     sqlite.close();
     process.exit(1);
+  }
+
+  // Excepción explícita: si DATABASE_PATH apunta a la DB de tests,
+  // saltamos el guard de producción (los tests deben poder reset libremente).
+  const isTestDb = path.basename(dbPath).includes(".test.");
+  if (!isTestDb) {
+    const guard = checkProductionGuard();
+    if (guard.isProduction && !hasOverrideFlag()) {
+      console.error("");
+      console.error(`[seed] ABORTED: ${guard.reason}`);
+      console.error("[seed] Si realmente querés vaciar y re-seedear esta DB, pasá --i-know-what-im-doing");
+      console.error("[seed] o seteá SEED_OVERRIDE_PRODUCTION=true.");
+      console.error("[seed] (Hacer backup primero: POST /api/backup)");
+      console.error("");
+      sqlite.close();
+      process.exit(1);
+    }
   }
 
   // Recreate tables from scratch so seed always matches current schema.

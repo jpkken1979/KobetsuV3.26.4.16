@@ -515,7 +515,9 @@ factoriesRouter.post("/export-excel", async (c) => {
     return c.json({
       success: true,
       filename,
-      path: filepath,
+      // path relativo al export dir — evita filtrar la ruta absoluta del FS
+      // del servidor en la respuesta (M-1, audit 2026-04-28).
+      path: `./DataTotal/${filename}`,
       factoryCount: allFactories.length,
       companyCount: allCompanies.length,
       factoryYearlyConfigCount: allFactoryYearlyConfigs.length,

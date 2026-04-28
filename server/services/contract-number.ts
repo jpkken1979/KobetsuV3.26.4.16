@@ -5,6 +5,21 @@ import { like, desc } from "drizzle-orm";
 /**
  * Genera un número de contrato único: KOB-YYYYMM-XXXX
  * El contador XXXX se auto-incrementa basado en el máximo existente para ese mes.
+ *
+ * INVARIANTE CRÍTICO (B-2, audit 2026-04-28):
+ *   Toda llamada a esta función debe estar envuelta en `sqlite.transaction(() => ...)`
+ *   junto con el INSERT que la consume. better-sqlite3 serializa transactions
+ *   en un único proceso, garantizando que el SELECT max + INSERT son atómicos.
+ *
+ *   Si en el futuro se escala a múltiples procesos o se inserta fuera de
+ *   transacción, se requiere un schema con sequence dedicada (p.ej. tabla
+ *   `contract_counters` con UPDATE atómico) para evitar colisiones en el
+ *   índice único de `contracts.contract_number`.
+ *
+ *   Llamadores actuales auditados (todos dentro de transaction):
+ *     - server/routes/contracts.ts (POST /contracts)
+ *     - server/services/batch-contracts/write.ts (5 call sites)
+ *     - server/routes/documents-generate-batch-ids.ts
  */
 export function generateContractNumber(startDate: string): string {
   // Parse as local date to avoid UTC timezone offset issues

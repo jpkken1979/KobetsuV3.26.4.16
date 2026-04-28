@@ -142,7 +142,7 @@ server/
 │   ├── schema.ts           # 11 tables + relations + indexes
 │   └── index.ts            # Drizzle + SQLite init (WAL, FK, pragmas)
 ├── routes/                 # 31 route files (CRUD, docs, batch, imports, admin)
-├── services/               # Business logic (32 modules)
+├── services/               # Business logic (33 modules)
 └── pdf/                    # PDFKit generators (9 generators + helpers + types)
     └── fonts/              # NotoSansJP + BIZ UD Mincho
 ```
@@ -153,7 +153,7 @@ server/
 - **Domain CRUD (13):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`, `factory-yearly-config.ts`, `company-yearly-config.ts`
 - **Document generation (8):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
 - **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`
-- **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only with regex blocklist), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically)
+- **Admin panel (7)** (token-gated via `ADMIN_TOKEN` env, see `server/middleware/security.ts`): `admin-tables.ts`, `admin-rows.ts`, `admin-sql.ts` (SELECT-only via `stmt.reader` flag de better-sqlite3 — sin parsing de SQL ni regex), `admin-crud.ts` (DELETE blocked on `client_companies`/`factories`/`audit_log`), `admin-stats.ts`, `admin-backup.ts`, `admin-reset.ts` (POST /reset-all — deletes all operational data atomically). Token obligatorio para TODA mutación (incluso desde localhost) tras hardening C-1 (audit 2026-04-28).
 
 **PDF generators (9 generators + utilities):**
 | Module | Document |
@@ -170,7 +170,7 @@ server/
 | `helpers.ts` | Grid functions, font registration, `getTakaoJigyosho()` |
 | `types.ts` | Shared type definitions for PDF data |
 
-**Service modules (32):** `admin-sql`, `admin-stats`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `koritsu-types`, `pdf-data-builders`, `pdf-versioning`, `shift-sort`, `takao-detection`, `validation` (verified: 32 modules)
+**Service modules (33):** `admin-sql`, `admin-stats`, `audit-context`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `koritsu-types`, `pdf-data-builders`, `pdf-versioning`, `shift-sort`, `takao-detection`, `validation` (verified: 33 modules — `audit-context` agregado en C-1/M-3 audit 2026-04-28).
 
 **Conventions:**
 - Routes use `try/catch (err: unknown)` with JSON error responses `{ error: string }`

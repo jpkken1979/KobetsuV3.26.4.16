@@ -108,10 +108,23 @@ export function resolveOrCreateCompany(
   rawCompany: string,
   companyMap: Map<string, number>,
   companyInfoMap: Map<string, CompanyInfo>,
+  warnings?: string[],
 ): number | null {
+  // 1) Match exacto sobre el nombre normalizado.
   let companyId = companyMap.get(normalizedCompany) ?? null;
 
+  // 2) Match exacto sobre el raw (por si difieren en width/spaces).
+  if (!companyId && rawCompany !== normalizedCompany) {
+    companyId = companyMap.get(rawCompany) ?? null;
+  }
+
+  // 3) Fuzzy (substring bidireccional). Coleccionamos TODOS los candidatos
+  //    para detectar ambigüedad. Si hay más de uno, marcamos warning y NO
+  //    asumimos: el caller skipea esa fila. Antes el primer hit ganaba según
+  //    orden de iteración del Map → reasignaba factories a empresa equivocada.
+  //    Ver M-4 en auditoría 2026-04-28.
   if (!companyId) {
+    const candidates: Array<{ name: string; id: number }> = [];
     for (const [name, id] of companyMap) {
       if (
         name.includes(normalizedCompany) ||
@@ -119,9 +132,19 @@ export function resolveOrCreateCompany(
         name.includes(rawCompany) ||
         rawCompany.includes(name)
       ) {
-        companyId = id;
-        break;
+        if (!candidates.some((c) => c.id === id)) {
+          candidates.push({ name, id });
+        }
       }
+    }
+
+    if (candidates.length === 1) {
+      companyId = candidates[0].id;
+    } else if (candidates.length > 1) {
+      warnings?.push(
+        `会社名「${rawCompany}」が複数の登録企業に該当します (${candidates.map((c) => c.name).join(", ")}). スキップします — 正確な名称で再インポートしてください.`,
+      );
+      return null;
     }
   }
 
@@ -204,6 +227,7 @@ export async function importFactories(
           rawCompany,
           companyMap,
           companyInfoMap,
+          txWarnings,
         );
         if (!companyId) { txSkipped++; continue; }
 
