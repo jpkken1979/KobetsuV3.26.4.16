@@ -77,6 +77,22 @@ function getValidColumns(tableName: string): Set<string> {
   return new Set(Object.keys(cols));
 }
 
+/**
+ * Returns the camelCase → snake_case map for a table.
+ * Drizzle stores SQL names on the column metadata's `.name`; we need them
+ * to build raw SQL because SQLite columns are snake_case.
+ */
+function getColumnSqlMap(tableName: string): Record<string, string> {
+  const table = DRIZZLE_TABLE_MAP[tableName];
+  if (!table) return {};
+  const cols = getTableColumns(table);
+  const map: Record<string, string> = {};
+  for (const [jsKey, col] of Object.entries(cols)) {
+    map[jsKey] = (col as { name: string }).name;
+  }
+  return map;
+}
+
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function writeAuditLog(
@@ -142,9 +158,11 @@ adminCrudRouter.post("/:table", async (c) => {
       body = { ...body, createdAt: now, updatedAt: now };
     }
 
+    const sqlMap = getColumnSqlMap(tableName);
     const columns = Object.keys(body);
     const placeholders = columns.map(() => "?").join(", ");
-    const sql = `INSERT INTO "${tableName}" (${columns.join(", ")}) VALUES (${placeholders}) RETURNING *`;
+    const sqlColumns = columns.map((k) => `"${sqlMap[k] ?? k}"`).join(", ");
+    const sql = `INSERT INTO "${tableName}" (${sqlColumns}) VALUES (${placeholders}) RETURNING *`;
     const values = columns.map((k) => body[k]);
 
     const stmt = sqlite.prepare(sql);
@@ -220,11 +238,15 @@ adminCrudRouter.put("/:table/:id", async (c) => {
       }
     }
 
-    // Inject updatedAt
-    const now = new Date().toISOString().replace("T", " ").slice(0, 19);
-    clean.updatedAt = now;
+    // Inject updatedAt solo si la tabla tiene esa columna
+    // (e.g. shift_templates no la tiene).
+    if (validCols.has("updatedAt")) {
+      const now = new Date().toISOString().replace("T", " ").slice(0, 19);
+      clean.updatedAt = now;
+    }
 
-    const setPairs = Object.keys(clean).map((k) => `"${k}" = ?`).join(", ");
+    const sqlMap = getColumnSqlMap(tableName);
+    const setPairs = Object.keys(clean).map((k) => `"${sqlMap[k] ?? k}" = ?`).join(", ");
     const sqlStr = `UPDATE "${tableName}" SET ${setPairs} WHERE id = ? RETURNING *`;
     const values = [...Object.values(clean), id];
 

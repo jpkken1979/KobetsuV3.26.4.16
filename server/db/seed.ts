@@ -368,6 +368,49 @@ async function seed() {
 
     CREATE INDEX IF NOT EXISTS idx_pdf_versions_generated_at
       ON pdf_versions(generated_at);
+
+    CREATE TABLE IF NOT EXISTS factory_yearly_config (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      factory_id INTEGER NOT NULL REFERENCES factories(id) ON DELETE CASCADE,
+      fiscal_year INTEGER NOT NULL,
+      sagyobi_text TEXT,
+      kyujitsu_text TEXT,
+      kyuukashori TEXT,
+      supervisor_name TEXT,
+      supervisor_dept TEXT,
+      supervisor_role TEXT,
+      supervisor_phone TEXT,
+      hakensaki_manager_name TEXT,
+      hakensaki_manager_dept TEXT,
+      hakensaki_manager_role TEXT,
+      hakensaki_manager_phone TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS factory_yearly_config_unique
+      ON factory_yearly_config(factory_id, fiscal_year);
+    CREATE INDEX IF NOT EXISTS idx_fyc_factory ON factory_yearly_config(factory_id);
+    CREATE INDEX IF NOT EXISTS idx_fyc_fiscal_year ON factory_yearly_config(fiscal_year);
+
+    CREATE TABLE IF NOT EXISTS company_yearly_config (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      company_id INTEGER NOT NULL REFERENCES client_companies(id) ON DELETE CASCADE,
+      fiscal_year INTEGER NOT NULL,
+      kyujitsu_text TEXT,
+      kyuukashori TEXT,
+      hakensaki_manager_name TEXT,
+      hakensaki_manager_dept TEXT,
+      hakensaki_manager_role TEXT,
+      hakensaki_manager_phone TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS company_yearly_config_unique
+      ON company_yearly_config(company_id, fiscal_year);
+    CREATE INDEX IF NOT EXISTS idx_cyc_company ON company_yearly_config(company_id);
+    CREATE INDEX IF NOT EXISTS idx_cyc_fiscal_year ON company_yearly_config(fiscal_year);
   `);
 
   console.log("[seed] Tables created/verified");

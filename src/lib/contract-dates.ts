@@ -1,6 +1,23 @@
-function isBusinessDay(date: Date) {
+function isWeekend(date: Date) {
   const day = date.getDay();
-  return day !== 0 && day !== 6;
+  return day === 0 || day === 6;
+}
+
+// Mirror exacto de server/services/contract-dates.ts#isFactoryClosureDay.
+// 年末年始: Dec 29-31 + Jan 1-3 / GW: Apr 29 + May 3-6 / お盆: Aug 13-16.
+export function isFactoryClosureDay(date: Date): boolean {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  if (month === 12 && day >= 29) return true;
+  if (month === 1 && day <= 3) return true;
+  if (month === 4 && day === 29) return true;
+  if (month === 5 && day >= 3 && day <= 6) return true;
+  if (month === 8 && day >= 13 && day <= 16) return true;
+  return false;
+}
+
+function isBusinessDay(date: Date) {
+  return !isWeekend(date) && !isFactoryClosureDay(date);
 }
 
 function shiftBusinessDays(date: Date, businessDays: number) {
