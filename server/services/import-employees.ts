@@ -69,18 +69,16 @@ function resolveCompanyFromDispatch(
   if (!rawDispatch) return { companyId: null, resolvedFactoryName: null };
 
   const resolution = resolveDispatch(rawDispatch);
-  const fullCompanyName = resolution.companyName;
-  const resolvedFactoryName = resolution.factoryName;
+  let companyId = companyMap.get(resolution.companyName) ?? null;
 
-  let companyId = companyMap.get(fullCompanyName) ?? null;
-
+  // Si no se encontró por nombre exacto, intentar por fuzzy match de nombres cortos
+  // (la columna E/派遣先 contiene "高雄工業株式会社 営業本部..." pero el dispatch-map
+  // solo tiene "高雄工業 本社")
   if (!companyId) {
     for (const [name, id] of companyMap) {
       if (
-        name.includes(fullCompanyName) ||
-        fullCompanyName.includes(name) ||
-        name.includes(rawDispatch) ||
-        rawDispatch.includes(name)
+        resolution.companyName.includes(name) ||
+        name.includes(resolution.companyName)
       ) {
         companyId = id;
         break;
@@ -88,7 +86,7 @@ function resolveCompanyFromDispatch(
     }
   }
 
-  return { companyId, resolvedFactoryName };
+  return { companyId, resolvedFactoryName: resolution.factoryName };
 }
 
 /**
@@ -125,6 +123,45 @@ export function buildEmployeeData(
   const rawDispatch = String(row.companyName || row["派遣先"] || "").trim();
   const { companyId, resolvedFactoryName } = resolveCompanyFromDispatch(rawDispatch, companyMap);
 
+  // Intentar extraer department real desde la columna 派遣先 (E) que contiene
+  // el hierarchy completo: "高雄工業株式会社 営業本部 第一営業部本社営業課"
+  // Cuando 配属先 (F) solo tiene el shift type (ej: " lift作業"), el department
+  // real está en la columna 派遣先 (E) después del nombre de empresa.
+  function extractDepartmentFromDispatch(raw: string): string | null {
+    if (!raw) return null;
+    // La columna E viene de DBGenzaiX: "高雄工業株式会社 営業本部 第一営業部本社営業課"
+    // Necesitamos extraer "営業本部 第一営業部 本社営業課" (con espacios correctos)
+    const parts = raw.split(/\s+/);
+    if (parts.length <= 1) return null;
+    // El department es todo excepto la primera parte (nombre de empresa)
+    let dept = parts.slice(1).join(" ");
+    // Normalizar espacios inconsistentes entre Excel y DB:
+    // Excel tiene "第一営業部本社営業課" pero DB tiene "第一営業部 本社営業課"
+    // Agregar espacio después de 部 cuando sigue texto (no espacio)
+    dept = dept.replace(/部([^　 ])/g, '部 $1');
+    // Verificar que parezca un department real (contiene 部 o 課)
+    if (/[部課]/.test(dept)) {
+      return dept;
+    }
+    return null;
+  }
+
+  let dept = normalizePlacement(row.department || row["配属先"]);
+  let line = normalizePlacement(row.lineName || row["配属ライン"] || row["ライン"]);
+  let effectiveFactoryName = resolvedFactoryName ?? null;
+
+  // Si dept parece ser solo un shift type (ej: " lift作業", "フォーク作業", "人有")
+  // en vez de un department real (que contiene 部, 課, 本部), intentar extraer
+  // el department desde 派遣先 (columna E que tiene el hierarchy completo)
+  const SHIFT_TYPE_MARKERS = /^(?:lift|人有|フォーク|班|工区|作業)/i;
+  const isShiftTypeOnly = dept.length > 0 && SHIFT_TYPE_MARKERS.test(dept);
+  if (isShiftTypeOnly) {
+    const extractedDept = extractDepartmentFromDispatch(rawDispatch);
+    if (extractedDept) {
+      dept = extractedDept;
+    }
+  }
+
   const rawGender = String(row.gender || row["性別"] || "").trim();
   const gender =
     rawGender === "男" ? "male"
@@ -143,10 +180,6 @@ export function buildEmployeeData(
     .filter(Boolean)
     .join(" ")
     .trim();
-
-  let dept = normalizePlacement(row.department || row["配属先"]);
-  let line = normalizePlacement(row.lineName || row["配属ライン"] || row["ライン"]);
-  let effectiveFactoryName = resolvedFactoryName;
 
   const composite = parseHaizokusaki(dept);
   if (composite) {
