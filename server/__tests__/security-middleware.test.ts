@@ -33,6 +33,7 @@ function buildApp(mod: SecurityModule): Hono {
   app.use("*", mod.adminGuardMiddleware);
   app.get("/api/health", (c) => c.json({ ok: true }));
   app.post("/api/contracts", (c) => c.json({ created: true }));
+  app.post("/api/backup", (c) => c.json({ filename: "kobetsu-auto-test.db" }));
   app.get("/api/admin/tables", (c) => c.json({ tables: [] }));
   app.post("/api/admin/sql", (c) => c.json({ rows: [] }));
   app.delete("/api/admin/crud/x/1", (c) => c.json({ deleted: true }));
@@ -104,6 +105,20 @@ describe("adminGuardMiddleware: con ADMIN_TOKEN configurado", () => {
     expect(res.status).toBe(200);
   });
 
+  it("protege POST /api/backup con el mismo token admin", async () => {
+    const mod = await loadModule({ ADMIN_TOKEN: TOKEN, NODE_ENV: "test" });
+    const app = buildApp(mod);
+
+    const unauthorized = await app.request("/api/backup", { method: "POST" });
+    expect(unauthorized.status).toBe(401);
+
+    const authorized = await app.request("/api/backup", {
+      method: "POST",
+      headers: { "x-admin-token": TOKEN },
+    });
+    expect(authorized.status).toBe(200);
+  });
+
   it("permite GET /api/admin/* sin token desde localhost en dev (UX shortcut)", async () => {
     const mod = await loadModule({ ADMIN_TOKEN: TOKEN, NODE_ENV: "test" });
     const app = buildApp(mod);
@@ -156,6 +171,13 @@ describe("adminGuardMiddleware: sin ADMIN_TOKEN configurado", () => {
     const mod = await loadModule({ ADMIN_TOKEN: undefined, NODE_ENV: "test" });
     const app = buildApp(mod);
     const res = await app.request("/api/admin/sql", { method: "POST", body: "{}" });
+    expect(res.status).toBe(503);
+  });
+
+  it("en dev bloquea POST /api/backup si no hay ADMIN_TOKEN", async () => {
+    const mod = await loadModule({ ADMIN_TOKEN: undefined, NODE_ENV: "test" });
+    const app = buildApp(mod);
+    const res = await app.request("/api/backup", { method: "POST" });
     expect(res.status).toBe(503);
   });
 });

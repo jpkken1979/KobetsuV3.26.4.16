@@ -27,6 +27,8 @@ Variables relevantes:
 - `ADMIN_TOKEN` (obligatorio en producción para rutas `/api/admin/*`)
 - `API_RATE_LIMIT_WINDOW_MS`
 - `API_RATE_LIMIT_MAX`
+- `BACKUP_KEEP_COUNT` (default `10`)
+- `BACKUP_INTERVAL_HOURS` (default `24`)
 
 ## Arranque local
 
@@ -50,12 +52,21 @@ Puertos por default:
 - `npm run test:coverage`: seed + coverage
 - `npm run test:e2e`: tests E2E con Playwright (requiere `npx playwright install chromium` la primera vez)
 - `npm run build`: build de producción
+- `npm run verify`: lint + typecheck + tests + build
 
 ## Seguridad admin
 
 - En producción, si `ADMIN_TOKEN` no está definido, `/api/admin/*` queda deshabilitado.
 - Si `ADMIN_TOKEN` está definido, se requiere header `x-admin-token`.
+- Las mutaciones admin y `POST /api/backup` requieren `x-admin-token` incluso en localhost.
 - El frontend puede enviarlo guardando `adminApiToken` en `localStorage`.
+
+## Dependencias
+
+`npm audit` reporta una vulnerabilidad moderada transitiva de `uuid` vía `exceljs`.
+La corrección sugerida por npm baja `exceljs` a `3.4.0`, un cambio mayor hacia atrás
+para un flujo crítico de importación/exportación Excel; no aplicar `npm audit fix --force`
+sin validar esos flujos.
 
 ## Flujos de creación de contratos + bundle PDF
 

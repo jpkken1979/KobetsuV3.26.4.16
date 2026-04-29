@@ -21,8 +21,8 @@ function isMutationMethod(method: string): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
 }
 
-function isAdminPath(path: string): boolean {
-  return path.startsWith("/api/admin/");
+function isAdminProtectedPath(path: string): boolean {
+  return path.startsWith("/api/admin/") || path === "/api/backup";
 }
 
 function getClientId(c: Context): string {
@@ -86,7 +86,7 @@ export async function adminGuardMiddleware(c: Context, next: Next) {
   const method = c.req.method.toUpperCase();
   const path = c.req.path;
 
-  if (isAdminPath(path)) {
+  if (isAdminProtectedPath(path)) {
     const isProd = process.env.NODE_ENV === "production";
     const isMutation = isMutationMethod(method);
 
