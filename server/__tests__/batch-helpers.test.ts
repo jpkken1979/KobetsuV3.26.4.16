@@ -241,6 +241,66 @@ describe("groupEmployeesByRate", () => {
     expect(groups.size).toBe(1);
     expect(groups.get(1600)?.length).toBe(3);
   });
+
+  // ─── REGRESSION GUARDS para `??` vs `||` ─────────────────────────────
+  // Si alguien cambia el operador `??` por `||` en la prioridad de tarifas
+  // (`billingRate ?? hourlyRate ?? fallback`), 0 sería tratado como falsy y
+  // caería al siguiente fallback. CLAUDE.md exige `??` siempre — estos tests
+  // detectan el bug.
+  describe("?? vs || semantics — billingRate=0 must NOT fall back", () => {
+    it("billingRate=0 with hourlyRate=1500 → empleado se descarta (rate=0), NO se agrupa en 1500", () => {
+      // Con `??` la prioridad da rate=0 → continue → grupo vacío
+      // Con `||` daría rate=1500 → grupo 1500 con un empleado (BUG)
+      const emps = [
+        makeEmployee({ id: 1, billingRate: 0, hourlyRate: 1500 }),
+      ];
+      const groups = groupEmployeesByRate(emps, 2000);
+      expect(groups.size).toBe(0);
+      expect(groups.get(1500)).toBeUndefined();
+      expect(groups.get(2000)).toBeUndefined();
+    });
+
+    it("billingRate=null, hourlyRate=0 → empleado se descarta, NO usa fallback", () => {
+      const emps = [
+        makeEmployee({ id: 1, billingRate: null, hourlyRate: 0 }),
+      ];
+      const groups = groupEmployeesByRate(emps, 1500);
+      expect(groups.size).toBe(0);
+      expect(groups.get(1500)).toBeUndefined();
+    });
+
+    it("fallbackRate=0 con billingRate y hourlyRate null → descarta, NO crashea", () => {
+      const emps = [
+        makeEmployee({ id: 1, billingRate: null, hourlyRate: null }),
+      ];
+      const groups = groupEmployeesByRate(emps, 0);
+      expect(groups.size).toBe(0);
+    });
+
+    it("mezcla: empleado con billingRate=0 se descarta mientras otros válidos se agrupan", () => {
+      const emps = [
+        makeEmployee({ id: 1, billingRate: 0, hourlyRate: 1500 }),    // descartado
+        makeEmployee({ id: 2, billingRate: 1800, hourlyRate: null }),  // grupo 1800
+        makeEmployee({ id: 3, billingRate: null, hourlyRate: 1800 }),  // grupo 1800
+      ];
+      const groups = groupEmployeesByRate(emps, null);
+      expect(groups.size).toBe(1);
+      expect(groups.get(1800)?.length).toBe(2);
+      expect(groups.get(0)).toBeUndefined();
+      expect(groups.get(1500)).toBeUndefined();
+    });
+
+    it("billingRate negativa también queda como rate válido (no es 0 ni null)", () => {
+      // Edge case: aunque negativa no tiene sentido, `??` la pasa.
+      // Documenta el comportamiento actual — la validación de >= 0 va en otra capa.
+      const emps = [
+        makeEmployee({ id: 1, billingRate: -100, hourlyRate: 1500 }),
+      ];
+      const groups = groupEmployeesByRate(emps, null);
+      expect(groups.size).toBe(1);
+      expect(groups.get(-100)?.length).toBe(1);
+    });
+  });
 });
 
 // ─── buildRateGroupList ─────────────────────────────────────────────

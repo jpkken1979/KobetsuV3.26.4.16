@@ -21,6 +21,7 @@ export default defineConfig({
       provider: "v8",
       include: [
         "server/services/**/*.ts",
+        "server/routes/**/*.ts",
         "src/routes/companies/-table-*.tsx",
       ],
       thresholds: {
@@ -29,6 +30,25 @@ export default defineConfig({
         statements: 50,
         branches: 50,
         perFile: false,
+        // Per-file floors for invariants documented in CLAUDE.md.
+        "server/services/contract-dates.ts": {
+          lines: 95,
+          functions: 95,
+          statements: 95,
+          branches: 90,
+        },
+        "server/services/batch-helpers.ts": {
+          lines: 85,
+          functions: 85,
+          statements: 85,
+          branches: 80,
+        },
+        "server/services/koritsu-pdf-parser.ts": {
+          lines: 80,
+          functions: 80,
+          statements: 80,
+          branches: 70,
+        },
       },
     },
   },
