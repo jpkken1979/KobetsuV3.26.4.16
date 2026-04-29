@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { api, type Contract } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, isSafePreviewUrl } from "@/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { createFileRoute } from "@tanstack/react-router";
@@ -242,7 +242,7 @@ function DocumentsPage() {
               </div>
 
               {/* Quick preview for keiyakusho when no contract selected */}
-              {previewUrl && !selectedContractId && (
+              {isSafePreviewUrl(previewUrl) && !selectedContractId && (
                 <div className="overflow-hidden rounded-xl border border-border/60 bg-card shadow-[var(--shadow-card)]">
                   <div className="flex items-center justify-between border-b border-border/60 p-3.5">
                     <h3 className="text-sm font-semibold">PDF プレビュー</h3>

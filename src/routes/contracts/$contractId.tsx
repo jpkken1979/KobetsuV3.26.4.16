@@ -201,9 +201,14 @@ function ContractDetail() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
+  // Cierra FRONT-MED-1 (audit 2026-04-29): rechazá `:contractId` que no sea
+  // un entero positivo finito antes de hacer el fetch (evita `/api/contracts/NaN`).
+  const isValidId = Number.isInteger(id) && id > 0;
+
   const { data: contract, isLoading, error } = useQuery({
     queryKey: queryKeys.contracts.detail(id),
     queryFn: () => api.getContract(id),
+    enabled: isValidId,
   });
 
   // Generate PDF
@@ -246,6 +251,22 @@ function ContractDetail() {
       toast.error("完全削除に失敗しました");
     },
   });
+
+  if (!isValidId) {
+    return (
+      <AnimatedPage className="flex flex-col items-center justify-center py-32">
+        <AlertTriangle className="h-12 w-12 text-amber-500/50" />
+        <p className="mt-4 text-lg font-bold text-muted-foreground">無効な契約ID</p>
+        <p className="mt-1 text-sm text-muted-foreground/60">ID: {contractId}</p>
+        <Link
+          to="/contracts"
+          className="btn-press mt-6 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+        >
+          契約一覧へ戻る
+        </Link>
+      </AnimatedPage>
+    );
+  }
 
   if (isLoading) {
     return (

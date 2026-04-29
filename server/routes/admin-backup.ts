@@ -13,6 +13,7 @@ import { Hono } from "hono";
 import fs from "node:fs";
 import path from "node:path";
 import { createAutoBackup } from "../services/backup.js";
+import { sanitizeErrorMessage } from "../services/error-utils.js";
 
 export const adminBackupRouter = new Hono();
 
@@ -28,6 +29,31 @@ interface BackupEntry {
 // ─── Helpers ────────────────────────────────────────────────────────
 
 const DATA_DIR = path.resolve("data");
+
+/**
+ * Resuelve un filename a su path absoluto dentro de DATA_DIR rechazando
+ * symlinks y traversal. Devuelve null si el path es inválido.
+ *
+ * Cierra BACK-HIGH-2 (audit 2026-04-29): un atacante con write en data/
+ * podía plantar `kobetsu-evil.db -> /etc/passwd` y el restore copiaba el
+ * target sobre kobetsu.db. `path.resolve + startsWith` no detectaba
+ * symlinks; ahora rechazamos cualquier non-regular file y comparamos
+ * realpath contra realpath(DATA_DIR).
+ */
+function resolveBackupPath(filename: string): string | null {
+  const candidate = path.join(DATA_DIR, filename);
+  if (!candidate.startsWith(DATA_DIR + path.sep)) return null;
+  if (!fs.existsSync(candidate)) return null;
+
+  const lstat = fs.lstatSync(candidate);
+  if (!lstat.isFile()) return null; // rechaza symlinks, dirs, devices
+
+  const realDataDir = fs.realpathSync(DATA_DIR);
+  const realPath = fs.realpathSync(candidate);
+  if (!realPath.startsWith(realDataDir + path.sep)) return null;
+
+  return realPath;
+}
 
 /** List all .db files in data/ directory */
 function listDbFiles(): BackupEntry[] {
@@ -61,8 +87,7 @@ adminBackupRouter.get("/", async (c) => {
     const backups = listDbFiles();
     return c.json({ backups });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Failed to list backups: ${message}` }, 500);
+    return c.json({ error: `Failed to list backups: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -89,8 +114,7 @@ adminBackupRouter.post("/", async (c) => {
       backups,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Failed to create backup: ${message}` }, 500);
+    return c.json({ error: `Failed to create backup: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -117,15 +141,9 @@ adminBackupRouter.post("/restore", async (c) => {
       }, 400);
     }
 
-    const backupPath = path.join(DATA_DIR, filename);
-
-    // Path confinement: prevent directory traversal
-    if (!backupPath.startsWith(DATA_DIR + path.sep)) {
-      return c.json({ error: "Invalid path." }, 400);
-    }
-
-    if (!fs.existsSync(backupPath)) {
-      return c.json({ error: `Backup file not found: ${filename}` }, 404);
+    const backupPath = resolveBackupPath(filename);
+    if (!backupPath) {
+      return c.json({ error: `Backup file not found or invalid: ${filename}` }, 404);
     }
 
     const activeDbPath = path.join(DATA_DIR, "kobetsu.db");
@@ -143,8 +161,7 @@ adminBackupRouter.post("/restore", async (c) => {
       restoredFrom: filename,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Failed to restore backup: ${message}` }, 500);
+    return c.json({ error: `Failed to restore backup: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -174,23 +191,16 @@ adminBackupRouter.delete("/:filename", async (c) => {
       return c.json({ error: "Cannot delete the active database file." }, 400);
     }
 
-    const filePath = path.join(DATA_DIR, filename);
-
-    // Path confinement: prevent directory traversal
-    if (!filePath.startsWith(DATA_DIR + path.sep)) {
-      return c.json({ error: "Invalid path." }, 400);
-    }
-
-    if (!fs.existsSync(filePath)) {
-      return c.json({ error: `Backup file not found: ${filename}` }, 404);
+    const filePath = resolveBackupPath(filename);
+    if (!filePath) {
+      return c.json({ error: `Backup file not found or invalid: ${filename}` }, 404);
     }
 
     fs.unlinkSync(filePath);
 
     return c.json({ deleted: true, filename });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Failed to delete backup: ${message}` }, 500);
+    return c.json({ error: `Failed to delete backup: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -267,7 +277,6 @@ adminBackupRouter.post("/export-sql", async (c) => {
       filename: `kobetsu-dump-${new Date().toISOString().slice(0, 10)}.sql`,
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Failed to export SQL: ${message}` }, 500);
+    return c.json({ error: `Failed to export SQL: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });

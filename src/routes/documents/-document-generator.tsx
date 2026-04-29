@@ -1,5 +1,5 @@
 import { type Contract } from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, isSafePreviewUrl } from "@/lib/utils";
 import { type UseMutationResult } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -346,7 +346,7 @@ export function DocumentGenerator({
 
       {/* PDF Preview */}
       <AnimatePresence>
-        {previewUrl && (
+        {isSafePreviewUrl(previewUrl) && (
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.98 }}
             animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}

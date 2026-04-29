@@ -193,7 +193,7 @@ export function BackupManager() {
                       title="Download backup file"
                       onClick={() => {
                         const url = `/api/admin/backups/download?filename=${encodeURIComponent(backup.filename)}`;
-                        window.open(url, "_blank");
+                        window.open(url, "_blank", "noopener,noreferrer");
                       }}
                     >
                       <Download className="h-4 w-4" aria-hidden="true" />

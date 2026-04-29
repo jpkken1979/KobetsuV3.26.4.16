@@ -156,7 +156,6 @@ function makeContract(overrides: Record<string, unknown> = {}) {
     },
     employees: [],
     ...overrides,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
 

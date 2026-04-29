@@ -15,3 +15,14 @@ export function toLocalDateStr(date: Date): string {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+/**
+ * Permite sólo URLs internas relativas (`/api/...` o `/output/...`) para usarse
+ * como `src` de un `<iframe>`. Cierra FRONT-MED-3 (audit 2026-04-29): si en
+ * algún flujo futuro `previewUrl` viniera de un input externo, esto evita que
+ * el iframe cargue contenido arbitrario (ej. `javascript:`, `data:`, dominio externo).
+ */
+export function isSafePreviewUrl(url: string | null | undefined): url is string {
+  if (!url) return false;
+  return url.startsWith("/api/") || url.startsWith("/output/");
+}

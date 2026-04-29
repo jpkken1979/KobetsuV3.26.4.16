@@ -74,7 +74,7 @@ export function RatePreview() {
                       aria-label="基本時給"
                       value={value || ""}
                       onChange={(e) =>
-                        handleBaseRateChange(parseInt(e.target.value) || 0)
+                        handleBaseRateChange(parseInt(e.target.value, 10) || 0)
                       }
                       className="w-full border-b-2 border-primary/40 bg-transparent font-mono text-3xl font-bold text-primary tabular-nums outline-none transition-colors focus:border-primary"
                       step={50}

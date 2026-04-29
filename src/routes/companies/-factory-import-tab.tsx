@@ -23,7 +23,7 @@ export function FactoryImportTab() {
   });
 
   const downloadTemplate = () => {
-    window.open("/api/import/factories/template", "_blank");
+    window.open("/api/import/factories/template", "_blank", "noopener,noreferrer");
   };
 
   const parseExcelRows = async (f: File): Promise<Record<string, unknown>[]> => {

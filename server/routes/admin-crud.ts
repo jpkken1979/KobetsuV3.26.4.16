@@ -11,6 +11,7 @@ import { Hono, type Context } from "hono";
 import { getTableColumns } from "drizzle-orm";
 import { db, sqlite } from "../db/index.js";
 import { buildAuditDetail } from "../services/audit-context.js";
+import { sanitizeErrorMessage } from "../services/error-utils.js";
 import {
   auditLog,
   clientCompanies,
@@ -158,8 +159,7 @@ adminCrudRouter.post("/:table", async (c) => {
 
     return c.json(inserted, 201);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Insert failed: ${message}` }, 500);
+    return c.json({ error: `Insert failed: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -240,8 +240,7 @@ adminCrudRouter.put("/:table/:id", async (c) => {
 
     return c.json(updated);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Update failed: ${message}` }, 500);
+    return c.json({ error: `Update failed: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -283,7 +282,6 @@ adminCrudRouter.delete("/:table/:id", async (c) => {
 
     return c.json({ deleted: true, id });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Delete failed: ${message}` }, 500);
+    return c.json({ error: `Delete failed: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });

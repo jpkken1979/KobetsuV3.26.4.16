@@ -13,7 +13,6 @@
  * cobertura real. El cast asume que `executeBatchCreate`/`executeNewHiresCreate`
  * solo consultan los campos provistos (id, fullName, effectiveHireDate, etc.).
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, afterEach } from "vitest";
 import { db } from "../db/index.js";
 import { contracts, contractEmployees, auditLog } from "../db/schema.js";

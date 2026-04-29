@@ -237,7 +237,7 @@ export function WorkConditions() {
               type="number"
               value={data.breakMinutes || ""}
               onChange={(e) =>
-                updateField("breakMinutes", parseInt(e.target.value) || 0)
+                updateField("breakMinutes", parseInt(e.target.value, 10) || 0)
               }
               aria-required="true"
               className={inputClass}
