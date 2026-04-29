@@ -34,6 +34,15 @@ sqlite.pragma("foreign_keys = ON");
 
 const db = drizzle(sqlite, { schema });
 
+function parseJsonOrThrow<T>(raw: string, sourceLabel: string): T {
+  try {
+    return JSON.parse(raw) as T;
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new Error(`[seed] Invalid JSON in ${sourceLabel}: ${detail}`, { cause: err });
+  }
+}
+
 function loadJson<T>(filename: string): T {
   const filepath = path.join(seedDir, filename);
   if (!fs.existsSync(filepath)) {
@@ -42,12 +51,12 @@ function loadJson<T>(filename: string): T {
     if (fs.existsSync(fallbackPath)) {
       console.warn(`[seed] ${filename} not found, using ${fallback} (synthetic data)`);
       const raw = fs.readFileSync(fallbackPath, "utf-8");
-      return JSON.parse(raw) as T;
+      return parseJsonOrThrow<T>(raw, fallback);
     }
     throw new Error(`[seed] Neither ${filename} nor ${fallback} exists in ${seedDir}`);
   }
   const raw = fs.readFileSync(filepath, "utf-8");
-  return JSON.parse(raw) as T;
+  return parseJsonOrThrow<T>(raw, filename);
 }
 
 function normalizeCompanyName(name: string): string {

@@ -17,6 +17,7 @@ import { spawn } from "node:child_process";
 import { ZipFile } from "yazl";
 import { isSafeDownloadFilename, resolveDownloadFilePath } from "../services/document-files.js";
 import { getContractData } from "../services/document-generation.js";
+import { sanitizeErrorMessage } from "../services/error-utils.js";
 import {
   readContractDocIndex,
   KOBETSU_OUTPUT_DIR,
@@ -99,8 +100,7 @@ documentsRouter.get("/download/:filename", async (c) => {
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return c.json({ error: `Failed to download document: ${message}` }, 500);
+    return c.json({ error: `Failed to download document: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -135,8 +135,7 @@ documentsRouter.get("/list/:contractId", async (c) => {
 
     return c.json({ files });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return c.json({ error: `Failed to list documents: ${message}` }, 500);
+    return c.json({ error: `Failed to list documents: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -171,8 +170,7 @@ documentsRouter.get("/labor-history", async (c) => {
 
     return c.json({ files });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return c.json({ error: `Failed to list labor history: ${message}` }, 500);
+    return c.json({ error: `Failed to list labor history: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -191,8 +189,7 @@ documentsRouter.post("/open-folder", async (c) => {
     openFolderInOs(dir);
     return c.json({ success: true, type, path: dir });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return c.json({ error: `Failed to open folder: ${message}` }, 500);
+    return c.json({ error: `Failed to open folder: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });
 
@@ -283,7 +280,6 @@ documentsRouter.post("/download-zip", async (c) => {
       },
     });
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return c.json({ error: `Failed to create ZIP: ${message}` }, 500);
+    return c.json({ error: `Failed to create ZIP: ${sanitizeErrorMessage(err)}` }, 500);
   }
 });

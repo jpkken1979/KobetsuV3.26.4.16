@@ -57,7 +57,7 @@ export function EmployeeImportDialog({ open, onClose }: Props) {
   const importMu = useImportEmployees();
 
   const downloadTemplate = () => {
-    window.open("/api/employees/import/template", "_blank");
+    window.open("/api/employees/import/template", "_blank", "noopener,noreferrer");
   };
 
   const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {

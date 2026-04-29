@@ -102,6 +102,21 @@ describe("sanitizeFilename", () => {
   it("returns empty string unchanged", () => {
     expect(sanitizeFilename("")).toBe("");
   });
+
+  it("collapses traversal segments (..)", () => {
+    expect(sanitizeFilename("../evil")).toBe("__evil");
+    expect(sanitizeFilename("..")).toBe("_");
+    expect(sanitizeFilename("....pdf")).toBe("_pdf");
+    // `/` se vuelve `_` primero, después `..` colapsa por separado en cada run
+    expect(sanitizeFilename("a/../../b")).toBe("a_____b");
+    // sin `/` para sembrar traversal
+    expect(sanitizeFilename("a..b..c")).toBe("a_b_c");
+  });
+
+  it("caps overly long filenames at 200 chars", () => {
+    const long = "a".repeat(300);
+    expect(sanitizeFilename(long).length).toBe(200);
+  });
 });
 
 // ─── document-files: isSafeDownloadFilename ───────────────────────────

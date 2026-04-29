@@ -176,7 +176,7 @@ server/
 | `helpers.ts` | Grid functions, font registration, `getTakaoJigyosho()` |
 | `types.ts` | Shared type definitions for PDF data |
 
-**Service modules (33):** `admin-sql`, `admin-stats`, `audit-context`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `koritsu-types`, `pdf-data-builders`, `pdf-versioning`, `shift-sort`, `takao-detection`, `validation` (verified: 33 modules — `audit-context` agregado en C-1/M-3 audit 2026-04-28).
+**Service modules (34):** `admin-sql`, `admin-stats`, `audit-context`, `backup`, `batch-contracts`, `batch-helpers`, `completeness`, `contract-assignment`, `contract-dates`, `contract-number`, `contract-writes`, `dashboard-stats`, `db-utils`, `dispatch-mapping`, `document-files`, `document-generation`, `document-index`, `employee-mapper`, `error-utils`, `factory-roles`, `factory-yearly-config`, `haizokusaki-parser`, `import-assignment`, `import-employees`, `import-factories-service`, `import-utils`, `koritsu-excel-parser`, `koritsu-pdf-parser`, `koritsu-types`, `pdf-data-builders`, `pdf-versioning`, `shift-sort`, `takao-detection`, `validation` (verified: 34 modules — `error-utils` agregado en LOW-1 hardening audit 2026-04-29).
 
 **Conventions:**
 - Routes use `try/catch (err: unknown)` with JSON error responses `{ error: string }`

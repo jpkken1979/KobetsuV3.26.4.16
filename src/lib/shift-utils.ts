@@ -160,7 +160,7 @@ export function calcMinsBetween(start: string, end: string): number {
 function fmtTimeJP(time: string): string {
   if (!time) return "";
   const [h, m] = time.split(":");
-  return `${parseInt(h)}時${m}分`;
+  return `${parseInt(h, 10)}時${m}分`;
 }
 
 export function composeWorkHoursText(shifts: ShiftEntry[]): string {

@@ -7,6 +7,7 @@
 
 import { Hono } from "hono";
 import { parseAndValidate, executeSql } from "../services/admin-sql.js";
+import { sanitizeErrorMessage } from "../services/error-utils.js";
 
 export const adminSqlRouter = new Hono();
 
@@ -32,7 +33,6 @@ adminSqlRouter.post("/", async (c) => {
     const result = executeSql(sql);
     return c.json(result);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    return c.json({ error: `Query execution failed: ${message}` }, 400);
+    return c.json({ error: `Query execution failed: ${sanitizeErrorMessage(err)}` }, 400);
   }
 });
