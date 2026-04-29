@@ -1,6 +1,87 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-28 (smart-batch — 9° flujo de generación con auto-clasificación 継続/途中入社者)
+> Última actualización: 2026-04-29 (auditoría profesional + hardening sin auth + ESLint hardening + splits + cobertura nueva)
+
+## Sesión 2026-04-29 — Auditoría profesional + hardening + refactors + tests
+
+**Branch:** `claude/audit-app-refactor-1r0Fw` (4 commits, push OK)
+
+### Fase 1 — `/auditoriajp` (auditoría profesional)
+
+3 agentes paralelos (backend, frontend, calidad) auditaron el repo completo. Hallazgos:
+**0 críticos · 4 altos · 7 medios · 6 bajos**. Riesgo global: BAJO–MEDIO (app local-first, hardening C-1 ya bien ejecutado).
+
+- `npm audit`: 0 high/critical (2 moderate transitivas en `uuid<14` via `exceljs`)
+- Type safety: **0 `: any` productivos**, 0 `@ts-ignore`, 0 `as any`
+- 0 secretos en repo, `.gitignore` bien configurado
+
+### Fase 2 — Hardening sin tocar auth (commit `d9010f7`)
+
+Por pedido del usuario (uso local-only), **se skipea TODO lo de auth**: BACK-HIGH-1 (gateaer `/api/backup`), FRONT-HIGH-1 (mover `ADMIN_TOKEN` de `localStorage`), FRONT-HIGH-2 (validar Origin/Referer). Documentado en `decision_no_auth_changes_local_only.md`.
+
+**Aplicado:**
+- BACK-HIGH-2: `resolveBackupPath()` con `lstatSync` + `realpathSync` rechaza symlinks en restore/delete (`server/routes/admin-backup.ts`)
+- MED-2: `sanitizeFilename` colapsa `..` y capa a 200 chars (`server/services/document-files.ts`)
+- LOW-1: nuevo `services/error-utils.ts` con `sanitizeErrorMessage()` que enmascara paths Unix (`/home`, `/var`, `/etc`, ...) y Windows (`C:\\`, `D:\\`, ...) en error responses; aplicado en `admin-sql`, `admin-crud`, `admin-backup`, `documents`
+- FRONT-MED-1: rechaza `:contractId` no entero positivo antes de fetch (`src/routes/contracts/$contractId.tsx`)
+- FRONT-MED-2: `noopener,noreferrer` en `window.open` (3 lugares)
+- FRONT-MED-3: nuevo `isSafePreviewUrl()` exige `/api/` o `/output/` antes del iframe (`src/lib/utils.ts`)
+- `parseInt` con radix 10 (rate-preview, work-conditions, shift-utils)
+- `parseJsonOrThrow` con `cause` en `seed.ts`
+- Tests: `security-middleware.test.ts` (13 casos cubriendo gating admin paths, rate limiting, modos prod/dev, comparación timing-safe)
+
+### Fase 3 — ESLint hardening (commit `d75807c`)
+
+- Instala `eslint-plugin-security` con reglas curadas (`detect-eval-with-expression`, `detect-pseudoRandomBytes`, `detect-buffer-noassert`, `detect-bidi-characters`, `detect-non-literal-require`, `detect-no-csrf-before-method-override`)
+- Apaga `detect-unsafe-regex` (falsos positivos sobre parsers de PDF internos), `detect-object-injection`, `detect-non-literal-fs-filename`
+- **Sube `no-explicit-any` de `warn` a `error`** (relajado en tests)
+- 3 directivas `eslint-disable` obsoletas removidas
+
+### Fase 4 — Refactor de archivos grandes (commit `0c6a9d4`)
+
+Ambos splits con barrel re-exports → 100% backward-compat.
+
+**Backend:** `server/services/batch-contracts/write.ts` (727 líneas) → barrel
+- `write/build-values.ts` (helper compartido `buildContractValues`)
+- `write/standard-batches.ts` (~330 líneas, 4 executors estándar)
+- `write/by-line.ts` (~145 líneas, `executeByLineCreate`)
+- `write/smart-batch.ts` (~60 líneas, `executeSmartBatch` + tipo)
+
+**Frontend:** `src/lib/api-types.ts` (1032 líneas) → barrel con 6 sub-archivos
+- `api-types/entities.ts` — Company, Factory, Employee, Contract, RoleKey, etc.
+- `api-types/batch.ts` — todos los flujos batch
+- `api-types/documents.ts` — generación de docs
+- `api-types/inputs.ts` — Create/Update + import
+- `api-types/dashboard.ts` — stats + alerts + data-check
+- `api-types/admin.ts` — panel admin
+
+### Fase 5 — Cobertura nueva (commit `fffc98d`)
+
+- `error-utils.test.ts` (11 casos): paths Unix/Windows ocultos, fallback, truncado a 500
+- `utils.test.ts` extendido: `isSafePreviewUrl` rechaza `javascript:`, `data:`, dominios externos; `toLocalDateStr` sin TZ shift
+- `use-debounce.test.ts` (6 casos): fake timers, cancelación, custom delays
+- `button.test.tsx` (11 casos): variants, sizes, loading, ref forwarding
+- `status-badge.test.tsx` (19 casos): 3 badges (Contract/Employee/Audit) con labels canónicos + fallbacks
+
+### Verificación final
+
+| Check | Antes | Ahora |
+|---|---|---|
+| Tests | 832 | **889** ✅ |
+| Test files | 46 | **50** ✅ |
+| `npm run lint` | 0 errors | 0 errors ✅ |
+| `npm run typecheck` | clean | clean ✅ |
+| `npm audit` (high/crit) | 0 | 0 ✅ |
+| Service modules | 33 | 34 (`error-utils` added) |
+
+### Pendiente
+
+- BACK-HIGH-1, FRONT-HIGH-1, FRONT-HIGH-2: skipped (uso local-only); reabrir si la app sale al network público.
+- Cobertura formal del frontend sigue scopeada a `companies/-table-*.tsx`. Si se quiere subir floor, ajustar `vitest.config.ts` `coverage.include`.
+- Refactor de archivos >500 líneas restantes (`routes/contracts/new.tsx` 954, `index.tsx` 854, `employees/index.tsx` 817, `koritsu-pdf-parser.ts` 737). Abordar al tocar feature.
+- `pdf_versions.sha256` solo se almacena al generar; agregar endpoint `verify` para integridad real.
+
+---
 
 ## Sesión 2026-04-28h — Smart-Batch: ikkatsu por fábrica con auto-clasificación 継続/途中入社者
 
