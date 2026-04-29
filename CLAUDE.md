@@ -127,6 +127,35 @@ npx tsx test-multishift-pdf.ts             # Multi-shift variant smoke test
 node scripts/excel-to-grid-spec.cjs <file> <sheet> [start] [end]  # Parse Excel → JSON grid spec
 ```
 
+## Debug & Troubleshooting
+
+```bash
+# Admin no funciona → verificar env vars cargadas
+tsx server/index.ts                    # Test server startup (muestra si faltan env vars)
+
+# Tests SQLite fail → reset DB
+npm run test:prepare                   # Drops/recreates test DB
+
+# PDF no genera → verificar fonts
+ls server/pdf/fonts/                  # Fonts deben existir
+
+# Ver logs del dev server
+npm run dev:server 2>&1 | head -50    # Solo los primeros 50 lines
+
+# Debug route específico
+curl -v http://localhost:8026/api/health  # Test API sin frontend
+
+# Inspect DB en vivo
+npm run db:studio                      # Drizzle Studio en http://localhost:3000
+```
+
+### Gotchas de Debug
+
+- Admin rejects localhost → **sin `--env-file .env`**, `ADMIN_TOKEN` no carga (fix: `npm run dev:server`)
+- Factory import sobrescribe null → **solo actualiza campos con valores reales** del Excel
+- Rate muestra 0 → verificar `billingRate ?? hourlyRate ?? factory.hourlyRate` con `??` (no `||`)
+- motion laggy → **falta `useReducedMotion()`** check
+
 ## Architecture
 
 > **Dónde está qué:** Routes HTTP → `server/routes/*.ts` · Business logic → `server/services/*.ts` · PDFs → `server/pdf/*.ts` · React pages → `src/routes/*.tsx` · React Query hooks → `src/lib/hooks/*.ts` · Tipos API → `src/lib/api-types.ts` · Tokens UI → `src/index.css` (`@theme`)
@@ -212,68 +241,22 @@ src/
 └── routes/                 # TanStack file-based routes (see table below)
 ```
 
-**React Query + utility hooks (`src/lib/hooks/`, 23 archivos):**
+**React Query hooks (`src/lib/hooks/`):** 23 archivos organizados por dominio: CRUD (companies, factories, employees, contracts, shift-templates, configs), Admin (tables, rows, sql, stats, backup), y Utility (theme, debounce, reduced-motion, dashboard-stats). Query keys centralizados en `query-keys.ts`.
 
-> El drift guard automatizado solo cubre `server/routes/` y `server/services/`. Esta tabla de hooks se mantiene a mano — actualizarla al agregar/quitar archivos en `src/lib/hooks/`.
+**Frontend routes (`src/routes/`):** Full list in `src/routes/` directory (file-based routing, auto-generated `routeTree.gen.ts`). Key routes:
 
-*Dominio CRUD:*
-| Hook | Purpose |
-|------|---------|
-| `use-companies.ts` | Companies CRUD + list |
-| `use-factories.ts` | Factories CRUD + bulk roles/calendars |
-| `use-employees.ts` | Employees CRUD + filter by factory |
-| `use-contracts.ts` | Contracts CRUD + batch operations |
-| `use-data-check.ts` | Completeness matrix queries |
-| `use-shift-templates.ts` | Shift pattern CRUD |
-| `use-company-yearly-config.ts` | Per-company annual config CRUD |
-| `use-factory-yearly-config.ts` | Per-line annual config CRUD |
-| `use-contract-wizard.ts` | Wiring del wizard 5-step + split por tarifa |
-| `use-koritsu-import.ts` | Flujo de import específico コーリツ (Excel + PDF parse) |
-| `use-pdf-versions.ts` | Historial de PDFs generados (tabla `pdf_versions`) |
-
-*Admin panel (token-gated):*
-| Hook | Purpose |
-|------|---------|
-| `use-admin-tables.ts` | Lista de tablas disponibles en el admin explorer |
-| `use-admin-columns.ts` | Metadata de columnas para grilla admin |
-| `use-admin-rows.ts` | Paginación de filas de cualquier tabla |
-| `use-admin-crud.ts` | Create / update / delete controlado por el servidor |
-| `use-admin-sql.ts` | SELECT-only runner con blocklist |
-| `use-admin-stats.ts` | Métricas agregadas (totales, drift, últimas mutaciones) |
-| `use-admin-backup.ts` | Backup manual + listado de snapshots |
-
-*Utility / UX:*
-| Hook | Purpose |
-|------|---------|
-| `use-theme.ts` | Light/dark theme state |
-| `use-debounce.ts` | Debounced value utility |
-| `use-unsaved-warning.ts` | Unsaved changes guard (beforeunload + TanStack Router) |
-| `use-reduced-motion.ts` | Respeta `prefers-reduced-motion` para todos los `motion` |
-| `use-dashboard-stats.ts` | Stats agregadas para hero spotlight + bento grid de páginas batch |
-
-**Frontend routes (`src/routes/`):**
 | Path | Purpose |
 |------|---------|
-| `/` | Dashboard — stats, charts, alerts |
+| `/` | Dashboard |
 | `/companies` | Company/factory registry |
-| `/companies/table` | Tabla editable de factories con import modal |
-| `/companies/koritsu` | コーリツ-specific import |
-| `/employees` | Employee list with search/filter |
-| `/contracts` | Contract list with filters + cancelled toggle |
-| `/contracts/new` | 5-step contract wizard |
-| `/contracts/:contractId` | Contract detail + employee assignment editor (con `-edit-contract-dialog.tsx` para edición inline) |
-| `/contracts/batch` | Batch contract generation |
-| `/contracts/new-hires` | Batch creation for new hires (preview → confirm) |
-| `/contracts/mid-hires` | Batch creation for mid-hires (preview → confirm) |
-| `/contracts/smart-batch` | Smart ikkatsu: multi-factory, auto-clasifica 継続/途中入社者 por nyushabi |
-| `/shouheisha` | Recruitment bulk for 外国人材 — creates employees + contract + PDFs in one flow |
-| `/documents` | PDF generation/download (tabs: 契約別/工場一括/ID指定) |
-| `/import` | Excel employee import |
-| `/data-check` | Completeness matrix |
-| `/audit` | Audit log explorer |
-| `/history` | Contract history |
-| `/settings` | Backup, system info |
-| `/admin` | Panel de administración — token-gated (`ADMIN_TOKEN`) |
+| `/employees` | Employee list |
+| `/contracts` | Contract list |
+| `/contracts/new` | 5-step wizard |
+| `/contracts/batch`, `/smart-batch` | Batch generation |
+| `/contracts/new-hires`, `/mid-hires` | Bulk 継続/途中入社者 |
+| `/shouheisha` | Foreign recruitment bulk |
+| `/documents` | PDF generation |
+| `/admin` | Admin panel (token-gated) |
 
 **Conventions:**
 - Path aliases: `@/*` → `src/*`, `@server/*` → `server/*`
