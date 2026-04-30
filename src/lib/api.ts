@@ -14,6 +14,7 @@ import type {
   BatchCreateResult,
   BatchPreviewResult,
   BatchDocumentResult,
+  GenerateGroupedResult,
   LaborHistoryFile,
   NewHiresPreviewResult,
   NewHiresCreateResult,
@@ -242,6 +243,11 @@ export const api = {
       { method: "POST", body: JSON.stringify({ contractIds, kobetsuCopies }) },
       120000
     ),
+  generateGrouped: (contractIds: number[], groupBy: "kobetsu" | "tsuchisho" | "daicho" | "all" = "all") =>
+    request<GenerateGroupedResult>("/documents/generate-grouped", {
+      method: "POST",
+      body: JSON.stringify({ contractIds, groupBy }),
+    }, 120000),
   generateKeiyakusho: (employeeNumber: string, data?: Record<string, unknown>) =>
     request<{ filename: string; path: string }>(`/documents/keiyakusho/${encodeURIComponent(employeeNumber)}`, { method: "POST", body: JSON.stringify(data ?? {}) }),
   generateShugyojoken: (employeeNumber: string, data?: Record<string, unknown>) =>
@@ -379,6 +385,24 @@ export const api = {
   }),
   getAdminStats: () => request<AdminStats>("/admin/stats"),
 };
+
+// ─── Standalone PDF download (binary — cannot use request<T>) ──────────────
+
+export async function downloadPdf(downloadPath: string, filename: string): Promise<void> {
+  const res = await fetch(downloadPath);
+  if (!res.ok) {
+    throw new Error(`PDF download failed: ${res.status}`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 // ─── Standalone ZIP download (binary — cannot use request<T>) ────────────────
 

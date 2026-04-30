@@ -20,6 +20,13 @@ export interface BatchDocumentResult {
   summary?: { total: number; errors: number };
 }
 
+export interface GenerateGroupedResult {
+  success: boolean;
+  contractCount: number;
+  files: { type: string; filename: string; path: string }[];
+  groupBy: "kobetsu" | "tsuchisho" | "daicho" | "all";
+}
+
 export interface LaborHistoryFile {
   filename: string;
   path: string;

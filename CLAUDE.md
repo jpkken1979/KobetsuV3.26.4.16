@@ -184,7 +184,7 @@ server/
 
 > **Convención de carpetas:** `server/routes/factories.ts` es el entry point de Hono; `server/routes/factories/` contiene helpers de ese dominio. Mismo patrón en `services/batch-contracts.ts` + `services/batch-contracts/` y `services/import-factories-service.ts` + `services/import-factories/`. El drift guard cuenta solo archivos `.ts` del primer nivel.
 
-**Route files (31 files, grouped by purpose):**
+**Route files (32 files, grouped by purpose):**
 - **Domain CRUD (13):** `companies.ts`, `factories.ts`, `employees.ts`, `contracts.ts`, `contracts-batch.ts`, `documents.ts`, `shift-templates.ts`, `calendars.ts`, `data-check.ts`, `dashboard.ts`, `pdf-versions.ts`, `factory-yearly-config.ts`, `company-yearly-config.ts`
 - **Document generation (8):** `documents-generate.ts`, `documents-generate-individual.ts`, `documents-generate-single.ts`, `documents-generate-batch-bundle.ts`, `documents-generate-batch-factory.ts`, `documents-generate-batch-ids.ts`, `documents-generate-batch-set.ts`, `documents-generate-batch-utils.ts`
 - **Imports (3):** `import.ts`, `import-factories.ts`, `import-koritsu.ts`

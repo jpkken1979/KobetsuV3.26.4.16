@@ -38,6 +38,7 @@ import {
     Calendar,
     CheckSquare,
     ChevronRight,
+    Download,
     Eye,
     EyeOff,
     FileText,
@@ -56,6 +57,7 @@ import { TableSkeleton } from "./-contracts-skeleton";
 import { contractColumns } from "./-contracts-columns";
 import { ExpiryDateDisplay, EmployeeNames, LastKobetsuAt } from "./-contracts-helpers";
 import { SetOptionsModal, type SetOptions } from "./-set-options-modal";
+import { GroupedDownloadModal } from "./-grouped-download-modal";
 
 // Row entrance — usado en motion.tr individual (parent variants + Fragment + tbody es incompatible en React 19)
 const ROW_ENTRANCE = {
@@ -239,6 +241,17 @@ function ContractsList() {
   }, [tableRows]);
 
   const [setModalGroup, setSetModalGroup] = useState<ContractGroup | null>(null);
+  const [showGroupedModal, setShowGroupedModal] = useState(false);
+
+  // Calcular stats para el modal de descarga agrupada
+  const groupedStats = useMemo(() => {
+    let totalEmployees = 0;
+    for (const id of selected) {
+      const c = flatContracts.find((fc) => fc.id === id);
+      if (c) totalEmployees += c.employees?.length ?? 0;
+    }
+    return { contractCount: selected.size, employeeCount: totalEmployees };
+  }, [selected, flatContracts]);
 
   const executeSetGeneration = useCallback(async (group: ContractGroup, options: SetOptions) => {
     setSetModalGroup(null);
@@ -762,15 +775,25 @@ function ContractsList() {
                     {purge.isPending ? "削除中..." : "完全削除"}
                   </Button>
                 ) : (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleBulkDelete}
-                    disabled={bulkDelete.isPending}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {bulkDelete.isPending ? "取消中..." : "一括取消"}
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowGroupedModal(true)}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      PDF
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={bulkDelete.isPending}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {bulkDelete.isPending ? "取消中..." : "一括取消"}
+                    </Button>
+                  </>
                 )}
               </div>
             </motion.div>
@@ -809,6 +832,17 @@ function ContractsList() {
             employeeCount={setModalGroup.totalEmployees}
             onGenerate={(options) => executeSetGeneration(setModalGroup, options)}
             onClose={() => setSetModalGroup(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showGroupedModal && (
+          <GroupedDownloadModal
+            contractIds={[...selected]}
+            contractCount={groupedStats.contractCount}
+            employeeCount={groupedStats.employeeCount}
+            onClose={() => setShowGroupedModal(false)}
           />
         )}
       </AnimatePresence>

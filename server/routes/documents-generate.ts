@@ -6,6 +6,7 @@
 //   documents-generate-batch-set.ts     — handleGenerateSet
 //   documents-generate-batch-factory.ts — handleGenerateFactory
 //   documents-generate-batch-ids.ts     — handleGenerateByIds
+//   documents-generate-grouped.ts     — handleGenerateGrouped
 import { Hono } from "hono";
 import { handleGenerateSingle } from "./documents-generate-single.js";
 import { handleKeiyakusho, handleShugyojoken } from "./documents-generate-individual.js";
@@ -13,6 +14,7 @@ import { handleGenerateBatch } from "./documents-generate-batch-bundle.js";
 import { handleGenerateSet } from "./documents-generate-batch-set.js";
 import { handleGenerateFactory } from "./documents-generate-batch-factory.js";
 import { handleGenerateByIds } from "./documents-generate-batch-ids.js";
+import { handleGenerateGrouped } from "./documents-generate-grouped.js";
 
 // Re-export for backward compatibility (documents.ts imports from this file)
 export { readContractDocIndex, KOBETSU_OUTPUT_DIR, ROUDOU_OUTPUT_DIR, KORITSU_OUTPUT_DIR } from "../services/document-generation.js";
@@ -46,3 +48,7 @@ documentsGenerateRouter.post("/generate-factory", handleGenerateFactory);
 // ─── POST /api/documents/generate-by-ids ────────────────────────────
 // Group employees by ID, create contracts, generate PDFs, bundle into ZIP
 documentsGenerateRouter.post("/generate-by-ids", handleGenerateByIds);
+
+// ─── POST /api/documents/generate-grouped ────────────────────────────
+// Generate grouped PDFs (kobetsu/tsuchisho/daicho) from selected contracts
+documentsGenerateRouter.post("/generate-grouped", handleGenerateGrouped);

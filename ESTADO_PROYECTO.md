@@ -1,6 +1,32 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.16
 
-> Última actualización: 2026-04-29 (auditoría profesional + hardening sin auth + ESLint hardening + splits + cobertura nueva)
+> Última actualización: 2026-04-30 (descarga agrupada de PDFs por tipo)
+
+## Sesión 2026-04-30 — Descarga Agrupada de PDFs por Tipo
+
+**Branch:** `master` (commit pendiente)
+
+Feature para seleccionar múltiples contratos desde `/contracts` y descargar PDFs organizados por tipo:
+
+- `個別契約書 全部` — todos los kobetsu en 1 PDF
+- `通知書 全部` — todos los tsuchisho en 1 PDF
+- `管理台帳 全部` — 派遣先 + 派遣元 interleaved en 1 PDF
+- `全部ダウンロード` — ZIP con los 3 PDFs
+
+**Archivos creados:**
+- `server/routes/documents-generate-grouped.ts` — endpoint `POST /api/documents/generate-grouped`
+- `src/routes/contracts/-grouped-download-modal.tsx` — modal UI
+
+**Archivos modificados:**
+- `server/routes/documents-generate.ts` — registrado nueva ruta
+- `src/lib/api-types/batch.ts` — tipo `GenerateGroupedResult`
+- `src/lib/api.ts` — funciones `generateGrouped()` y `downloadPdf()`
+- `src/routes/contracts/index.tsx` — botón PDF en toolbar multi-select
+- `CLAUDE.md` — Route files (32 files)
+
+**Tests:** 1007/1007 ✓
+
+## Sesión 2026-04-29
 
 ## Sesión 2026-04-29 — Auditoría profesional + hardening + refactors + tests
 
