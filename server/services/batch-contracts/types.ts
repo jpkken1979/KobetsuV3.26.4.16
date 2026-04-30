@@ -176,4 +176,5 @@ export interface SmartBatchParams {
   factoryIds?: number[];
   globalStartDate: string;
   globalEndDate: string;
+  groupByLine?: boolean;
 }

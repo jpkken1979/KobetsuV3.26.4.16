@@ -30,6 +30,7 @@ const batchPreviewSchema = z.object({
   factoryIds: z.array(z.number().int().positive()).optional(),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  groupByLine: z.boolean().optional(),
 });
 
 const batchSchema = z.object({
@@ -38,6 +39,7 @@ const batchSchema = z.object({
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   generatePdf: z.boolean().optional(),
+  groupByLine: z.boolean().optional(),
 });
 
 const newHiresSchema = z.object({
@@ -47,6 +49,7 @@ const newHiresSchema = z.object({
   hireDateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   generateDocs: z.boolean().optional(),
+  groupByLine: z.boolean().optional(),
 });
 
 const midHiresSchema = z.object({
@@ -58,6 +61,7 @@ const midHiresSchema = z.object({
   ).optional(),
   startDateOverride: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   generateDocs: z.boolean().optional(),
+  groupByLine: z.boolean().optional(),
 });
 
 const previewByIdsSchema = z.object({
@@ -106,6 +110,7 @@ const smartBatchSchema = z.object({
   globalStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "globalStartDate must be YYYY-MM-DD"),
   globalEndDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "globalEndDate must be YYYY-MM-DD"),
   generateDocs: z.boolean().optional(),
+  groupByLine: z.boolean().optional(),
 });
 
 // ── POST /api/contracts/batch/preview ───────────────────────────────
@@ -116,8 +121,8 @@ contractsBatchRouter.post("/batch/preview", async (c) => {
     const parsed = batchPreviewSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, startDate, endDate } = parsed.data;
-    const { lines, skipped } = await analyzeBatch(companyId, factoryIds, startDate, endDate);
+    const { companyId, factoryIds, startDate, endDate, groupByLine } = parsed.data;
+    const { lines, skipped } = await analyzeBatch(companyId, factoryIds, startDate, endDate, groupByLine);
 
     const totalContracts = lines.reduce((sum, l) => sum + l.totalContracts, 0);
     const totalEmployees = lines.reduce((sum, l) => sum + l.totalEmployees, 0);
@@ -168,8 +173,8 @@ contractsBatchRouter.post("/batch", async (c) => {
     const parsed = batchSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, startDate, endDate, generatePdf } = parsed.data;
-    const { lines, skipped } = await analyzeBatch(companyId, factoryIds, startDate, endDate);
+    const { companyId, factoryIds, startDate, endDate, generatePdf, groupByLine } = parsed.data;
+    const { lines, skipped } = await analyzeBatch(companyId, factoryIds, startDate, endDate, groupByLine);
 
     const { created, skipped: finalSkipped } = executeBatchCreate(companyId, startDate, lines, skipped);
 
@@ -195,10 +200,10 @@ contractsBatchRouter.post("/batch/new-hires/preview", async (c) => {
     const parsed = newHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, hireDateFrom, endDate } = parsed.data;
+    const { companyId, factoryIds, hireDateFrom, endDate, groupByLine } = parsed.data;
     const hireDateTo = parsed.data.hireDateTo || toLocalDateStr(new Date());
 
-    const { lines, skipped } = await analyzeNewHires(companyId, factoryIds, hireDateFrom, hireDateTo, endDate);
+    const { lines, skipped } = await analyzeNewHires(companyId, factoryIds, hireDateFrom, hireDateTo, endDate, groupByLine);
 
     const totalContracts = lines.reduce((sum, l) => sum + l.totalContracts, 0);
     const totalEmployees = lines.reduce((sum, l) => sum + l.totalEmployees, 0);
@@ -254,10 +259,10 @@ contractsBatchRouter.post("/batch/new-hires", async (c) => {
     const parsed = newHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, hireDateFrom, endDate, generateDocs } = parsed.data;
+    const { companyId, factoryIds, hireDateFrom, endDate, generateDocs, groupByLine } = parsed.data;
     const hireDateTo = parsed.data.hireDateTo || toLocalDateStr(new Date());
 
-    const { lines, skipped } = await analyzeNewHires(companyId, factoryIds, hireDateFrom, hireDateTo, endDate);
+    const { lines, skipped } = await analyzeNewHires(companyId, factoryIds, hireDateFrom, hireDateTo, endDate, groupByLine);
     const created = executeNewHiresCreate(companyId, hireDateFrom, hireDateTo, lines);
 
     return c.json({
@@ -282,12 +287,13 @@ contractsBatchRouter.post("/batch/mid-hires/preview", async (c) => {
     const parsed = midHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, conflictDateOverrides, startDateOverride } = parsed.data;
+    const { companyId, factoryIds, conflictDateOverrides, startDateOverride, groupByLine } = parsed.data;
     const { lines, skipped } = await analyzeMidHires({
       companyId,
       factoryIds,
       conflictDateOverrides,
       startDateOverride,
+      groupByLine,
     });
 
     const totalContracts = lines.reduce((sum, l) => sum + l.totalContracts, 0);
@@ -345,12 +351,13 @@ contractsBatchRouter.post("/batch/mid-hires", async (c) => {
     const parsed = midHiresSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, conflictDateOverrides, startDateOverride, generateDocs } = parsed.data;
+    const { companyId, factoryIds, conflictDateOverrides, startDateOverride, generateDocs, groupByLine } = parsed.data;
     const { lines, skipped } = await analyzeMidHires({
       companyId,
       factoryIds,
       conflictDateOverrides,
       startDateOverride,
+      groupByLine,
     });
 
     const created = executeMidHiresCreate(companyId, lines);
@@ -486,7 +493,7 @@ contractsBatchRouter.post("/batch/smart-by-factory/preview", async (c) => {
     const parsed = smartBatchSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, globalStartDate, globalEndDate } = parsed.data;
+    const { companyId, factoryIds, globalStartDate, globalEndDate, groupByLine } = parsed.data;
     if (globalStartDate > globalEndDate) {
       return c.json({ error: "開始日が終了日より後です" }, 400);
     }
@@ -496,6 +503,7 @@ contractsBatchRouter.post("/batch/smart-by-factory/preview", async (c) => {
       factoryIds,
       globalStartDate,
       globalEndDate,
+      groupByLine,
     });
 
     const totalContracts = lines.reduce((s, l) => s + l.estimatedContracts, 0);
@@ -530,7 +538,7 @@ contractsBatchRouter.post("/batch/smart-by-factory", async (c) => {
     const parsed = smartBatchSchema.safeParse(raw);
     if (!parsed.success) return c.json({ error: parsed.error.issues[0].message }, 400);
 
-    const { companyId, factoryIds, globalStartDate, globalEndDate, generateDocs } = parsed.data;
+    const { companyId, factoryIds, globalStartDate, globalEndDate, generateDocs, groupByLine } = parsed.data;
     if (globalStartDate > globalEndDate) {
       return c.json({ error: "開始日が終了日より後です" }, 400);
     }
@@ -540,6 +548,7 @@ contractsBatchRouter.post("/batch/smart-by-factory", async (c) => {
       factoryIds,
       globalStartDate,
       globalEndDate,
+      groupByLine,
     });
 
     const result = executeSmartBatch(lines);

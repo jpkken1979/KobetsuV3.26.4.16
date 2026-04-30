@@ -77,6 +77,7 @@ function MidHiresBatch() {
   const [conflictDateOverrides, setConflictDateOverrides] = useState<Record<string, string>>({});
   const [startDateOverride, setStartDateOverride] = useState<string | undefined>(undefined);
   const [generateDocs, setGenerateDocs] = useState(true);
+  const [groupByLine, setGroupByLine] = useState(false);
   const [preview, setPreview] = useState<MidHiresPreviewResult | null>(null);
   const [excludedFactoryIds, setExcludedFactoryIds] = useState<Set<number>>(new Set());
   const [isPreviewStale, setIsPreviewStale] = useState(false);
@@ -171,6 +172,7 @@ function MidHiresBatch() {
         factoryIds,
         conflictDateOverrides: Object.keys(conflictDateOverrides).length > 0 ? conflictDateOverrides : undefined,
         startDateOverride,
+        groupByLine,
       });
       setPreview(res);
       setExcludedFactoryIds(new Set());
@@ -178,7 +180,7 @@ function MidHiresBatch() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社者の検索に失敗しました");
     }
-  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, midHiresPreview]);
+  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, groupByLine, midHiresPreview]);
 
   const handleConfirmAndCreate = useCallback(async () => {
     if (!companyId || !conflictDateInput) return;
@@ -196,6 +198,7 @@ function MidHiresBatch() {
         conflictDateOverrides: Object.keys(conflictDateOverrides).length > 0 ? conflictDateOverrides : undefined,
         startDateOverride,
         generateDocs,
+        groupByLine,
       }) as unknown as MidHiresCreateResult;
 
       if (generateDocs && res.contractIds?.length > 0) {
@@ -468,6 +471,12 @@ function MidHiresBatch() {
                 onChange={setGenerateDocs}
                 label="PDFも生成"
                 description="個別契約書+通知書・派遣先管理台帳・派遣元管理台帳"
+              />
+              <StyledCheckbox
+                checked={groupByLine}
+                onChange={setGroupByLine}
+                label="配和工作場（ライン）ごとに分组"
+                description="同一単価でもラインが異なれば別途契約書を作成します"
               />
 
               {/* Search button */}

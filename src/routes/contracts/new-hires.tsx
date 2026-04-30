@@ -85,6 +85,7 @@ function NewHiresBatch() {
   const [endDateOverride, setEndDateOverride] = useState("");
   const [useEndDateOverride, setUseEndDateOverride] = useState(false);
   const [generateDocs, setGenerateDocs] = useState(true);
+  const [groupByLine, setGroupByLine] = useState(false);
   const [preview, setPreview] = useState<NewHiresPreviewResult | null>(null);
   const [excludedEmployees, setExcludedEmployees] = useState<Set<number>>(
     new Set()
@@ -107,6 +108,7 @@ function NewHiresBatch() {
       hireDateFrom,
       hireDateTo,
       endDate: useEndDateOverride && endDateOverride ? endDateOverride : undefined,
+      groupByLine,
     };
 
     try {
@@ -122,6 +124,7 @@ function NewHiresBatch() {
     hireDateTo,
     useEndDateOverride,
     endDateOverride,
+    groupByLine,
     newHiresPreview,
   ]);
 
@@ -149,6 +152,7 @@ function NewHiresBatch() {
       hireDateTo,
       endDate: useEndDateOverride && endDateOverride ? endDateOverride : undefined,
       generateDocs,
+      groupByLine,
     };
 
     try {
@@ -364,6 +368,12 @@ function NewHiresBatch() {
                   onChange={setGenerateDocs}
                   label="PDFも生成"
                   description="個別契約書+通知書・派遣先管理台帳・派遣元管理台帳"
+                />
+                <StyledCheckbox
+                  checked={groupByLine}
+                  onChange={setGroupByLine}
+                  label="配和工作場（ライン）ごとに分组"
+                  description="同一単価でもラインが異なれば別途契約書を作成します"
                 />
               </div>
 

@@ -72,6 +72,7 @@ function SmartBatchPage() {
   const [globalStartDate, setGlobalStartDate] = useState("");
   const [globalEndDate, setGlobalEndDate] = useState("");
   const [generateDocs, setGenerateDocs] = useState(true);
+  const [groupByLine, setGroupByLine] = useState(false);
   const [preview, setPreview] = useState<SmartBatchPreviewResult | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<SmartBatchCreateResult | null>(null);
@@ -126,12 +127,13 @@ function SmartBatchPage() {
         factoryIds,
         globalStartDate,
         globalEndDate,
+        groupByLine,
       });
       setPreview(res);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "プレビューに失敗しました");
     }
-  }, [canSearch, companyId, selectedFactoryIds, globalStartDate, globalEndDate, previewMut]);
+  }, [canSearch, companyId, selectedFactoryIds, globalStartDate, globalEndDate, groupByLine, previewMut]);
 
   const handleConfirmAndCreate = useCallback(async () => {
     if (!companyId || !preview) return;
@@ -144,6 +146,7 @@ function SmartBatchPage() {
         globalStartDate,
         globalEndDate,
         generateDocs,
+        groupByLine,
       });
 
       if (generateDocs && res.contractIds.length > 0) {
@@ -440,6 +443,12 @@ function SmartBatchPage() {
                   onChange={setGenerateDocs}
                   label="契約作成後にPDFも自動生成する"
                   description="個別契約書 + 通知書 + 派遣先管理台帳 + 派遣元管理台帳"
+                />
+                <StyledCheckbox
+                  checked={groupByLine}
+                  onChange={setGroupByLine}
+                  label="配和工作場（ライン）ごとに分组"
+                  description="同一単価でもラインが異なれば別途契約書を作成します"
                 />
               </Section>
 

@@ -9,6 +9,7 @@ import {
   calculateEndDateForFactory,
   parseWorkHours,
   groupEmployeesByRate,
+  groupEmployeesByLineRate,
   buildRateGroupList,
   createSkipRecord,
   findDuplicateContractsBulk,
@@ -16,12 +17,13 @@ import {
   calculateParticipation,
   checkExemption,
   type AnalysisLine,
+  type LineGroup,
   type SkipRecord,
   type AnalysisResult,
 } from "../batch-helpers.js";
 
 // ─── Re-export types that routes need ────────────────────────────────
-export type { AnalysisResult, AnalysisLine, SkipRecord };
+export type { AnalysisResult, AnalysisLine, SkipRecord, LineGroup };
 
 // ─── Shared imports for this module ──────────────────────────────────
 import {
@@ -58,6 +60,7 @@ export async function analyzeBatch(
   factoryIds: number[] | undefined,
   startDate: string,
   globalEndDate?: string,
+  groupByLine?: boolean,
 ): Promise<AnalysisResult> {
   const { targetFactories } = await buildBatchContext(companyId, startDate, factoryIds);
   const lines: AnalysisLine[] = [];
@@ -83,10 +86,32 @@ export async function analyzeBatch(
       continue;
     }
 
-    const rateGroups = groupEmployeesByRate(factoryEmps, factory.hourlyRate);
-    if (rateGroups.size === 0) {
-      skipped.push(createSkipRecord(factory, "単価未設定"));
-      continue;
+    // Choose grouping strategy: by rate only, or by (department, lineName, rate)
+    let rateGroupList;
+    if (groupByLine) {
+      const lineGroups = groupEmployeesByLineRate(factoryEmps, factory.hourlyRate);
+      if (lineGroups.length === 0) {
+        skipped.push(createSkipRecord(factory, "単価未設定"));
+        continue;
+      }
+      rateGroupList = lineGroups.map((lg) => ({
+        rate: lg.rate,
+        employees: lg.employees,
+        employeeCount: lg.employeeCount,
+        overtimeRate: lg.overtimeRate,
+        nightShiftRate: lg.nightShiftRate,
+        holidayRate: lg.holidayRate,
+        sixtyHourRate: lg.sixtyHourRate,
+        department: lg.department,
+        lineName: lg.lineName,
+      }));
+    } else {
+      const rateGroups = groupEmployeesByRate(factoryEmps, factory.hourlyRate);
+      if (rateGroups.size === 0) {
+        skipped.push(createSkipRecord(factory, "単価未設定"));
+        continue;
+      }
+      rateGroupList = buildRateGroupList(rateGroups);
     }
 
     // Filter bulk duplicates to only those overlapping this factory's specific date range
@@ -96,7 +121,6 @@ export async function analyzeBatch(
     const participationRate = calculateParticipation(factory.workHours, factory.breakTime);
     const exemption = checkExemption(factory);
 
-    const rateGroupList = buildRateGroupList(rateGroups);
     const capped = !!(factory.conflictDate && effectiveEndDate <= factory.conflictDate && (globalEndDate ? globalEndDate > factory.conflictDate : false));
     const autoCalculated = !!factory.contractPeriod;
 
@@ -129,6 +153,7 @@ export async function analyzeNewHires(
   hireDateFrom: string,
   hireDateTo: string,
   globalEndDate?: string,
+  groupByLine?: boolean,
 ): Promise<AnalysisResult> {
   const { targetFactories } = await buildBatchContext(companyId, hireDateFrom, factoryIds);
   const lines: AnalysisLine[] = [];
@@ -157,10 +182,41 @@ export async function analyzeNewHires(
       ? (factory.conflictDate && factory.conflictDate < globalEndDate ? factory.conflictDate : globalEndDate)
       : calculateEndDateForFactory(factory, hireDateFrom, undefined);
 
-    const rateGroups = groupEmployeesByRate(newHires, factory.hourlyRate);
-    if (rateGroups.size === 0) {
-      skipped.push(createSkipRecord(factory, "単価未設定"));
-      continue;
+    // Choose grouping strategy: by rate only, or by (department, lineName, rate)
+    let rateGroupList;
+    if (groupByLine) {
+      const lineGroups = groupEmployeesByLineRate(newHires, factory.hourlyRate);
+      if (lineGroups.length === 0) {
+        skipped.push(createSkipRecord(factory, "単価未設定"));
+        continue;
+      }
+      rateGroupList = lineGroups.map((lg) => ({
+        rate: lg.rate,
+        employees: lg.employees.map((emp) => ({
+          ...emp,
+          effectiveHireDate: emp.actualHireDate || emp.hireDate || hireDateFrom,
+        })),
+        employeeCount: lg.employeeCount,
+        overtimeRate: lg.overtimeRate,
+        nightShiftRate: lg.nightShiftRate,
+        holidayRate: lg.holidayRate,
+        sixtyHourRate: lg.sixtyHourRate,
+        department: lg.department,
+        lineName: lg.lineName,
+      }));
+    } else {
+      const rateGroups = groupEmployeesByRate(newHires, factory.hourlyRate);
+      if (rateGroups.size === 0) {
+        skipped.push(createSkipRecord(factory, "単価未設定"));
+        continue;
+      }
+      rateGroupList = buildRateGroupList(rateGroups).map((rg) => ({
+        ...rg,
+        employees: rg.employees.map((emp) => ({
+          ...emp,
+          effectiveHireDate: emp.actualHireDate || emp.hireDate || hireDateFrom,
+        })),
+      }));
     }
 
     const workHours = parseWorkHours(factory.workHours);
@@ -168,15 +224,6 @@ export async function analyzeNewHires(
     const workEndTime = workHours.workEndTime;
     const participationRate = calculateParticipation(factory.workHours, factory.breakTime);
     const exemption = checkExemption(factory);
-
-    // Build rate group list with effectiveHireDate attached to employees
-    const rateGroupList = buildRateGroupList(rateGroups).map((rg) => ({
-      ...rg,
-      employees: rg.employees.map((emp) => ({
-        ...emp,
-        effectiveHireDate: emp.actualHireDate || emp.hireDate || hireDateFrom,
-      })),
-    }));
 
     lines.push({
       factory,
@@ -202,8 +249,9 @@ export async function analyzeMidHires(params: {
   factoryIds?: number[];
   conflictDateOverrides?: Record<string, string>; // factoryId.toString() → "YYYY-MM-DD"
   startDateOverride?: string; // override manual de periodStart
+  groupByLine?: boolean; // if true, group by (department, lineName, rate) instead of just rate
 }): Promise<MidHiresResult> {
-  const { companyId, factoryIds, conflictDateOverrides = {}, startDateOverride } = params;
+  const { companyId, factoryIds, conflictDateOverrides = {}, startDateOverride, groupByLine = false } = params;
   const today = toLocalDateStr(new Date());
 
   // Cargar empresa para obtener conflictDate y contractPeriod
@@ -269,13 +317,32 @@ export async function analyzeMidHires(params: {
     const participationRate = calculateParticipation(factory.workHours, factory.breakTime);
     const exemption = checkExemption(factory);
 
-    const rateGroupList = buildRateGroupList(rateGroups).map((rg) => ({
-      ...rg,
-      employees: rg.employees.map((emp) => ({
-        ...emp,
-        effectiveHireDate: emp.actualHireDate ?? emp.hireDate ?? periodStart,
-      })),
-    }));
+    // Build rate group list: either by rate (default) or by line+rate (groupByLine)
+    const rateGroupList = (() => {
+      if (groupByLine) {
+        // groupEmployeesByLineRate returns LineGroup[], but we need to map to MidHiresLine["rateGroups"]
+        const lineGroups = groupEmployeesByLineRate(eligible, factory.hourlyRate);
+        return lineGroups.map((lg) => ({
+          rate: lg.rate,
+          employees: lg.employees.map((emp) => ({
+            ...emp,
+            effectiveHireDate: emp.actualHireDate ?? emp.hireDate ?? periodStart,
+          })),
+          employeeCount: lg.employeeCount,
+          overtimeRate: lg.overtimeRate,
+          nightShiftRate: lg.nightShiftRate,
+          holidayRate: lg.holidayRate,
+          sixtyHourRate: lg.sixtyHourRate,
+        }));
+      }
+      return buildRateGroupList(rateGroups).map((rg) => ({
+        ...rg,
+        employees: rg.employees.map((emp) => ({
+          ...emp,
+          effectiveHireDate: emp.actualHireDate ?? emp.hireDate ?? periodStart,
+        })),
+      }));
+    })();
 
     lines.push({
       factory,
@@ -420,7 +487,7 @@ export async function groupEmployeesByIds(
 export async function analyzeSmartBatch(
   params: SmartBatchParams,
 ): Promise<SmartBatchResult> {
-  const { companyId, factoryIds, globalStartDate, globalEndDate } = params;
+  const { companyId, factoryIds, globalStartDate, globalEndDate, groupByLine = false } = params;
 
   if (globalStartDate > globalEndDate) {
     throw new Error("globalStartDate debe ser <= globalEndDate");
@@ -501,13 +568,18 @@ export async function analyzeSmartBatch(
       continue;
     }
 
-    // Estimación de contratos: agrupando por (rate, startDate, endDate).
+    // Estimación de contratos: agrupando por (rate, startDate, endDate) o por (dept, line, rate, startDate, endDate).
     // Replicamos la cadena de prioridad de executeByLineCreate para preview.
     const groupKeys = new Set<string>();
     for (const e of [...continuation, ...midHires]) {
       const rate = e.billingRate ?? e.hourlyRate ?? factory.hourlyRate ?? 0;
       if (!rate) continue; // executeByLineCreate descarta empleados sin rate
-      groupKeys.add(`${rate}|${e.contractStartDate}|${e.contractEndDate}`);
+      if (groupByLine) {
+        // group by (department, lineName, rate, startDate, endDate)
+        groupKeys.add(`${factory.department ?? ""}|${factory.lineName ?? ""}|${rate}|${e.contractStartDate}|${e.contractEndDate}`);
+      } else {
+        groupKeys.add(`${rate}|${e.contractStartDate}|${e.contractEndDate}`);
+      }
     }
 
     lines.push({

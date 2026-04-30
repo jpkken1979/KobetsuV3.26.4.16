@@ -20,6 +20,18 @@ export interface RateGroup {
   sixtyHourRate: number;
 }
 
+export interface LineGroup {
+  department: string;
+  lineName: string;
+  rate: number;
+  employees: (Employee & { effectiveHireDate?: string })[];
+  employeeCount: number;
+  overtimeRate: number;
+  nightShiftRate: number;
+  holidayRate: number;
+  sixtyHourRate: number;
+}
+
 export interface AnalysisLine {
   factory: Factory;
   effectiveEndDate: string;
@@ -188,6 +200,42 @@ export function groupEmployeesByRate<T extends { billingRate: number | null; hou
     rateGroups.get(rate)!.push(emp);
   }
   return rateGroups;
+}
+
+/** Group employees by (department, lineName, rate) — one contract per line per rate */
+export function groupEmployeesByLineRate<T extends {
+  billingRate: number | null;
+  hourlyRate: number | null;
+  department?: string | null;
+  lineName?: string | null;
+}>(emps: T[], fallbackRate: number | null): LineGroup[] {
+  const lineMap = new Map<string, T[]>();
+
+  for (const emp of emps) {
+    const rate = emp.billingRate ?? emp.hourlyRate ?? fallbackRate ?? 0;
+    if (rate === 0) continue;
+    const dept = emp.department ?? "";
+    const line = emp.lineName ?? "";
+    const key = `${dept}|${line}|${rate}`;
+    if (!lineMap.has(key)) lineMap.set(key, []);
+    lineMap.get(key)!.push(emp);
+  }
+
+  return Array.from(lineMap.entries()).map(([key, emps]) => {
+    const [dept, line, rateStr] = key.split("|");
+    const rate = Number(rateStr);
+    return {
+      department: dept,
+      lineName: line,
+      rate,
+      employees: emps as unknown as LineGroup["employees"],
+      employeeCount: emps.length,
+      overtimeRate: Math.round(rate * 1.25),
+      nightShiftRate: Math.round(rate * 1.25),
+      holidayRate: Math.round(rate * 1.35),
+      sixtyHourRate: Math.round(rate * 1.5),
+    };
+  });
 }
 
 /** Convert rate groups Map to array with calculated OT/holiday rates */

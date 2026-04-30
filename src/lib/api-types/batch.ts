@@ -320,4 +320,5 @@ export interface SmartBatchPayload {
   globalStartDate: string;
   globalEndDate: string;
   generateDocs?: boolean;
+  groupByLine?: boolean;
 }

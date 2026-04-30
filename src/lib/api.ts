@@ -195,15 +195,15 @@ export const api = {
     request<BatchPreviewResult>("/contracts/batch/preview", { method: "POST", body: JSON.stringify(data) }),
 
   // New Hires Batch
-  newHiresPreview: (data: { companyId: number; factoryIds?: number[]; hireDateFrom: string; hireDateTo?: string; endDate?: string }) =>
+  newHiresPreview: (data: { companyId: number; factoryIds?: number[]; hireDateFrom: string; hireDateTo?: string; endDate?: string; groupByLine?: boolean }) =>
     request<NewHiresPreviewResult>("/contracts/batch/new-hires/preview", { method: "POST", body: JSON.stringify(data) }),
-  newHiresCreate: (data: { companyId: number; factoryIds?: number[]; hireDateFrom: string; hireDateTo?: string; endDate?: string; generateDocs?: boolean }) =>
+  newHiresCreate: (data: { companyId: number; factoryIds?: number[]; hireDateFrom: string; hireDateTo?: string; endDate?: string; generateDocs?: boolean; groupByLine?: boolean }) =>
     request<NewHiresCreateResult>("/contracts/batch/new-hires", { method: "POST", body: JSON.stringify(data) }),
 
   // Mid-Hires Batch (途中入社)
-  midHiresPreview: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string }) =>
+  midHiresPreview: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string; groupByLine?: boolean }) =>
     request<MidHiresPreviewResult>("/contracts/batch/mid-hires/preview", { method: "POST", body: JSON.stringify(data) }),
-  midHiresCreate: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string; generateDocs?: boolean }) =>
+  midHiresCreate: (data: { companyId: number; factoryIds?: number[]; conflictDateOverrides?: Record<string, string>; startDateOverride?: string; generateDocs?: boolean; groupByLine?: boolean }) =>
     request<MidHiresCreateResult>("/contracts/batch/mid-hires", { method: "POST", body: JSON.stringify(data) }),
 
   // By-Line Batch (selección granular por línea, fechas individuales)
