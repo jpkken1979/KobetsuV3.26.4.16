@@ -6,4 +6,4 @@
 - [Sesion 2026-04-15c — factory/company yearly config + table UX](session_2026-04-15c.md) — inkan 朱肉; MSGothic font; factory_yearly_config + company_yearly_config cascade; 年度 button tabla; light mode fix
 - [GitHub repo KobetsuV3](reference_github.md) — https://github.com/jpkken1979/KobetsuV3.26.4.16
 - [Sesion 2026-04-23c — Split 既存/新規入社 + endDate -1 día + tanka PDF](session_2026-04-23c.md) — wizard activo reescrito; endDate -1 día; tanka 社員台帳 priority en PDF (inferencia mode desde contract_employees)
-- [Refactor formato 労働契約書 2026-04-23](decision_keiyakusho_format_2026_04_23.md) — grid 16 cols sin spacer C/M, fonts 7pt uniformes, shifts adaptativos; match a TEXPERT Perfect.pdf
+- [Sesion 2026-04-30 — refactor shift-utils + PDF audit](session_2026-04-30.md) — extract shift-utils module, 40 tests, audit 115 factories por patron de turno, commits 4f14940/872abf1/f03bbd9
