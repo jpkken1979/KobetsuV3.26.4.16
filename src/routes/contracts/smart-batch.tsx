@@ -158,7 +158,7 @@ function SmartBatchPage() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "一括作成に失敗しました");
     }
-  }, [companyId, preview, selectedFactoryIds, globalStartDate, globalEndDate, generateDocs, createMut, batchGenerateDocs]);
+  }, [companyId, preview, selectedFactoryIds, globalStartDate, globalEndDate, generateDocs, groupByLine, createMut, batchGenerateDocs]);
 
   // ─── Results Screen ───────────────────────────────────────────────
   if (result) {

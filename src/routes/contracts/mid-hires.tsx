@@ -210,7 +210,7 @@ function MidHiresBatch() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "途中入社一括作成に失敗しました");
     }
-  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, generateDocs, midHiresCreate, batchGenerateDocs, preview, excludedFactoryIds]);
+  }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, generateDocs, groupByLine, midHiresCreate, batchGenerateDocs, preview, excludedFactoryIds]);
 
   const canSearch = !!companyId && !!conflictDateInput;
   const canCreate =

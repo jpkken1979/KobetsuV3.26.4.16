@@ -174,6 +174,7 @@ function NewHiresBatch() {
     useEndDateOverride,
     endDateOverride,
     generateDocs,
+    groupByLine,
     newHiresCreate,
     batchGenerateDocs,
   ]);
