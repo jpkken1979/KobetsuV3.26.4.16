@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { contracts, type FactoryYearlyConfig, type CompanyYearlyConfig } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getConfigForYear, getCompanyConfigForYear, getFiscalYear } from "./factory-yearly-config.js";
+import { parseWorkHours, parseBreakTime, NAMED_SHIFT_RE, inferContractHourlyRate } from "./shift-utils.js";
 import PDFDocument from "pdfkit";
 import fs from "node:fs";
 import path from "node:path";
@@ -192,91 +193,27 @@ export function buildCommonData(
   const company = c.company;
   const factory = c.factory;
 
-  // ─── Shift detection helpers ────────────────
-  // Detect named shifts (昼勤①, 交替勤務②, A勤務, シフト1...) followed by a time pattern.
-  // Works regardless of separator (、 / 　 / \n) — replaces the old whitespace-only heuristic.
-  // Match: 昼勤 8:30~17:00, ①8時00分~17時00分, 1 08:00~17:00, A勤務 7:00-15:30
-  // Handles: named shift prefix + time range with various separators (：:~-)
-  // Match patterns like: 昼勤 8:30~17:00, 昼勤：7時00分~15時30分, ①8時00分~17時00分, 1 08:00~17:00
-// Handles: named shift prefix + time range with various separators (：:~-)
-const NAMED_SHIFT_RE = /(?:[A-Za-z]+[勤務番]*|交替|[一-鿿]+[勤直務]+|①|②|③|④|⑤|⑥|⑦|⑧|⑨|⑩)[①-⑩0-9]*\s*[：:ー]?\s*\d{1,2}\s*[時:：]*\s*\d{2}分?\s*[～~ー-]\s*\d{1,2}\s*[時:：]*\s*\d{2}分?|[0-9①-⑩]\d?\s*\d{1,2}:?\d{2}\s*[～~ー-]\s*\d{1,2}:?\d{2}/gu;
-  const countNamedShifts = (text: string): number => {
-    if (!text) return 0;
-    return (text.match(NAMED_SHIFT_RE) || []).length;
-  };
-  // Normalize separators to \n so renderMultiShift puts one shift per line.
-  // Only kicks in when the text already has named shifts — leaves single-shift text alone.
-  const normalizeShiftText = (text: string): string => {
-    if (!text || text.includes("\n")) return text || "";
-    if (countNamedShifts(text) < 2) return text;
-    return text.replace(/、/g, "\n").trim();
-  };
+  // ─── Shift detection via reusable utilities ────────────────
+  // Use the shared shift-utils module for workHours and breakTime parsing.
+  // This centralizes the NAMED_SHIFT_RE logic and handles all edge cases:
+  // - Canonical multi-shift text (昼勤①…、交替勤務②…)
+  // - Arubaito/part-time (Day!=Night but only one shift in workHours)
+  // - 2-shift factories with explicit Day/Night fields
 
-  // Build comprehensive workHours string — prefer canonical workHours when it has named shifts.
-  let workHours = "";
-  const fullWorkHours = factory.workHours || "";
-  const namedShiftCount = countNamedShifts(fullWorkHours);
+  const workHours = parseWorkHours({
+    workHours: factory.workHours,
+    workHoursDay: factory.workHoursDay,
+    workHoursNight: factory.workHoursNight,
+    contractStartTime: c.workStartTime,
+    contractEndTime: c.workEndTime,
+  });
 
-  // Only use workHoursDay/Night as source of truth when workHours is empty OR
-  // when both Day/Night are populated AND different (2-shift factory).
-  // Never use Day/Night when workHours is a simple single-shift text (高雄 workaround).
-  const hasDayNight = factory.workHoursDay || factory.workHoursNight;
-  const dayNightDifferent = factory.workHoursDay && factory.workHoursNight &&
-    factory.workHoursDay !== factory.workHoursNight;
-
-  if (namedShiftCount >= 2) {
-    // Canonical multi-shift text (六甲: "昼勤①…、交替勤務②…", 高雄: "A勤務：…　B勤務：…")
-    workHours = normalizeShiftText(fullWorkHours);
-  } else if (hasDayNight && dayNightDifferent) {
-    // Two distinct shift times — use Day/Night with labels ONLY if workHours is empty
-    // (arubaito/part-time factories intentionally have different Day/Night but only ONE
-    // shift is actually used — prefer the existing workHours text to avoid showing
-    // two shifts when only one applies)
-    if (fullWorkHours && fullWorkHours.trim().length > 0) {
-      workHours = fullWorkHours;
-    } else {
-      const parts: string[] = [];
-      if (factory.workHoursDay) parts.push(`【昼勤】${factory.workHoursDay}`);
-      if (factory.workHoursNight) parts.push(`【夜勤】${factory.workHoursNight}`);
-      workHours = parts.join("\n");
-    }
-  } else if (hasDayNight && !dayNightDifferent) {
-    // Only one shift populated (e.g., same time for both) — use workHours directly
-    workHours = fullWorkHours || factory.workHoursDay || "";
-  } else if (hasDayNight && !fullWorkHours) {
-    // workHours empty but Day/Night exist — use Day with label as fallback
-    workHours = fullWorkHours || `【昼勤】${factory.workHoursDay}`;
-  } else if (c.workStartTime && c.workEndTime) {
-    workHours = `${c.workStartTime} ～ ${c.workEndTime}`;
-  } else {
-    workHours = fullWorkHours;
-  }
-
-  // Build comprehensive breakTime string — same detection strategy.
-  let breakTime = "";
-  const breakDayText = factory.breakTimeDay || "";
-  const breakNightText = factory.breakTimeNight || "";
-  const breakDayCount = countNamedShifts(breakDayText);
-  const breakNightCount = countNamedShifts(breakNightText);
-
-  if (breakDayCount >= 2) {
-    // Canonical multi-shift breaks live in breakTimeDay (六甲, 高雄).
-    // Ignore breakTimeNight to avoid duplicating the legacy 2-shift fallback.
-    breakTime = normalizeShiftText(breakDayText);
-  } else if (breakDayCount + breakNightCount >= 2) {
-    // Multi-shift split across both legacy fields (rare).
-    breakTime = normalizeShiftText([breakDayText, breakNightText].filter(Boolean).join("\n"));
-  } else if (breakDayText || breakNightText) {
-    // Use whatever break times exist — with labels only if 2 shifts are active
-    const parts: string[] = [];
-    if (breakDayText) parts.push(dayNightDifferent ? `【昼勤】${breakDayText}` : breakDayText);
-    if (breakNightText) parts.push(dayNightDifferent ? `【夜勤】${breakNightText}` : breakNightText);
-    breakTime = parts.join("\n");
-  } else if (c.breakMinutes) {
-    breakTime = `${c.breakMinutes}分`;
-  } else if (factory.breakTime) {
-    breakTime = `${factory.breakTime}分`;
-  }
+  const breakTime = parseBreakTime({
+    breakTimeDay: factory.breakTimeDay,
+    breakTimeNight: factory.breakTimeNight,
+    breakMinutes: c.breakMinutes,
+    breakTime: factory.breakTime,
+  });
 
   return {
     companyName: company.name,
@@ -296,20 +233,7 @@ const NAMED_SHIFT_RE = /(?:[A-Za-z]+[勤務番]*|交替|[一-鿿]+[勤直務]+|�
     workHours,
     breakTime,
     overtimeHours: factory.overtimeHours || c.overtimeMax || "",
-    hourlyRate: c.hourlyRate ?? (() => {
-      // Infer from contract_employees assignments when contract.hourlyRate is null
-      // (legacy contracts created before hourlyRate was set at contract level)
-      if (c.employees && c.employees.length > 0) {
-        const rates = c.employees.map((ce) => ce.hourlyRate ?? ce.employee.billingRate ?? ce.employee.hourlyRate ?? null).filter((r): r is number => r !== null);
-        if (rates.length > 0) {
-          // Use the most common rate (mode) from assignments
-          const freq = new Map<number, number>();
-          for (const r of rates) { freq.set(r, (freq.get(r) ?? 0) + 1); }
-          return Array.from(freq.entries()).sort((a, b) => b[1] - a[1])[0]![0];
-        }
-      }
-      return factory.hourlyRate ?? 0;
-    })(),
+    hourlyRate: inferContractHourlyRate(c.hourlyRate, c.employees, factory.hourlyRate),
     conflictDate: c.conflictDateOverride ?? factory.conflictDate ?? "",
     closingDay: factory.closingDayText || (factory.closingDay ? `${factory.closingDay}日` : ""),
     paymentDay: factory.paymentDayText || (factory.paymentDay ? `${factory.paymentDay}日` : ""),
