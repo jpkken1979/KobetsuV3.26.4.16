@@ -431,11 +431,12 @@ export function generateKobetsuPDF(doc: Doc, data: KobetsuData): void {
 
   // Row 6: 組織単位 + 抵触日 (only 抵触日 has its own border)
   // 組織単位 = jigyosho (Takao only) + factoryName + department — refleja 企業データ一覧
+  // Use smaller font (5pt) to keep long department names in a single line
   cell(doc, 6, 2, 6, 6, "組織単位", 7.5, { align: "center" });
   const soshikiText = [jigyosho, data.factoryName, data.department]
     .filter(Boolean)
     .join("　");
-  cell(doc, 6, 7, 6, 13, soshikiText, 8, { align: "center" });
+  cell(doc, 6, 7, 6, 13, soshikiText, 5, { align: "center" });
   cell(doc, 6, 14, 6, 15, "抵触日", 7.5, { align: "center" });
   cell(doc, 6, 16, 6, 26, formatDateJP(data.conflictDate), 8);
 

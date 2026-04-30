@@ -212,17 +212,32 @@ export function buildCommonData(
   let workHours = "";
   const fullWorkHours = factory.workHours || "";
   const namedShiftCount = countNamedShifts(fullWorkHours);
+
+  // Only use workHoursDay/Night as source of truth when workHours is empty OR
+  // when both Day/Night are populated AND different (2-shift factory).
+  // Never use Day/Night when workHours is a simple single-shift text (高雄 workaround).
+  const hasDayNight = factory.workHoursDay || factory.workHoursNight;
+  const dayNightDifferent = factory.workHoursDay && factory.workHoursNight &&
+    factory.workHoursDay !== factory.workHoursNight;
+
   if (namedShiftCount >= 2) {
     // Canonical multi-shift text (六甲: "昼勤①…、交替勤務②…", 高雄: "A勤務：…　B勤務：…")
     workHours = normalizeShiftText(fullWorkHours);
-  } else if (factory.workHoursDay || factory.workHoursNight) {
+  } else if (hasDayNight && dayNightDifferent) {
+    // Two distinct shift times — use Day/Night with labels
     const parts: string[] = [];
     if (factory.workHoursDay) parts.push(`【昼勤】${factory.workHoursDay}`);
     if (factory.workHoursNight) parts.push(`【夜勤】${factory.workHoursNight}`);
     workHours = parts.join("\n");
+  } else if (hasDayNight && !dayNightDifferent) {
+    // Only one shift populated (e.g., same time for both) — use workHours directly
+    workHours = fullWorkHours || factory.workHoursDay || "";
+  } else if (hasDayNight && !fullWorkHours) {
+    // workHours empty but Day/Night exist — use Day with label as fallback
+    workHours = fullWorkHours || `【昼勤】${factory.workHoursDay}`;
   } else if (c.workStartTime && c.workEndTime) {
     workHours = `${c.workStartTime} ～ ${c.workEndTime}`;
-  } else if (fullWorkHours) {
+  } else {
     workHours = fullWorkHours;
   }
 
@@ -241,10 +256,10 @@ export function buildCommonData(
     // Multi-shift split across both legacy fields (rare).
     breakTime = normalizeShiftText([breakDayText, breakNightText].filter(Boolean).join("\n"));
   } else if (breakDayText || breakNightText) {
-    // Plain 2-shift legacy (no shift names in text) — wrap with explicit labels.
+    // Use whatever break times exist — with labels only if 2 shifts are active
     const parts: string[] = [];
-    if (breakDayText) parts.push(`【昼勤】${breakDayText}`);
-    if (breakNightText) parts.push(`【夜勤】${breakNightText}`);
+    if (breakDayText) parts.push(dayNightDifferent ? `【昼勤】${breakDayText}` : breakDayText);
+    if (breakNightText) parts.push(dayNightDifferent ? `【夜勤】${breakNightText}` : breakNightText);
     breakTime = parts.join("\n");
   } else if (c.breakMinutes) {
     breakTime = `${c.breakMinutes}分`;

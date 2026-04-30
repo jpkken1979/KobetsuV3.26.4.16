@@ -186,6 +186,13 @@ export function buildEmployeeData(
     effectiveFactoryName = composite.factoryName;
     dept = composite.department;
     line = composite.lineName;
+  } else if (resolvedFactoryName) {
+    // parseHaizokusaki failed (e.g., 営業 departments like "海南産機営業課").
+    // The dept still has the full company prefix, try to extract department from it.
+    const extracted = extractDepartmentFromDispatch(dept);
+    if (extracted) {
+      dept = extracted;
+    }
   }
 
   const factoryId = resolveFactoryAssignment({
