@@ -1,9 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { createFileRoute } from "@tanstack/react-router";
 import { useCompanies } from "@/lib/hooks/use-companies";
 import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import { useFactoryCascade } from "@/lib/hooks/use-factories";
@@ -29,6 +28,7 @@ import {
   StyledCheckbox,
   ConfirmationModalShell,
   PdfGenerationBanner,
+  BatchErrorView,
 } from "@/components/contract/batch-shared";
 import { Badge } from "@/components/ui/badge";
 import { buildLocalBatchPreview } from "./-batch-preview";
@@ -59,10 +59,9 @@ import {
 
 export const Route = createFileRoute("/contracts/batch")({
   component: BatchCreate,
-  errorComponent: ({ reset }) => (
-    <div className="flex flex-col items-center justify-center gap-4 py-20">
-      <p className="text-lg font-semibold text-destructive">エラーが発生しました</p>
-      <Button variant="outline" onClick={reset}>再試行</Button>
+  errorComponent: ({ error, reset }) => (
+    <div className="container mx-auto max-w-7xl px-4 py-8">
+      <BatchErrorView error={error} reset={reset} />
     </div>
   ),
   pendingComponent: () => (
@@ -596,7 +595,13 @@ function BatchCreate() {
               icon={Zap}
               title="プレビュー待機中"
               description="工場と開始日を選択するとプレビューが表示されます"
-            />
+            >
+              <Link to="/employees">
+                <Button variant="outline" size="sm">
+                  社員をインポートする
+                </Button>
+              </Link>
+            </EmptyState>
           ) : null}
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { createFileRoute } from "@tanstack/react-router";
 import { useCompanies } from "@/lib/hooks/use-companies";
 import { useDashboardStats } from "@/lib/hooks/use-dashboard-stats";
 import {
@@ -23,6 +23,7 @@ import {
   StyledCheckbox,
   ConfirmationModalShell,
   PdfGenerationBanner,
+  BatchErrorView,
 } from "@/components/contract/batch-shared";
 import type {
   MidHiresPreviewResult,
@@ -32,6 +33,7 @@ import type {
 } from "@/lib/api";
 import { MidHiresPreview } from "./-mid-hires-preview";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BatchProgressBar } from "@/components/contract/batch-progress-bar";
 import {
   UserPlus,
   UserCheck,
@@ -50,10 +52,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/contracts/mid-hires")({
   component: MidHiresBatch,
-  errorComponent: ({ reset }) => (
-    <div className="flex flex-col items-center justify-center gap-4 py-20">
-      <p className="text-lg font-semibold text-destructive">エラーが発生しました</p>
-      <Button variant="outline" onClick={reset}>再試行</Button>
+  errorComponent: ({ error, reset }) => (
+    <div className="container mx-auto max-w-7xl px-4 py-8">
+      <BatchErrorView error={error} reset={reset} />
     </div>
   ),
   pendingComponent: () => (
@@ -83,6 +84,7 @@ function MidHiresBatch() {
   const [isPreviewStale, setIsPreviewStale] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<MidHiresCreateResult | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0, phase: "" });
 
   // Factories of the selected company
   const selectedCompany = useMemo(
@@ -186,12 +188,16 @@ function MidHiresBatch() {
     if (!companyId || !conflictDateInput) return;
     setShowConfirm(false);
 
-    try {
-      const includedFactoryIds = (selectedFactoryIds.size > 0
-        ? Array.from(selectedFactoryIds)
-        : (preview?.lines?.map((l) => l.factoryId) ?? [])
-      ).filter((id) => !excludedFactoryIds.has(id));
+    const includedFactoryIds = (selectedFactoryIds.size > 0
+      ? Array.from(selectedFactoryIds)
+      : (preview?.lines?.map((l) => l.factoryId) ?? [])
+    ).filter((id) => !excludedFactoryIds.has(id));
 
+    const total = includedFactoryIds.length || preview?.lines?.length || 0;
+    setProgress({ current: 0, total, phase: "途中入社者を処理中..." });
+
+    try {
+      setProgress((p) => ({ ...p, phase: "契約を生成中..." }));
       const res = await midHiresCreate.mutateAsync({
         companyId,
         factoryIds: includedFactoryIds.length > 0 ? includedFactoryIds : undefined,
@@ -202,12 +208,15 @@ function MidHiresBatch() {
       }) as unknown as MidHiresCreateResult;
 
       if (generateDocs && res.contractIds?.length > 0) {
+        setProgress((p) => ({ ...p, current: total, phase: "PDFを生成中..." }));
         const pdfResult = await batchGenerateDocs.mutateAsync(res.contractIds);
         setResult({ ...res, pdfFiles: pdfResult.files } as MidHiresCreateResult);
       } else {
+        setProgress((p) => ({ ...p, current: total, phase: "完了" }));
         setResult(res);
       }
     } catch (error) {
+      setProgress({ current: 0, total: 0, phase: "" });
       toast.error(error instanceof Error ? error.message : "途中入社一括作成に失敗しました");
     }
   }, [companyId, selectedFactoryIds, conflictDateInput, conflictDateOverrides, startDateOverride, generateDocs, groupByLine, midHiresCreate, batchGenerateDocs, preview, excludedFactoryIds]);
@@ -290,6 +299,15 @@ function MidHiresBatch() {
 
   return (
     <AnimatedPage className="space-y-6">
+      {(midHiresCreate.isPending || batchGenerateDocs.isPending) && progress.total > 0 && (
+        <BatchProgressBar
+          current={progress.current}
+          total={progress.total}
+          label={`契約作成中 ${progress.current} / ${progress.total}`}
+          phase={progress.phase}
+        />
+      )}
+
       {/* Confirmation Modal */}
       {preview && (
         <ConfirmationModalShell
@@ -551,7 +569,16 @@ function MidHiresBatch() {
               icon={Users}
               title="途中入社者が見つかりません"
               description="選択した期間内に入社した社員が見つかりませんでした"
-            />
+            >
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-xs text-muted-foreground">抵触日を確認して、工場・ラインの検索対象期間を調整してください</p>
+                <Link to="/companies">
+                  <Button variant="outline" size="sm">
+                    工場の抵触日を確認
+                  </Button>
+                </Link>
+              </div>
+            </EmptyState>
           ) : companyId && conflictDateInput ? (
             <EmptyState
               icon={Search}

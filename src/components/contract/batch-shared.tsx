@@ -21,6 +21,8 @@ import {
   Layers,
   ShieldAlert,
   Loader2,
+  AlertTriangle,
+  RotateCcw,
   type LucideIcon,
 } from "lucide-react";
 
@@ -393,6 +395,107 @@ export function PdfGenerationBanner() {
     <div className="mb-4 flex items-center gap-2 rounded-lg bg-primary/[0.08] p-2.5 text-xs text-primary dark:bg-primary/[0.12] dark:text-primary/80">
       <FileDown className="h-3.5 w-3.5" />
       作成後にPDFも自動生成します (個別契約書+通知書・派遣先管理台帳・派遣元管理台帳)
+    </div>
+  );
+}
+
+// ─── Batch Error View ─────────────────────────────────────────────────
+
+/** Classification of error types for actionable recovery suggestions */
+type ErrorType = "network" | "rate_limit" | "server" | "validation" | "unknown";
+
+function classifyError(message: string | undefined): ErrorType {
+  if (!message) return "unknown";
+  const m = message.toLowerCase();
+  if (m.includes("network") || m.includes("fetch") || m.includes("connection") || m.includes("econnrefused") || m.includes("enotfound")) return "network";
+  if (m.includes("429") || m.includes("rate limit") || m.includes("リクエストが多すぎ")) return "rate_limit";
+  if (m.includes("500") || m.includes("internal server") || m.includes("server error") || m.includes("500")) return "server";
+  if (m.includes("400") || m.includes("validation") || m.includes("bad request") || m.includes("422")) return "validation";
+  return "unknown";
+}
+
+/** Human-readable titles per error type */
+const ERROR_TYPE_LABELS: Record<ErrorType, string> = {
+  network: "接続エラー",
+  rate_limit: "リクエストが多すぎます",
+  server: "サーバーエラー",
+  validation: "入力エラー",
+  unknown: "エラーが発生しました",
+};
+
+/** Actionable suggestions per error type */
+const ERROR_TYPE_SUGGESTIONS: Record<ErrorType, { label: string; action: "reload" | "retry" }[]> = {
+  network: [
+    { label: "ページを更新", action: "reload" },
+    { label: "再試行", action: "retry" },
+  ],
+  rate_limit: [
+    { label: "少し待ってから再試行", action: "retry" },
+  ],
+  server: [
+    { label: "再試行", action: "retry" },
+  ],
+  validation: [
+    { label: "入力內容を確認", action: "retry" },
+  ],
+  unknown: [
+    { label: "再試行", action: "retry" },
+  ],
+};
+
+export interface BatchErrorViewProps {
+  error: { message?: string };
+  reset: () => void;
+}
+
+/**
+ * Rich error display for batch pages.
+ * Shows server error message when available, classifies the error type,
+ * and offers actionable recovery buttons (reload, retry).
+ */
+export function BatchErrorView({ error, reset }: BatchErrorViewProps) {
+  const { message } = error;
+  const errorType = classifyError(message);
+  const isUnexpectedJsonEnd = message === "Unexpected end of JSON input";
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-destructive/50 bg-destructive/10 py-12 px-8">
+      {/* Icon + Title */}
+      <div className="flex items-center gap-2">
+        <div className="rounded-lg bg-destructive/15 p-2">
+          <AlertTriangle className="h-5 w-5 text-destructive" />
+        </div>
+        <h3 className="text-lg font-semibold">{ERROR_TYPE_LABELS[errorType]}</h3>
+      </div>
+
+      {/* Server message — only if it's meaningful */}
+      {message && !isUnexpectedJsonEnd && (
+        <p className="max-w-md text-center text-sm text-muted-foreground leading-relaxed">
+          {message}
+        </p>
+      )}
+
+      {/* Recovery actions */}
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={reset}
+          className="inline-flex items-center gap-2 rounded-lg border border-border/60 bg-card px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-colors hover:bg-muted/50 cursor-pointer"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          再試行
+        </button>
+        {ERROR_TYPE_SUGGESTIONS[errorType].map(({ label, action }) =>
+          action === "reload" ? (
+            <button
+              key="reload"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-2 rounded-lg border border-border/40 bg-card/50 px-4 py-2 text-sm font-medium text-muted-foreground shadow-xs transition-colors hover:bg-muted/30 cursor-pointer"
+            >
+              {label}
+            </button>
+          ) : null
+        )}
+      </div>
     </div>
   );
 }

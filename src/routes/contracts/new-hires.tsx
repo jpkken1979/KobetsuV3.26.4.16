@@ -23,6 +23,7 @@ import {
   StyledCheckbox,
   ConfirmationModalShell,
   PdfGenerationBanner,
+  BatchErrorView,
 } from "@/components/contract/batch-shared";
 import { Badge } from "@/components/ui/badge";
 import type {
@@ -34,6 +35,7 @@ import type {
   NewHiresCreateResult,
 } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BatchProgressBar } from "@/components/contract/batch-progress-bar";
 import {
   Calendar,
   UserPlus,
@@ -57,10 +59,9 @@ function toLocalDateStr(date: Date): string {
 
 export const Route = createFileRoute("/contracts/new-hires")({
   component: NewHiresBatch,
-  errorComponent: ({ reset }) => (
-    <div className="flex flex-col items-center justify-center gap-4 py-20">
-      <p className="text-lg font-semibold text-destructive">エラーが発生しました</p>
-      <Button variant="outline" onClick={reset}>再試行</Button>
+  errorComponent: ({ error, reset }) => (
+    <div className="container mx-auto max-w-7xl px-4 py-8">
+      <BatchErrorView error={error} reset={reset} />
     </div>
   ),
   pendingComponent: () => (
@@ -92,6 +93,7 @@ function NewHiresBatch() {
   );
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<NewHiresCreateResult | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0, phase: "" });
 
   const handleCompanyChange = useCallback((id: number) => {
     setCompanyId(id);
@@ -146,6 +148,9 @@ function NewHiresBatch() {
     if (!companyId || !hireDateFrom) return;
     setShowConfirm(false);
 
+    const total = preview?.totalEmployees ?? 0;
+    setProgress({ current: 0, total, phase: "新規入社者を処理中..." });
+
     const data = {
       companyId,
       hireDateFrom,
@@ -156,28 +161,22 @@ function NewHiresBatch() {
     };
 
     try {
+      setProgress((p) => ({ ...p, phase: "契約を生成中..." }));
       const res = await newHiresCreate.mutateAsync(data) as unknown as NewHiresCreateResult;
 
       if (generateDocs && res.contractIds?.length > 0) {
+        setProgress((p) => ({ ...p, current: total, phase: "PDFを生成中..." }));
         const pdfResult = await batchGenerateDocs.mutateAsync(res.contractIds);
         setResult({ ...res, pdfFiles: pdfResult.files } as NewHiresCreateResult);
       } else {
+        setProgress((p) => ({ ...p, current: total, phase: "完了" }));
         setResult(res);
       }
     } catch (error) {
+      setProgress({ current: 0, total: 0, phase: "" });
       toast.error(error instanceof Error ? error.message : "新規入社一括作成に失敗しました");
     }
-  }, [
-    companyId,
-    hireDateFrom,
-    hireDateTo,
-    useEndDateOverride,
-    endDateOverride,
-    generateDocs,
-    groupByLine,
-    newHiresCreate,
-    batchGenerateDocs,
-  ]);
+  }, [preview, companyId, hireDateFrom, hireDateTo, useEndDateOverride, endDateOverride, generateDocs, groupByLine, newHiresCreate, batchGenerateDocs]);
 
   const canSearch = companyId && hireDateFrom;
   const canCreate =
@@ -268,6 +267,15 @@ function NewHiresBatch() {
 
   return (
     <AnimatedPage className="space-y-6">
+      {(newHiresCreate.isPending || batchGenerateDocs.isPending) && progress.total > 0 && (
+        <BatchProgressBar
+          current={progress.current}
+          total={progress.total}
+          label={`契約作成中 ${progress.current} / ${progress.total}`}
+          phase={progress.phase}
+        />
+      )}
+
       {/* Confirmation Modal */}
       {preview && (
         <ConfirmationModalShell
@@ -522,7 +530,27 @@ function NewHiresBatch() {
               icon={Users}
               title="該当する新規入社者が見つかりません"
               description="入社日の範囲を調整してください"
-            />
+            >
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground">入社日がこの範囲の新規入社者が見つかりませんでした</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    // Extend the range to search the previous month
+                    const to = new Date(hireDateFrom);
+                    to.setMonth(to.getMonth() - 1);
+                    const y = to.getFullYear();
+                    const m = String(to.getMonth() + 1).padStart(2, "0");
+                    const d = String(to.getDate()).padStart(2, "0");
+                    setHireDateFrom(`${y}-${m}-${d}`);
+                    setPreview(null);
+                  }}
+                >
+                  前月も検索する
+                </Button>
+              </div>
+            </EmptyState>
           ) : companyId ? (
             <EmptyState
               icon={UserPlus}

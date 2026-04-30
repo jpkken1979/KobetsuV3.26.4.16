@@ -23,6 +23,7 @@ import {
   StyledCheckbox,
   ConfirmationModalShell,
   PdfGenerationBanner,
+  BatchErrorView,
 } from "@/components/contract/batch-shared";
 import type {
   SmartBatchPreviewResult,
@@ -30,6 +31,7 @@ import type {
   Factory,
 } from "@/lib/api";
 import { EmptyState } from "@/components/ui/empty-state";
+import { BatchProgressBar } from "@/components/contract/batch-progress-bar";
 import {
   Users,
   UserPlus,
@@ -47,10 +49,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/contracts/smart-batch")({
   component: SmartBatchPage,
-  errorComponent: ({ reset }) => (
-    <div className="flex flex-col items-center justify-center gap-4 py-20">
-      <p className="text-lg font-semibold text-destructive">エラーが発生しました</p>
-      <Button variant="outline" onClick={reset}>再試行</Button>
+  errorComponent: ({ error, reset }) => (
+    <div className="container mx-auto max-w-7xl px-4 py-8">
+      <BatchErrorView error={error} reset={reset} />
     </div>
   ),
   pendingComponent: () => (
@@ -76,6 +77,7 @@ function SmartBatchPage() {
   const [preview, setPreview] = useState<SmartBatchPreviewResult | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [result, setResult] = useState<SmartBatchCreateResult | null>(null);
+  const [progress, setProgress] = useState({ current: 0, total: 0, phase: "" });
 
   const selectedCompany = useMemo(
     () => companies?.find((c) => c.id === companyId) ?? null,
@@ -138,8 +140,11 @@ function SmartBatchPage() {
   const handleConfirmAndCreate = useCallback(async () => {
     if (!companyId || !preview) return;
     setShowConfirm(false);
+    const total = preview.lines?.length || 0;
+    setProgress({ current: 0, total, phase: "契約を生成中..." });
     try {
       const factoryIds = selectedFactoryIds.size > 0 ? Array.from(selectedFactoryIds) : undefined;
+      setProgress({ current: 0, total, phase: "工場データを処理中..." });
       const res = await createMut.mutateAsync({
         companyId,
         factoryIds,
@@ -150,12 +155,16 @@ function SmartBatchPage() {
       });
 
       if (generateDocs && res.contractIds.length > 0) {
+        setProgress({ current: 0, total: res.contractIds.length, phase: "PDFを生成中..." });
         const pdfResult = await batchGenerateDocs.mutateAsync(res.contractIds);
+        setProgress((p) => ({ ...p, current: p.total, phase: "完了" }));
         setResult({ ...res, pdfFiles: pdfResult.files });
       } else {
+        setProgress((p) => ({ ...p, current: total, phase: "完了" }));
         setResult(res);
       }
     } catch (error) {
+      setProgress({ current: 0, total: 0, phase: "" });
       toast.error(error instanceof Error ? error.message : "一括作成に失敗しました");
     }
   }, [companyId, preview, selectedFactoryIds, globalStartDate, globalEndDate, generateDocs, groupByLine, createMut, batchGenerateDocs]);
@@ -201,6 +210,15 @@ function SmartBatchPage() {
   // ─── Main Screen ──────────────────────────────────────────────────
   return (
     <div className="container mx-auto max-w-7xl space-y-6 px-4 py-6">
+      {(createMut.isPending || batchGenerateDocs.isPending) && progress.total > 0 && (
+        <BatchProgressBar
+          current={progress.current}
+          total={progress.total}
+          label={`契約作成中 ${progress.current} / ${progress.total}`}
+          phase={progress.phase}
+        />
+      )}
+
       <BatchPageHeader
         title="スマート一括作成"
         description="工場全体を一括処理。自動で 継続 / 途中入社者 を分類し、入社日に応じて契約期間を調整します"
@@ -342,7 +360,27 @@ function SmartBatchPage() {
                     icon={AlertTriangle}
                     title="対象社員がいません"
                     description={preview.skipped.length > 0 ? `${preview.skipped.length}件の工場がスキップされました` : "条件を変更してください"}
-                  />
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-xs text-muted-foreground">グローバル期閲を調整してください</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (!globalStartDate) return;
+                          const from = new Date(globalStartDate);
+                          from.setMonth(from.getMonth() - 1);
+                          const y = from.getFullYear();
+                          const m = String(from.getMonth() + 1).padStart(2, "0");
+                          const d = String(from.getDate()).padStart(2, "0");
+                          setGlobalStartDate(`${y}-${m}-${d}`);
+                          setPreview(null);
+                        }}
+                      >
+                        前月も対象にする
+                      </Button>
+                    </div>
+                  </EmptyState>
                 </Section>
               ) : (
                 <Section icon={Building2} title={`工場別内訳 (${preview.lines.length}工場)`} step={4}>

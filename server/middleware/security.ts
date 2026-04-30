@@ -5,10 +5,28 @@ const RATE_LIMIT_WINDOW_MS = Number(process.env.API_RATE_LIMIT_WINDOW_MS ?? 60_0
 const RATE_LIMIT_MAX = Number(process.env.API_RATE_LIMIT_MAX ?? 180);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN?.trim() ?? "";
 
-function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
-}
+// Granular rate limits per endpoint path (windowSeconds, maxRequests)
+const ENDPOINT_RATE_LIMITS: Record<string, [number, number]> = {
+  // Preview operations — read-only, more permissive
+  "/api/contracts/batch/preview": [60, 30],
+  "/api/contracts/batch/new-hires/preview": [60, 30],
+  "/api/contracts/batch/mid-hires/preview": [60, 30],
+  "/api/contracts/batch/smart-by-factory/preview": [60, 30],
+
+  // Batch create operations — more restrictive
+  "/api/contracts/batch": [300, 10],
+  "/api/contracts/batch/new-hires": [300, 20],
+  "/api/contracts/batch/mid-hires": [300, 20],
+  "/api/contracts/batch/by-line": [300, 20],
+  "/api/contracts/batch/smart-by-factory": [300, 10],
+
+  // Document generation — CPU-intensive
+  "/api/documents/generate": [300, 50],
+  "/api/documents/generate-batch": [600, 10],
+  "/api/documents/generate-factory": [600, 10],
+  "/api/documents/generate-set": [600, 10],
+  "/api/documents/generate-by-ids": [600, 10],
+};
 
 type RateBucket = {
   count: number;
@@ -21,26 +39,31 @@ function isMutationMethod(method: string): boolean {
   return method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
 }
 
-function isAdminProtectedPath(path: string): boolean {
-  return path.startsWith("/api/admin/") || path === "/api/backup";
+/**
+ * Returns the rate-limit config for a given path.
+ * Falls back to global defaults if no specific entry exists.
+ */
+function getEndpointRateLimit(path: string): { windowMs: number; max: number } {
+  const specific = ENDPOINT_RATE_LIMITS[path];
+  if (specific) {
+    return { windowMs: specific[0] * 1000, max: specific[1] };
+  }
+  return { windowMs: RATE_LIMIT_WINDOW_MS, max: RATE_LIMIT_MAX };
 }
 
-function getClientId(c: Context): string {
-  const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
-  const realIp = c.req.header("x-real-ip")?.trim();
-  return forwarded ?? realIp ?? "local";
-}
-
-function consumeRateLimit(key: string): { allowed: boolean; retryAfterSec: number } {
+function consumeRateLimit(key: string, windowMs: number, max: number): {
+  allowed: boolean;
+  retryAfterSec: number;
+} {
   const now = Date.now();
   const current = rateBuckets.get(key);
 
   if (!current || now >= current.resetAt) {
-    rateBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return { allowed: true, retryAfterSec: Math.ceil(RATE_LIMIT_WINDOW_MS / 1000) };
+    rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, retryAfterSec: Math.ceil(windowMs / 1000) };
   }
 
-  if (current.count >= RATE_LIMIT_MAX) {
+  if (current.count >= max) {
     return {
       allowed: false,
       retryAfterSec: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
@@ -54,6 +77,19 @@ function consumeRateLimit(key: string): { allowed: boolean; retryAfterSec: numbe
   };
 }
 
+function setRateLimitHeaders(
+  c: Context,
+  _windowSec: number,
+  max: number,
+  remaining: number,
+  resetAtSec: number,
+): void {
+  void _windowSec; // unused but kept for API signature symmetry
+  c.header("X-RateLimit-Limit", String(max));
+  c.header("X-RateLimit-Remaining", String(Math.max(0, remaining)));
+  c.header("X-RateLimit-Reset", String(resetAtSec));
+}
+
 // Periodic cleanup every 60 seconds
 setInterval(() => {
   const now = Date.now();
@@ -63,6 +99,21 @@ setInterval(() => {
     }
   }
 }, 60_000);
+
+function isAdminProtectedPath(path: string): boolean {
+  return path.startsWith("/api/admin/") || path === "/api/backup";
+}
+
+function getClientId(c: Context): string {
+  const forwarded = c.req.header("x-forwarded-for")?.split(",")[0]?.trim();
+  const realIp = c.req.header("x-real-ip")?.trim();
+  return forwarded ?? realIp ?? "local";
+}
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 export async function securityHeadersMiddleware(_c: Context, next: Next) {
   await next();
@@ -128,9 +179,17 @@ export async function adminGuardMiddleware(c: Context, next: Next) {
     return;
   }
 
+  const { windowMs, max } = getEndpointRateLimit(path);
   const clientId = getClientId(c);
-  const rateKey = `${clientId}:${method}:${c.req.path}`;
-  const rate = consumeRateLimit(rateKey);
+  const rateKey = `${clientId}:${method}:${path}`;
+  const rate = consumeRateLimit(rateKey, windowMs, max);
+
+  const resetAtSec = Math.ceil((Date.now() + windowMs) / 1000);
+  const remaining = rate.allowed
+    ? (rateBuckets.get(rateKey)?.count ?? 1)
+    : 0;
+  setRateLimitHeaders(c, Math.ceil(windowMs / 1000), max, remaining, resetAtSec);
+
   if (!rate.allowed) {
     return c.json(
       { error: "Too many requests. Please retry later." },
