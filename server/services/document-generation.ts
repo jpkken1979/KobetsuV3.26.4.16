@@ -3,7 +3,7 @@ import { db } from "../db/index.js";
 import { contracts, type FactoryYearlyConfig, type CompanyYearlyConfig } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getConfigForYear, getCompanyConfigForYear, getFiscalYear } from "./factory-yearly-config.js";
-import { parseWorkHours, parseBreakTime, NAMED_SHIFT_RE, inferContractHourlyRate } from "./shift-utils.js";
+import { parseWorkHours, parseBreakTime, inferContractHourlyRate } from "./shift-utils.js";
 import PDFDocument from "pdfkit";
 import fs from "node:fs";
 import path from "node:path";

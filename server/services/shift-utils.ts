@@ -27,11 +27,6 @@ export function normalizeShiftText(text: string | null | undefined): string {
   return text.replace(/、/g, "\n").trim();
 }
 
-interface ShiftParseResult {
-  workHours: string;
-  breakTime: string;
-}
-
 /**
  * Infer hourlyRate from contract employees when contract.hourlyRate is null.
  * Uses the most common rate (mode) from contract_employees assignments.
