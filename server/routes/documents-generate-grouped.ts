@@ -201,10 +201,10 @@ export async function handleGenerateGrouped(c: Context) {
           if (pageIdx > 0) doc.addPage({ size: "A4", margin: 0 });
           pageIdx++;
           generateKobetsuPDF(doc, buildStandardKobetsuData(common, contract, empList));
-          // Atras: tsuchisho
+          // Atras: tsuchisho (empList = todos los empleados del contrato)
           doc.addPage({ size: "A4", margin: 0 });
           pageIdx++;
-          generateTsuchishoPDF(doc, buildStandardTsuchishoData(common, emp));
+          generateTsuchishoPDF(doc, buildStandardTsuchishoData(common, empList));
         }
       }
       const fn = `kobetsu_tsuchisho_全部_${timestamp}.pdf`;
@@ -224,7 +224,7 @@ export async function handleGenerateGrouped(c: Context) {
           generateKoritsuKobetsuPDF(doc, buildKoritsuKobetsuData(common, contract, empList));
           doc.addPage({ size: "A4", margin: 0 });
           pageIdx++;
-          generateKoritsuTsuchishoPDF(doc, buildKoritsuTsuchishoData(common, contract, emp));
+          generateKoritsuTsuchishoPDF(doc, buildKoritsuTsuchishoData(common, contract, empList));
         }
       }
       const fn = `kobetsu_tsuchisho_全部_${timestamp}.pdf`;
