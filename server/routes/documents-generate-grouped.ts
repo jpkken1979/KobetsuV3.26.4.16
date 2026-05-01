@@ -196,8 +196,8 @@ export async function handleGenerateGrouped(c: Context) {
         const common = await buildCommonDataForPDF(contract);
         const empList = mapContractEmployeesToPDF(contract.employees);
         // Por cada empleado: kobetsu (frente) + tsuchisho (atras)
-        for (const emp of empList) {
-          // Frente: kobetsu
+        for (const _emp of empList) {
+          // Frente: kobetsu (una pagina por empleado)
           if (pageIdx > 0) doc.addPage({ size: "A4", margin: 0 });
           pageIdx++;
           generateKobetsuPDF(doc, buildStandardKobetsuData(common, contract, empList));
@@ -218,7 +218,7 @@ export async function handleGenerateGrouped(c: Context) {
       for (const contract of koritsuContracts) {
         const common = await buildCommonDataForPDF(contract);
         const empList = mapContractEmployeesToPDF(contract.employees);
-        for (const emp of empList) {
+        for (const _emp of empList) {
           if (pageIdx > 0) doc.addPage({ size: "A4", margin: 0 });
           pageIdx++;
           generateKoritsuKobetsuPDF(doc, buildKoritsuKobetsuData(common, contract, empList));
