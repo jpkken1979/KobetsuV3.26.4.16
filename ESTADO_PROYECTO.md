@@ -1,6 +1,42 @@
 # ESTADO DEL PROYECTO — JP個別契約書v26.4.17
 
-> Última actualización: 2026-05-01 (exceljs 3.4.0 + auditoria security fixes)
+> Última actualización: 2026-05-01 (kobetsu+tsuchisho intercalado)
+
+## Sesión 2026-05-01b — Kobetsu+tsuchisho intercalado para impresión frente/atrás
+
+**Branch:** `master` (commits `66fb2fa`)
+
+**Problema:** El kobetsu se imprime en el frente de la hoja, el tsuchisho en el atrás. Cuando se generaban PDFs separados, era imposible alinear las páginas.
+
+**Solución:** Un solo PDF con kobetsu y tsuchisho intercalados por empleado:
+- Página N: kobetsu (frente)
+- Página N+1: tsuchisho (atrás)
+- Por cada empleado se generan 2 páginas enfrentadas
+
+**Cambios:**
+- Nueva opción "契約書+通知書" en modal de descarga grupal (primera posición)
+- Backend genera PDF único intercalado
+- tsuchisho recibe empList (TODOS los empleados), no emp individual
+
+**Archivos modificados:**
+- `server/routes/documents-generate-grouped.ts`
+- `src/lib/api.ts` — tipo GroupBy actualizado
+- `src/lib/api-types/batch.ts` — GenerateGroupedResult
+- `src/routes/contracts/-grouped-download-modal.tsx` — UI
+
+**Commits:**
+- `05c7fe4` feat(contracts): agregar opcion kobetsu+tsuchisho como ZIP
+- `288a0e4` fix(contracts): kobetsu+tsuchisho en un solo PDF intercalado
+- `b8c9bbc` fix(tsuchisho): enviar empList completo en lugar de emp individual
+- `66fb2fa` fix(tsuchisho): usar _emp underscore para variables no usadas
+
+**Verificación:**
+- Typecheck: clean
+- Tests: 1047/1047
+- PDF generado: 6 páginas (3 kobetsu + 3 tsuchisho = pares enfrentados)
+
+**Memoria creada:**
+- `.claude/memory/pattern_kobetsu_tsuchisho_intercalado.md`
 
 ## Sesión 2026-05-01 — Auditoría security + exceljs update
 
