@@ -26,4 +26,10 @@ El kobetsu (個別契約書) se imprime en el frente de la hoja y el tsuchisho (
 
 ## Pendiente
 
-- Refactorizar para evitar duplicacion de logica kobetsu/tsuchisho
+- **Refactor postergado** (bajo priority): la duplicación standard/koritsu es funcional (~40 líneas duplicadas) pero el refactor requiere types dinámicos complejos que no justifican el riesgo. El código actual funciona correctamente.
+
+## Alternativas evaluadas
+
+1. Helper functions con generics → complejidad de types no justifica beneficio
+2. Loop helper con callbacks → pierde legibilidad
+3. Template pattern → sobreingeniería para este caso
