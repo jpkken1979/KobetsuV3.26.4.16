@@ -243,7 +243,7 @@ export const api = {
       { method: "POST", body: JSON.stringify({ contractIds, kobetsuCopies }) },
       120000
     ),
-  generateGrouped: (contractIds: number[], groupBy: "kobetsu" | "tsuchisho" | "daicho" | "all" = "all") =>
+  generateGrouped: (contractIds: number[], groupBy: "kobetsu" | "tsuchisho" | "daicho" | "kobetsu-tsuchisho" | "all" = "all") =>
     request<GenerateGroupedResult>("/documents/generate-grouped", {
       method: "POST",
       body: JSON.stringify({ contractIds, groupBy }),

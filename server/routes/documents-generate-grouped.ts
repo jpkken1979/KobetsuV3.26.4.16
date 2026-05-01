@@ -45,7 +45,7 @@ import {
 
 const generateGroupedSchema = z.object({
   contractIds: z.array(z.number().int().positive()).min(1, "contractIds must be a non-empty array"),
-  groupBy: z.enum(["kobetsu", "tsuchisho", "daicho", "all"]).default("all"),
+  groupBy: z.enum(["kobetsu", "tsuchisho", "daicho", "kobetsu-tsuchisho", "all"]).default("all"),
 });
 
 export async function handleGenerateGrouped(c: Context) {
@@ -182,6 +182,84 @@ export async function handleGenerateGrouped(c: Context) {
       const fn = `daicho_全部_${timestamp}.pdf`;
       await writeToFile(doc, path.join(KORITSU_OUTPUT_DIR, fn));
       generatedFiles.push({ type: "daicho", filename: fn, path: `/api/documents/download/${encodeURIComponent(fn)}` });
+    }
+  }
+
+  // ── Kobetsu + Tsuchisho ZIP (juntos siempre) ─────────────────────────
+  if (groupBy === "kobetsu-tsuchisho") {
+    const zipName = `kobetsu_tsuchisho_${timestamp}.zip`;
+    const zipFiles: string[] = [];
+
+    // Kobetsu PDFs (reusar lógica de arriba)
+    if (standardContracts.length > 0) {
+      const doc = createDoc();
+      for (let idx = 0; idx < standardContracts.length; idx++) {
+        const contract = standardContracts[idx];
+        if (idx > 0) doc.addPage({ size: "A4", margin: 0 });
+        const common = await buildCommonDataForPDF(contract);
+        const empList = mapContractEmployeesToPDF(contract.employees);
+        generateKobetsuPDF(doc, buildStandardKobetsuData(common, contract, empList));
+      }
+      const fn = `kobetsu_全部_${timestamp}.pdf`;
+      await writeToFile(doc, path.join(KOBETSU_OUTPUT_DIR, fn));
+      generatedFiles.push({ type: "kobetsu", filename: fn, path: `/api/documents/download/${encodeURIComponent(fn)}` });
+      zipFiles.push(fn);
+    }
+    if (koritsuContracts.length > 0) {
+      const doc = createDoc();
+      for (let idx = 0; idx < koritsuContracts.length; idx++) {
+        const contract = koritsuContracts[idx];
+        if (idx > 0) doc.addPage({ size: "A4", margin: 0 });
+        const common = await buildCommonDataForPDF(contract);
+        const empList = mapContractEmployeesToPDF(contract.employees);
+        generateKoritsuKobetsuPDF(doc, buildKoritsuKobetsuData(common, contract, empList));
+      }
+      const fn = `kobetsu_全部_${timestamp}.pdf`;
+      await writeToFile(doc, path.join(KORITSU_OUTPUT_DIR, fn));
+      generatedFiles.push({ type: "kobetsu", filename: fn, path: `/api/documents/download/${encodeURIComponent(fn)}` });
+      zipFiles.push(fn);
+    }
+
+    // Tsuchisho PDFs
+    if (standardContracts.length > 0) {
+      const doc = createDoc();
+      let pageIdx = 0;
+      for (const contract of standardContracts) {
+        const common = await buildCommonDataForPDF(contract);
+        const empList = mapContractEmployeesToPDF(contract.employees);
+        if (pageIdx > 0) doc.addPage({ size: "A4", margin: 0 });
+        pageIdx++;
+        generateTsuchishoPDF(doc, buildStandardTsuchishoData(common, empList));
+      }
+      const fn = `tsuchisho_全部_${timestamp}.pdf`;
+      await writeToFile(doc, path.join(KOBETSU_OUTPUT_DIR, fn));
+      generatedFiles.push({ type: "tsuchisho", filename: fn, path: `/api/documents/download/${encodeURIComponent(fn)}` });
+      zipFiles.push(fn);
+    }
+    if (koritsuContracts.length > 0) {
+      const doc = createDoc();
+      let pageIdx = 0;
+      for (const contract of koritsuContracts) {
+        const common = await buildCommonDataForPDF(contract);
+        const empList = mapContractEmployeesToPDF(contract.employees);
+        if (pageIdx > 0) doc.addPage({ size: "A4", margin: 0 });
+        pageIdx++;
+        generateKoritsuTsuchishoPDF(doc, buildKoritsuTsuchishoData(common, contract, empList));
+      }
+      const fn = `tsuchisho_全部_${timestamp}.pdf`;
+      await writeToFile(doc, path.join(KORITSU_OUTPUT_DIR, fn));
+      generatedFiles.push({ type: "tsuchisho", filename: fn, path: `/api/documents/download/${encodeURIComponent(fn)}` });
+      zipFiles.push(fn);
+    }
+
+    // Crear ZIP con kobetsu + tsuchisho
+    if (zipFiles.length > 0) {
+      await createZipArchive(zipName, zipFiles, KOBETSU_OUTPUT_DIR);
+      generatedFiles.push({
+        type: "zip",
+        filename: zipName,
+        path: `/api/documents/download/${encodeURIComponent(zipName)}`,
+      });
     }
   }
 

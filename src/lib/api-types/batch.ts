@@ -24,7 +24,7 @@ export interface GenerateGroupedResult {
   success: boolean;
   contractCount: number;
   files: { type: string; filename: string; path: string }[];
-  groupBy: "kobetsu" | "tsuchisho" | "daicho" | "all";
+  groupBy: "kobetsu" | "tsuchisho" | "daicho" | "kobetsu-tsuchisho" | "all";
 }
 
 export interface LaborHistoryFile {

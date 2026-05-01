@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { api, downloadPdf } from "@/lib/api";
 
-type GroupBy = "kobetsu" | "tsuchisho" | "daicho" | "all";
+type GroupBy = "kobetsu" | "tsuchisho" | "daicho" | "kobetsu-tsuchisho" | "all";
 
 interface GroupedDownloadModalProps {
   contractIds: number[];
@@ -22,6 +22,12 @@ interface DownloadOption {
 }
 
 const OPTIONS: DownloadOption[] = [
+  {
+    value: "kobetsu-tsuchisho",
+    label: "契約書+通知書",
+    desc: "個別契約書 と 通知書 をZIPでダウンロード",
+    icon: Package,
+  },
   {
     value: "kobetsu",
     label: "個別契約書 全部",
