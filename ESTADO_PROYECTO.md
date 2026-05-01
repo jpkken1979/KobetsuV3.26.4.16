@@ -1,6 +1,30 @@
-# ESTADO DEL PROYECTO — JP個別契約書v26.4.16
+# ESTADO DEL PROYECTO — JP個別契約書v26.4.17
 
-> Última actualización: 2026-04-30 (descarga agrupada de PDFs por tipo)
+> Última actualización: 2026-05-01 (exceljs 3.4.0 + auditoria security fixes)
+
+## Sesión 2026-05-01 — Auditoría security + exceljs update
+
+**Branch:** `master` (commits `5c8959a`, `4b2ff61`)
+
+Fixes de la auditoría security del 2026-04-30:
+
+**Fixes aplicados:**
+- **M-1**: `exceljs` actualizado a 3.4.0 (resuelve CVEs en `uuid` via transitive dependency)
+- **L-1**: Removido import `NAMED_SHIFT_RE` no usado en `document-generation.ts`
+- **L-2**: Removido interface `ShiftParseResult` no usada en `shift-utils.ts`
+
+**Verificación:**
+- Typecheck: clean
+- Tests: 1047/1047
+
+**Commits:**
+- `5c8959a` fix(deps): actualizar exceljs a 3.4.0 para resolver CVEs en uuid
+- `4b2ff61` chore(hooks): actualizar hooks de memoria y planificación
+
+**Pendiente de la auditoría (no resueltos por decisión del usuario - uso local):**
+- M-2: `decodeURIComponent` sin try/catch (`documents.ts:75`)
+- M-3: Rate limiter en memoria (solo afecta multi-instance)
+- H-1: `.env` versionado (decisión consciente documentada)
 
 ## Sesión 2026-04-30 — Descarga Agrupada de PDFs por Tipo
 
