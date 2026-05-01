@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -uo pipefail
 # Pre-commit code review reminder
 # Checks if there are staged changes and suggests running /code-review
 

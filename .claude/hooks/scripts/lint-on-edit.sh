@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: Lint file after edit
 # Triggered by: PostToolUse on Edit|Write
 # Cost: 0 tokens (local bash)

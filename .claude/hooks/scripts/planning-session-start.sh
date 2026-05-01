@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: SessionStart — Detect /clear and recover session from git
 # Triggered by: SessionStart event
 # Cost: 0 tokens (local bash)

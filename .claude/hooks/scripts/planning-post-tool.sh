@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: PostToolUse — Update progress.md after significant actions
 # Triggered by: PostToolUse event
 # Cost: 0 tokens (local bash)

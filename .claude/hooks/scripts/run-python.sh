@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Detecta el intérprete Python disponible en cualquier OS/usuario/PC
 PYTHON=""
 

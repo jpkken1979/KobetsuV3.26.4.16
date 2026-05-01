@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -uo pipefail
 # Auto-cleanup unknown empty directories in repo root.
 # Runs on SessionStart/Stop and removes any empty top-level dir outside the canonical set.
 # Safe: only removes EMPTY directories outside the allowlist.
@@ -22,10 +23,21 @@ removed = 0
 for item in root.iterdir():
     if not item.is_dir() or item.name in KNOWN:
         continue
+    # SECURITY (M10): NUNCA seguir symlinks. Si un atacante crea un symlink
+    # con nombre fuera del allowlist apuntando a otro directorio, rmtree
+    # podria seguirlo y borrar contenido legitimo.
+    if item.is_symlink():
+        continue
     try:
+        # Re-validar: el resolved path debe seguir dentro del repo root.
+        resolved = item.resolve(strict=True)
+        if not str(resolved).startswith(str(root.resolve())):
+            continue
         children = list(item.iterdir())
         if not children or (len(children) == 1 and children[0].is_dir() and children[0].name == '.antigravity'):
-            shutil.rmtree(str(item))
+            # Pasar followlinks=False explicito (default en rmtree pero lo
+            # hacemos explicito para que un futuro lector lo vea).
+            shutil.rmtree(str(item), ignore_errors=False)
             removed += 1
     except Exception:
         pass

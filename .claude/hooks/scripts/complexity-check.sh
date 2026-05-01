@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: Alert if Python function exceeds complexity budget
 # Triggered by: PostToolUse on Edit|Write for .py files
 # Cost: 0 tokens (local bash)

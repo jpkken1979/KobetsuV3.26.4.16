@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: Show uncommitted changes when Claude stops
 # Triggered by: Stop event
 # Cost: 0 tokens (local bash)

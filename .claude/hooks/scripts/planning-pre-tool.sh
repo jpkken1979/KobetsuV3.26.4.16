@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: PreToolUse — Read active task plan before each decision
 # Triggered by: PreToolUse event
 # Cost: 0 tokens (local bash, reads markdown)

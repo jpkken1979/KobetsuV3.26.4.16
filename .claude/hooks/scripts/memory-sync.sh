@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: Auto-sync memories to repo on stop
 # Triggered by: Stop event
 # Cost: 0 tokens (local bash)
@@ -66,6 +67,26 @@ cd "$REPO_ROOT"
 BRAIN_CHANGES=$(git status --porcelain .agent/brain/ .claude/memory/ 2>/dev/null | grep -v '^??' | wc -l)
 
 if [ "$BRAIN_CHANGES" -gt 0 ]; then
+  # SECURITY: scan por secrets antes del git add automatico.
+  # Patrones comunes que NO deberian llegar a git: API keys, tokens, passwords.
+  # Si detectamos algo, abortamos el auto-commit y avisamos al usuario.
+  STAGED_FILES=$(git status --porcelain .agent/brain/ .claude/memory/ 2>/dev/null | awk '{print $2}')
+  SECRETS_FOUND=0
+  for FILE in $STAGED_FILES; do
+    [ ! -f "$FILE" ] && continue
+    # Patrones: ghp_/gho_/ghs_ (GitHub), sk-proj-/sk-ant-/sk-cp- (LLM APIs),
+    # AKIA (AWS), nvapi- (NVIDIA), generic API_KEY=... con valor largo.
+    if grep -qE '(ghp_|gho_|ghs_|sk-proj-|sk-ant-|sk-cp-|AKIA[0-9A-Z]{16}|nvapi-[a-zA-Z0-9_\-]{30,}|API_KEY\s*=\s*[a-zA-Z0-9_\-]{30,})' "$FILE" 2>/dev/null; then
+      SECRETS_FOUND=$((SECRETS_FOUND + 1))
+      echo "[Antigravity Memory] SECRET DETECTADO en $FILE - aborto auto-commit" >&2
+    fi
+  done
+
+  if [ "$SECRETS_FOUND" -gt 0 ]; then
+    echo "{\"systemMessage\": \"WARNING: ${SECRETS_FOUND} archivo(s) con posibles secrets - auto-commit abortado. Revisa manualmente y commitea con --no-verify si confirmas que es seguro.\"}"
+    exit 0
+  fi
+
   git add .agent/brain/ .claude/memory/
 
   # Obtener fecha actual para el mensaje

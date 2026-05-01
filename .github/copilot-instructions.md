@@ -4,15 +4,13 @@
 - Antigravity: 5.0.0
 - Gateway: http://localhost:4747
 
-## Agents (125 agentes)
+## Agents (124 agentes)
 
-### Tier 1- `product-manager`- `project-planner`- `super-orchestrator`
-### Tier 2- `backend-specialist`- `code-reviewer`- `coder`- `database-architect`- `frontend-specialist`- `haken-document-specialist`
-### Tier 3- `debugger`- `docs-specialist`- `documentation-writer`- `performance-optimizer`- `qa-automation-engineer`- `security-auditor`- `test-engineer`
-### Tier 4- `devops-engineer`
-### Tier 6- `haken-system-architect`- `uns-hr-specialist`
-### Tier 7- `inteligente-shain-agent`
-### Specialized / No-tier (105 agents)- `__pycache__`- `_archive`- `a11y`- `activator`- `agent-composer`- `analyst`- `api-designer`- `api-gateway-specialist`- `api-tester`- `app-auditor`- ... y 95 mas
+### Tier 0- `debugger`- `performance-optimizer`
+### Tier 1- `project-planner`
+### Tier 2- `code-reviewer`
+### Tier 3- `local-executor`
+### Specialized / No-tier (119 agents)- `__pycache__`- `_archive`- `_archive_stubs`- `a11y`- `activator`- `agent-composer`- `analyst`- `api-designer`- `api-gateway-specialist`- `api-tester`- ... y 109 mas
 
 ## Skills
 - Base: `.agent/skills/` (801 skills)

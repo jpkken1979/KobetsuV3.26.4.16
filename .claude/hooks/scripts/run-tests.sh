@@ -1,4 +1,5 @@
 #!/bin/bash
+set -uo pipefail
 # Hook: Run tests when Claude stops working
 # Triggered by: Stop event
 # Cost: 0 tokens (local bash, no LLM invocation)

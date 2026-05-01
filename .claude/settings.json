@@ -8,6 +8,11 @@
             "type": "command",
             "command": "\".claude/hooks/scripts/session-report.sh\"",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "\".claude/hooks/scripts/memory-sync.sh\"",
+            "timeout": 30000
           }
         ]
       }
